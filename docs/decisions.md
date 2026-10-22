@@ -29,6 +29,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-007a | Release 1 sign-in is admin-created username and password; users can change their password (supersedes the Microsoft part of DEC-007) | 2026-10-22 (owner) | `02` section 11 |
 | DEC-040b | AI chat history is deleted after **60 days** | 2026-10-22 (owner) | `07` AI-035 |
 | DEC-046a | AI behavior: confirms typos/wrong questions and suggests alternatives, answers after confirmation; answers from dashboard data; may do logical calculation; no free database queries and no tables outside the existing ones | 2026-10-22 (owner) | `07` AI-007, AI-008, AI-024 |
+| DEC-047 | The AI provider is **configurable in settings**: admin selects provider (9Router, OmniRoute, local model, Claude, Gemini, OpenAI/Codex, any OpenAI-compatible), model, and saves the API key; can switch any time | 2026-10-22 (owner) | `07` section 9, AI-037 to AI-047 |
+| DEC-046 | An **ETL** loads source data, refreshes materialized views and runs stored procedures, taking almost 3 hours. Dashboards must **auto-refresh** when data changes | 2026-10-22 (owner) | `02` section 13, `DASH-011` |
+| DEC-039 | **MFA is configurable per user**: admin enables or disables it for each user who needs it. Remaining local-account policy values stay as proposed | 2026-10-22 (owner) | `02` AUTH-010, AUTH-011 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -82,9 +85,10 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 | ID | Question | Proposed default | Blocks | Status |
 |---|---|---|---|---|
-| DEC-039 | Local account policy (now the only sign-in): minimum length, forced change, lockout, admin-only reset, MFA for admin accounts | 12+ characters, forced change, lockout after 5 failures, admin reset, optional TOTP MFA for admins | Phase 1 | Proposed |
 | DEC-040 | AI remainder: who may read chats (retention is 60 days, confirmed), usage limits | Only the owner of a chat reads it; non-content usage counters kept | AI phase | Proposed |
 | DEC-042 | AI reply language | Same language as the user's question (Bahasa Indonesia or English) | AI phase | Proposed |
 | DEC-043 | Findings thresholds and severity (outlier ceiling, upload-gap days, difference tolerance), who validates, retention | Warning above 10% difference; upload gap 3 days; validators are users with `findings.manage` | Findings phase | Proposed |
-| DEC-046 | Where can the app read the time of the last nightly refresh (`dataAsOf`)? A column, an ETL log table, or latest record date? | Read from an ETL/refresh metadata table if one exists; else show the latest month present | Phase 2 | Open |
-| DEC-047 | AI gateway and models: 9Router, OmniRoute or OpenCode on a local server. Which upstream models may receive aggregated business data? Fully local model or cloud? Pin one model and disable fallback/compression? | Use an OpenAI-compatible gateway or local model server (not OpenCode as backend); pinned qualified model; fallback and compression off | AI phase | Open |
+| DEC-048 | ETL refresh signal: can the ETL's final step write a refresh log row (run id, started, finished, status) and `NOTIFY`? Name of the log table. Can materialized views use `REFRESH ... CONCURRENTLY` (unique indexes)? Which time does the ETL start? | Log row + `NOTIFY` (poll as fallback); concurrent refresh if possible | Phase 2 | Open (important) |
+| DEC-049 | Where does the encryption master key (for API keys and MFA secrets) live: server environment variable, secret manager, or file readable only by the service? Who holds it and how is it rotated? | Server secret outside the database, held by the technical administrator | Phase 1 | Open |
+| DEC-050 | Data-sharing acknowledgement when a non-local AI provider is activated: wording, who may acknowledge | Admin acknowledges; stored in the audit log | AI phase | Proposed |
+| DEC-051 | Optional secondary AI profile used only when the active one is down (`AI-047`) | Off by default | AI phase | Open |

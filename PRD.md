@@ -43,10 +43,12 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Period selection is **by month** (`DASH-003`, from Tableau).
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
-- **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-036`).
+- **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-047`).
 - **Data Findings** sheet lists anomalies to validate; manual-upload sources are labelled (`FIND-001`, `DASH-009`).
-- **Sign-in:** admin creates users with a username and password; users can change their password after login. Microsoft sign-in is skipped for now (no Microsoft administrator) and can be added later (`AUTH-001` to `AUTH-010`).
-- **Freshness:** data is monthly and refreshed every night; the current month is month-to-date as of the last refresh and the refresh time is shown (`DASH-010`).
+- **Sign-in:** admin creates users with a username and password; users can change their password after login. Microsoft sign-in is skipped for now (no Microsoft administrator) and can be added later (`AUTH-001` to `AUTH-011`).
+- **Freshness and auto-refresh:** data is monthly, loaded by an ETL (about 3 hours, nightly today); the current month is month-to-date as of the last completed run, the refresh time is shown, and dashboards update automatically when a run finishes (`DASH-010`, `DASH-011`).
+- **AI provider is a setting:** admins choose provider and model (9Router, OmniRoute, local model, Claude, Gemini, OpenAI/Codex, any OpenAI-compatible) and save the API key in settings (`AI-037` to `AI-047`).
+- **MFA is configurable per user:** an admin enables or disables it for each user (`AUTH-010`).
 
 ## 4. Goals and non-goals
 
@@ -115,7 +117,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
 | 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |
-| 7 | AI Chat and Data Findings | Gateway and allowed upstream models (DEC-047), data as-of source (DEC-046), findings thresholds (DEC-043) |
+| 7 | AI Chat and Data Findings | Encryption key location (DEC-049), findings thresholds (DEC-043), ETL refresh signal (DEC-048) |
 | 8 | Production hardening | — |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.

@@ -100,8 +100,8 @@ Values above are placeholders. The same tooltip contract as dashboards applies (
 
 - `AI-024` `[C]` **Confirm-then-answer flow.** When the question has a typo, an unknown or ambiguous name, a period that does not exist, or asks for something the data cannot give, the AI replies with its best understanding and options ("Did you mean Sell IN for INA JAWA 1?") as buttons, and may suggest related questions. It runs the tools and shows the result only after the user confirms. An exact, unambiguous question is answered directly without a confirmation step. Name matching is done by the deterministic `resolveEntity` tool, not by the model's guess.
 - `AI-025` `[C]` Any calculation is disclosed: the answer shows the inputs and the formula (for example "Total Sell In = region 1 + region 2 + ..."). Calculations only use values already shown or available in the dashboards.
-- `AI-026` `[C]` The current month is **month-to-date as of the last nightly refresh**. Answers label it so and show the refresh time. A comparison of the in-progress month with a full month is labelled "not like-for-like". The AI does not scale, pace-adjust or project figures unless the user asks for a defined calculation on existing values.
-- `AI-027` `[P]` Data is refreshed every night today; near-real-time is planned. Freshness is read from configuration and a `dataAsOf` value, so the AI's wording follows whatever the refresh cadence is (DEC-046).
+- `AI-026` `[C]` The current month is **month-to-date as of the last completed data refresh**. Answers label it so and show the refresh time. A comparison of the in-progress month with a full month is labelled "not like-for-like". The AI does not scale, pace-adjust or project figures unless the user asks for a defined calculation on existing values.
+- `AI-027` `[P]` Data is loaded by an ETL (about 3 hours, nightly today); near-real-time is planned. Freshness comes from `dataAsOf` (the finish time of the last completed run), so the AI's wording follows whatever the refresh cadence is (`02-architecture.md` section 13).
 
 ```mermaid
 flowchart TD
@@ -149,7 +149,7 @@ stateDiagram-v2
 
 **B. The owner's example.** "growth sell in from month to date vs last month to date for region INA JAWA".
 1. The region is ambiguous (see A).
-2. Data is monthly and refreshed nightly. The AI says: the data has monthly periods only. October 2026 is month-to-date as of the last refresh (shows the time); September 2026 is a full month, so "last month to date" does not exist. It offers options: October 2026 (month to date) versus September 2026, or versus October 2025, noting they are not like-for-like.
+2. Data is monthly and loaded by the ETL (nightly today). The AI says: the data has monthly periods only. October 2026 is month-to-date as of the last refresh (shows the time); September 2026 is a full month, so "last month to date" does not exist. It offers options: October 2026 (month to date) versus September 2026, or versus October 2025, noting they are not like-for-like.
 3. The user picks (or confirms), and the AI shows the result as a pop-up bar or line chart with target, real, % and the growth, plus the as-of time.
 
 **C. Direct answer.** "show Sell IN growth for INA JAWA 1, September 2026 versus September 2025 as a bar chart": unambiguous and exact, so the AI calls `getGrowth`, shows the pop-up bar chart with target, real, % for each year and the growth, and a note with period and data as-of time. No confirmation step is needed.
@@ -164,21 +164,47 @@ stateDiagram-v2
 
 **H. Outside the existing data.** "Show sales by product": no such table or tool exists in the approved data, so the AI says it is not available and lists what it can show (regions, roles, active distributors, uploads, growth).
 
-## 9. Model connection (local gateway), privacy and retention
+## 9. AI provider settings (configurable by admin)
 
-**What the owner plans to use (DEC-047):** 9Router, OmniRoute or OpenCode on a local server. What these are (checked online):
-- **9Router and OmniRoute** are self-hosted AI gateways with an OpenAI-compatible endpoint (for example `/v1/chat/completions`). They route requests to many providers and can **fall back automatically between providers, including free tiers**, and can **compress token usage, including tool results**. They are built mainly for coding tools.
-- **OpenCode** is an open-source **coding agent** with a headless HTTP server (sessions, prompts, files). It is not an LLM gateway. It is a poor fit as the backend of this chat because it is an agent with file and command tools, not a plain model endpoint with our own data tools. `[P]` Do not use it as the chat backend; it can still be a developer tool.
+**Owner decision `[C]` (DEC-047):** the AI provider is **a setting, not a code choice**. An admin can pick the provider and model, enter and save the API key, and switch at any time. Supported choices include 9Router, OmniRoute, a local model server, Claude, Gemini, OpenAI (including Codex models) and any other OpenAI-compatible endpoint.
 
-**Requirements** (all `[P]` unless marked):
-- `AI-030` The AI service talks to the model through one `LlmClient` interface speaking the OpenAI-compatible chat API with tool calls; base address, model, key and timeouts are server configuration. Any OpenAI-compatible endpoint works (a gateway, or a local model server such as Ollama, llama.cpp or vLLM).
-- `AI-031` Use a **pinned model or fixed combo for the chat key**. Turn off silent fallback to unqualified or free-tier models, because a different model can change answer quality and tool-calling reliability. Record the model actually used with every answer in the audit log.
-- `AI-032` **Turn off token or tool-result compression** for this key. Compressing tool results could drop or alter figures the verifier depends on.
-- `AI-033` Temperature 0 (or lowest), strict tool schemas, bounded tool-call loops, request timeouts and rate limits (`AI-019`).
-- `AI-034` A model is **qualified** only after passing the evaluation set in section 10 (tool-calling accuracy, verifier pass rate, refusals). Re-run it when the model or gateway configuration changes.
-- `AI-035` `[C]` Chat history is **deleted after 60 days**: sessions, messages, results and tool-call content. A daily cleanup job removes expired items; reopening a result works only within the 60 days (the UI says when a result will expire). Non-content usage counters (requests, latency, model) may be kept for operations (DEC-040).
-- `AI-036` **Where the data goes:** a local gateway does not mean a local model. If it routes to cloud providers, aggregated tool results leave the server and go to those providers, and each provider's data-handling terms apply (some free tiers differ from paid ones, and consumer subscriptions used through a gateway may be restricted by provider terms). The owner must confirm which upstream models are allowed. A fully local model keeps data on the server (DEC-047).
-- Only aggregated results the user is allowed to see are sent to the model; never raw tables, credentials or other users' data.
+### 9.1 Settings screen (`ai.settings.manage`)
+
+- `AI-037` `[C]` **Provider profiles.** The admin creates one or more profiles; each has: name, **provider type**, base address (where needed), **model**, **API key**, enabled flag. One profile is **active**; switching the active profile takes effect for new questions without a deploy.
+- `AI-038` `[C]` **Provider types** (adapters): `openai-compatible` (covers 9Router, OmniRoute, local servers such as Ollama, llama.cpp or vLLM, OpenAI, and Gemini through its OpenAI-compatible endpoint), `anthropic` (Claude, native API with tool use), `gemini` (native, optional). Adding a new type means adding one adapter; the rest of the chat does not change.
+- `AI-039` `[C]` **API key handling.** The key is entered in the settings screen and saved server-side, **encrypted at rest**. It is **write-only in the UI** (only the last 4 characters are shown), never sent back to the browser, never logged, and can be replaced or deleted. Only `ai.settings.manage` can set it. The encryption master key lives outside the database (server secret, held by the technical administrator; DEC-049). Local servers that need no key can leave it empty.
+- `AI-040` `[C]` **Model selection.** The admin types a model id or picks from the provider's model list when the provider supports listing. Model names are never hard-coded in the app.
+- `AI-041` `[P]` **Test button.** "Test connection" checks reachability and authentication; "Test tool calling" runs a small fixed set of questions (one per tool and one refusal) and shows pass/fail. The profile shows its status (`untested`, `passed`, `failed`) and last test time. By default a profile must pass the tool-calling test before it can be activated; an admin can override with a recorded warning.
+- `AI-042` `[P]` **Data-sharing notice.** Selecting a provider that is not local shows which data leaves the server (aggregated results the user is allowed to see, never raw tables or credentials) and requires the admin to acknowledge it. The acknowledgement is audited. (DEC-050)
+- `AI-043` `[P]` **Global AI settings:** AI on/off, temperature (default lowest), maximum tool calls per question, rate limits per user, and chat retention (default 60 days, `AI-035`).
+- `AI-044` `[C]` Every change (profile created, key replaced, active profile switched, test run, settings changed) is **audited** without the key value.
+- `AI-045` `[P]` **Gateway warnings.** The app cannot control a gateway's internal behavior. For gateway types (9Router, OmniRoute) the screen shows a checklist: turn off fallback to other models, turn off token or tool-result compression, use a fixed model or combo. The app also **records the model each answer actually used** and raises a warning in the audit log when it differs from the configured model (detects silent fallback).
+- `AI-046` `[P]` **Safety does not depend on the provider.** The verifier, the tool catalog, scope enforcement and the no-free-query rule apply to every provider. A weaker model may refuse or fail more often, but cannot show a number that is not in the tool results.
+- `AI-047` `[O]` An optional secondary profile used only when the active one is down, clearly labelled in answers and audit (off by default).
+
+```mermaid
+flowchart LR
+  ST["Settings screen<br/>(ai.settings.manage)"] --> PR[(ai_provider_profiles<br/>key encrypted)]
+  CH[AI chat request] --> LC[LlmClient]
+  PR --> LC
+  LC --> AD1[openai-compatible adapter]
+  LC --> AD2[anthropic adapter]
+  LC --> AD3[gemini adapter]
+  AD1 --> G["9Router / OmniRoute / local model /<br/>OpenAI / other"]
+  AD2 --> CL[Claude]
+  AD3 --> GM[Gemini]
+```
+
+### 9.2 What the three tools you mentioned are (checked online)
+
+- **9Router and OmniRoute** are self-hosted AI gateways with an OpenAI-compatible endpoint. They route to many providers, can fall back automatically (including free tiers), and can compress tool results. They are built mainly for coding tools.
+- **OpenCode** is an open-source coding agent with an HTTP server, not a model gateway. It is a poor fit as a chat backend (it is an agent with file and command tools), so it is **not offered as a provider type**; it remains a developer tool.
+
+### 9.3 Privacy and retention
+
+- `AI-035` `[C]` Chat history is **deleted after 60 days** (sessions, messages, results, tool-call content) by a daily job; the UI says when a result expires. Non-content usage counters (requests, latency, model) may be kept for operations.
+- `AI-036` `[P]` A local gateway is not necessarily a local model. If the profile routes to cloud providers, aggregated tool results leave the server and that provider's data terms apply (free tiers and consumer subscriptions can differ from paid API terms). The admin decides which providers to use; a fully local model keeps data on the server.
+- Only aggregated results the user is allowed to see are sent to any model.
 
 ## 10. Testing and evaluation
 
@@ -190,10 +216,11 @@ stateDiagram-v2
 - **Boundary tests:** requests for tables or breakdowns that do not exist ("by product"), SQL, credentials, other users' chats: refused.
 - **Scope tests:** users with different principals/regions; out-of-scope requests; cache isolation.
 - **Adversarial tests:** prompt injection inside database text; forecasting and "why" questions.
-- **Gateway tests:** fallback disabled, compression off, model recorded; behavior when the gateway is down (clear message, no partial numbers).
+- **Provider settings tests:** key is never returned by any API or log; replace and delete work; activation requires a passed tool-calling test (override is audited); switching provider applies to the next question; model-mismatch warning is raised; behavior when the provider is down (clear message, no partial numbers).
+- **Adapter tests:** the same golden Q&A set passes through each adapter with a mock provider.
 - **Retention test:** items older than 60 days are removed; reopening an expired result says so.
 - **UI tests:** pop-up opens, hides on close/background/other menu, result stays in chat, reopens, refresh keeps history, keyboard and screen-reader behavior.
 
 ## 11. Open decisions
 
-DEC-040 (remaining: who may read chats), DEC-046 (data as-of source), DEC-047 (gateway choice, allowed upstream models, qualification). See `decisions.md`.
+DEC-040 (who may read chats), DEC-049 (where the encryption master key lives), DEC-050 (data-sharing acknowledgement). See `decisions.md`.

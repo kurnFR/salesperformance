@@ -41,7 +41,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ### Phase 7: AI Chat and Data Findings
 - Data Findings: checks, storage, sheet, indicators (`08-data-findings.md`). Can start earlier, after Phase 2, because it only needs source tables.
 - AI Chat: tool catalog over the existing services, verifier, pop-up UI, history, evaluation set (`07-ai-chat.md`). Needs DEC-047 (gateway and allowed upstream models) and DEC-046 (data as-of source) first.
-- Gateway checks: fallback off, compression off, pinned model recorded (`07-ai-chat.md` section 9).
+- AI provider settings: profiles, encrypted write-only API key, tests, activation, audit (`07-ai-chat.md` section 9).
 - **Exit:** golden Q&A parity with dashboards; adversarial and scope tests pass; findings tests pass.
 
 ### Phase 8: Production hardening
@@ -53,6 +53,16 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Only admin-created, enabled users can sign in; nothing is created automatically.
 - Users sign in with username and password, must change a temporary password at first login, and can change it later.
 - Repeated failures lock the account temporarily; resets and disables work; no password appears in logs.
+
+**Auto-refresh**
+- After an ETL run finishes, open dashboards and kiosk displays update without reload; the as-of time changes; caches never serve the previous version.
+- A failed or still-running ETL shows the previous completed as-of and does not change numbers mid-run.
+
+**MFA**
+- Admin can enable or disable MFA per user; an enabled user must enroll and then enter a code at every sign-in; recovery codes work once; admin reset works; users cannot disable their own MFA; all changes are audited.
+
+**AI provider settings**
+- Admin can add, edit, test, activate and delete provider profiles; the API key is never returned by any API or written to a log; switching provider applies to the next question; non-local providers require the data-sharing acknowledgement.
 
 **AI Chat**
 - Every number equals the dashboard service output or an exact `calculate` result; unavailable or out-of-scope data gets a plain "not available"; typos and ambiguous names trigger a confirmation; no causes, forecasts or tables outside the approved ones.

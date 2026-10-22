@@ -82,6 +82,8 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 |---|---|---|
 | `GET /api/health` | Liveness/readiness | Public |
 | `GET /api/me/access` | Signed-in user's capabilities and data scope (allowed principals, regions, dashboards); drives which buttons and filter options the UI shows | Authenticated |
+| `GET/POST/PUT/DELETE /api/admin/ai-providers`, `POST /api/admin/ai-providers/:id/test`, `PUT /api/admin/ai-settings` | AI provider profiles, API key (write-only), tests, global AI settings | `ai.settings.manage` |
+| `GET /api/data-version`, `GET /api/events` (server-sent events) | Current data version and as-of; push notice when a data refresh finishes | Authenticated |
 | `GET/POST/PUT /api/admin/roles`, `/api/admin/users/:id/roles`, `/api/admin/scopes` | Manage roles, capabilities, data scopes and user assignments | `access.manage` |
 | `GET /api/dashboards` | List dashboards | Viewer+ |
 | `GET /api/dashboards/:dashboardId` | Dashboard definition + active layout | Viewer+ |
@@ -97,7 +99,7 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | Asset list/upload | After storage is approved | Admin |
 | `POST /api/ai/chat`, `GET /api/ai/sessions`, `GET /api/ai/results/:id`, `POST /api/ai/results/:id/refresh` | AI data chat (`07-ai-chat.md`) | `ai.chat.use` |
 | `GET /api/findings`, `PUT /api/findings/:id` | Data findings (`08-data-findings.md`) | `findings.view` / `findings.manage` |
-| `POST /api/auth/login`, `POST /api/auth/change-password`, `POST /api/auth/logout` | Local login, password change, sign-out (Microsoft callback added only when that provider is) | Public / Authenticated |
+| `POST /api/auth/login`, `POST /api/auth/mfa/verify`, `POST /api/auth/mfa/enroll`, `PUT /api/admin/users/:id/mfa` (enable, disable, reset), `POST /api/auth/change-password`, `POST /api/auth/logout` | Local login, password change, sign-out (Microsoft callback added only when that provider is) | Public / Authenticated |
 
 Every endpoint documents purpose, permissions, filters, response fields, errors, cache policy and freshness. Never return SQL, connection strings, stack traces or internal sensitive identifiers.
 
@@ -178,7 +180,7 @@ sequenceDiagram
 
 ### 10.1 Model
 
-- **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
+- **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`, `ai.settings.manage`, `mfa.manage`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
 - **Filter policy per role:** each filter is `hidden`, `locked` (fixed to the role's scope value) or `editable` within the allowed values.
 - **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
 - **Data scope** is, per scope dimension, either `all` or an explicit list of values. Dimensions come from a registry: `principal`, `region`, `branch`, `dashboard` (extendable without changing route code).
@@ -246,12 +248,39 @@ flowchart TD
 - `AUTH-007` `[P]` Sessions use HttpOnly, Secure, SameSite cookies over HTTPS, CSRF protection, idle and absolute timeouts and sign-out; every sign-in, failure, lockout, password change and reset is audited without secrets.
 - `AUTH-008` `[P]` Kiosk displays use their own revocable credential (DEC-012), not a person's account.
 - `AUTH-009` `[D]` **Deferred:** Microsoft sign-in (Entra ID, OpenID Connect) needs a Microsoft administrator to register the app. When available, add a provider that links a user by tenant id and object id, still only for admin-created users. The `auth_identities` table is reserved for that.
-- `AUTH-010` `[O]` Since passwords are the only factor, decide on optional TOTP authenticator-app MFA for admin accounts (DEC-039).
+- `AUTH-010` `[C]` **MFA is configurable per user.** Admin opens a user and has an **Enable / Disable MFA** button. Only users who need MFA have it. When enabled, the user enrolls at the next sign-in (authenticator-app QR or key) and then enters a code after the password every time.
+- `AUTH-011` `[P]` MFA method: TOTP (authenticator app). Recovery codes shown once at enrollment; the admin can reset a user's MFA (lost phone) or disable it; users cannot disable their own MFA; MFA secrets are encrypted at rest; code attempts are rate-limited; enable, disable, enroll and reset are audited. Capability: `mfa.manage` (assignable per role). Other methods (for example passkeys) can be added later.
 
 ## 12. AI service boundary
 
-The AI chat (`07-ai-chat.md`) is a server module: `/api/ai/chat` builds the user's AccessContext, calls the model through an `LlmClient` (OpenAI-compatible chat with tool calls, pointed at the owner's local gateway or model server), validates tool arguments, runs the read-only tools through the same services and repositories as the dashboards, runs exact arithmetic in a `calculate` tool, verifies every number in the answer, and returns structured result blocks. The model has no database access of any kind. Model address, model name and key stay in server configuration. A daily job deletes chat data older than 60 days. Endpoints: `POST /api/ai/chat`, `GET /api/ai/sessions`, `GET /api/ai/results/:resultId`, `POST /api/ai/results/:resultId/refresh`.
+The AI chat (`07-ai-chat.md`) is a server module: `/api/ai/chat` builds the user's AccessContext, loads the **active provider profile** (settings, `07` section 9), calls the model through an `LlmClient` with the matching adapter (`openai-compatible`, `anthropic`, `gemini`), validates tool arguments, runs the read-only tools through the same services and repositories as the dashboards, runs exact arithmetic in a `calculate` tool, verifies every number in the answer, and returns structured result blocks. The model has no database access of any kind. Provider keys are stored encrypted in the database and decrypted only inside the server when a call is made; the master key comes from server secrets (DEC-049). A daily job deletes chat data older than 60 days. Endpoints: `POST /api/ai/chat`, `GET /api/ai/sessions`, `GET /api/ai/results/:resultId`, `POST /api/ai/results/:resultId/refresh`.
 
-## 13. Data freshness
+## 13. Data refresh and auto-update (DEC-046, DEC-048)
 
-Source data is refreshed **every night**, so the current month is always month-to-date as of the last refresh (`DASH-010`). Near-real-time refresh is planned for later. Every metric response carries `dataAsOf`; cache lifetimes and client polling come from configuration so the move to a faster refresh needs no code change (DEC-046).
+**Owner facts `[C]`:** an ETL loads data from the source systems, refreshes materialized views and runs stored procedures. A run takes **almost 3 hours** (nightly today). Dashboards must **update automatically** when data changes.
+
+**Design `[P]`:** react to the **end of a completed ETL run**, not to every row change. During a 3-hour run tables change constantly and may be half-updated, so row-level change detection would show inconsistent numbers and put load on the database.
+
+```mermaid
+sequenceDiagram
+  participant ETL as ETL job
+  participant DB as PostgreSQL
+  participant API as API server
+  participant UI as Browsers (dashboards, kiosks, AI results)
+  ETL->>DB: load tables, refresh materialized views, run procedures
+  ETL->>DB: final step: write refresh log row (finished, run id) and NOTIFY
+  DB-->>API: notification (LISTEN) or API poll of the log row
+  API->>API: bump dataVersion, set dataAsOf, clear caches
+  API-->>UI: server-sent event "data refreshed"
+  UI->>API: refetch current queries (cache invalidated)
+  UI->>UI: show updated data and new as-of time
+```
+
+- `OPS-004` `[C]` Dashboards, kiosk/playlist displays and open AI results update automatically after a refresh finishes, without a manual reload and without flicker (current view stays until new data arrives).
+- `OPS-005` `[P]` The ETL's final step writes one row to a refresh log (run id, started, finished, status) and issues `NOTIFY`. The app uses the log's finished time as `dataAsOf`. If `NOTIFY` is not possible, the API polls the log row every minute (cheap query). Fallback if no log can be added: a lightweight fingerprint query (latest period and row counts), `[O]`.
+- `OPS-006` `[P]` `dataVersion` is part of every cache key, so stale cached numbers are never served after a refresh. Cache lifetime is configuration.
+- `OPS-007` `[P]` While a run is in progress the UI may show "refresh in progress, data as of <previous completion>" (needs the log to record the start). Failed runs show the previous completed `dataAsOf` and a warning.
+- `OPS-008` `[P]` **Avoid read blocking:** a plain `REFRESH MATERIALIZED VIEW` locks readers for its duration. Prefer `REFRESH MATERIALIZED VIEW CONCURRENTLY` (needs a unique index on each view) so dashboards stay readable during the run. This is a database/ETL decision for the owner.
+- `OPS-009` `[P]` Data findings checks (`08-data-findings.md`) run after each completed refresh instead of on a fixed schedule.
+- `OPS-010` `[P]` A reopened AI result older than the current `dataVersion` shows "newer data available" with a Refresh action (`07` section 7).
+- Near-real-time later: the same event path works if refresh becomes incremental; the signal moves from "run finished" to "batch finished".

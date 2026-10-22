@@ -140,7 +140,27 @@ Maps each principal to its physical tables so no query code hard-codes `ina`/`as
 
 The ASW mapping table is `dwh_prod.v_sr_per_branch` (confirmed by the owner: a name without the `ina` suffix is ASW; each principal has its own region, branch and other data). `distaktif` currently holds **both** INA and ASW regions (owner, DEC-044) and will be split into separate tables later. Until then each principal reads it with a filter on that principal's region codes taken from its mapping table; after the split, only the registry entry changes (`table` becomes the principal's own table and `principalFilter` becomes `none`). Principal-specific row filters (for example the `distaktif` table is shared and filtered by region names) must be defined per approved mapping.
 
-### 2.7 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
+### 2.7 AI provider profile (`[P]`)
+
+```json
+{
+  "id": "prov-001",
+  "name": "Local gateway",
+  "adapter": "openai-compatible",
+  "baseUrl": "TBD (for example the local 9Router or OmniRoute address)",
+  "model": "TBD (typed or picked from the provider's list)",
+  "apiKey": { "stored": true, "last4": "TBD" },
+  "enabled": true,
+  "isActive": true,
+  "qualification": { "status": "passed", "testedAt": "TBD" },
+  "dataSharingAcknowledgedBy": "TBD",
+  "createdBy": "TBD"
+}
+```
+
+The API key is **never** returned: the API exposes only `stored` and `last4`. Adapter is one of `openai-compatible`, `anthropic`, `gemini`.
+
+### 2.8 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
 Every metric point carries what its tooltip needs, so the UI never recalculates:
 
@@ -189,6 +209,10 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.user_scope_overrides` | `user_id`, `dimension`, `add_json`, `remove_json` | Optional |
 | `app_config.principals` | `id`, `label`, `tables_json`, `enabled` | Principal registry (2.6) |
 | `app_config.users` | `id`, `display_name`, `sign_in_method` (`local` now; `microsoft` later), `enabled`, `created_by`, `created_at` | Created by admins only |
+| `app_config.user_mfa` | `user_id`, `enabled`, `method` (`totp`), `secret_encrypted`, `recovery_codes_hash`, `enrolled_at`, `reset_at` | Enabled or disabled per user by an admin |
+| `app_config.ai_provider_profiles` | `id`, `name`, `adapter`, `base_url`, `model`, `api_key_encrypted`, `key_last4`, `enabled`, `is_active`, `qualification_status`, `tested_at`, `acknowledged_by`, `created_by` | Key encrypted with a server master key (DEC-049) |
+| `app_config.ai_settings` | `enabled`, `temperature`, `max_tool_calls`, `rate_limit`, `retention_days` | Single row |
+| `app_config.etl_refresh_log` (proposed; may be owned by the ETL) | `run_id`, `started_at`, `finished_at`, `status` | Written by the ETL's final step; source of `dataAsOf` (DEC-048) |
 | `app_config.auth_identities` | `user_id`, `provider`, `tenant_id`, `object_id`, `account_hint`, `linked_at` | **Reserved for deferred Microsoft sign-in** (not used in release 1) |
 | `app_config.local_credentials` | `user_id`, `username`, `password_hash`, `must_change`, `failed_attempts`, `locked_until`, `changed_at` | Argon2id hash only |
 | `app_config.data_findings`, `data_finding_notes` | See `08-data-findings.md` section 3.1 | Findings and history |
@@ -251,6 +275,7 @@ Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Sal
 | Region list and order | Performance / Mapping: `REGIONCODE`, `REGIONNAME` | Region | Display order undefined (DEC-001) |
 | Team totals RSM/ASM/SPV/SE | Mapping: region, branch, area, `SLSNO` | Salesman | Derived; active flags undefined (DEC-028) |
 | Role achievement counts | Performance aggregated per entity per month; achieved when achievement >= working-day progress | Entity per month | Rule confirmed (DEC-021); DB verification pending |
+| Data refresh time (`dataAsOf`) | ETL refresh log (table name to be defined with the ETL owner, DEC-048); `finished_at` of the last successful run | Run | Proposed |
 | Working-day progress | `dimdate`: `dates`, `networkeddays`, `monthyear`; summed per month, no custom calendar | Date | Confirmed approach (DEC-027); verify 18 / 27 on 22-Oct-2026 |
 | Growth Sell In / Out | Performance, same month last year (12 months earlier) | Region per month | Derived from Tableau |
 | Active distributors per region | `distaktif`: `Total Aktif`, `TOTAL DIST`, `Bulan`; % = active / total | Region/area per month | Formula confirmed (DEC-024); DB verification pending |

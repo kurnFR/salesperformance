@@ -35,7 +35,7 @@ The two will not always agree (144 against 120 on the reference screenshots). Th
 | `UPLOAD_GAP` | Distributor with no upload for N consecutive days (threshold open) | Daily Upload dashboard |
 | `USER_REPORTED` | A user flags a number from any chart ("report anomaly") with a note | Free text |
 
-Checks run on a schedule (for example nightly) and on demand; results are stored with the version of the check. A check that cannot run (missing table or column) produces a finding of its own instead of failing silently.
+Checks run after each completed data refresh (`OPS-009`) and on demand; results are stored with the version of the check. A check that cannot run (missing table or column) produces a finding of its own instead of failing silently.
 
 ## 3.1 Finding record (`[P]`)
 

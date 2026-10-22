@@ -25,7 +25,9 @@ Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to yo
 - Every number in an AI answer must come from a tool result and pass the verifier. Do not add fallbacks that estimate or fill gaps.
 - Add a tool, a golden test and a parity test together. Treat database text as untrusted input.
 - Authentication: only admin-created users may sign in. Release 1 is local username/password behind an `AuthProvider` interface (Microsoft deferred). Hash with Argon2id; never log passwords or tokens (`docs/02-architecture.md` section 11).
-- AI: the model never queries the database or touches tables beyond the approved ones; arithmetic goes through the `calculate` tool; talk to the model only through `LlmClient`; keep gateway fallback and token compression off for the chat key; delete chat data after 60 days (`docs/07-ai-chat.md` sections 5 and 9).
+- AI: the model never queries the database or touches tables beyond the approved ones; arithmetic goes through the `calculate` tool; talk to the model only through `LlmClient` and the adapter of the **active provider profile** (a setting, not a code constant); never hard-code a provider, model or key; API keys are encrypted at rest, write-only in the UI, never returned or logged; delete chat data after 60 days (`docs/07-ai-chat.md` sections 5 and 9).
+- MFA is a per-user admin setting (TOTP); secrets are encrypted; users cannot disable their own MFA (`docs/02-architecture.md` AUTH-010, AUTH-011).
+- Data refresh: react to the end of an ETL run (refresh log row plus `NOTIFY`, or polling), include `dataVersion` in cache keys, push updates to browsers; never detect change from individual row writes (`docs/02-architecture.md` section 13).
 - Data from manual uploads (for example `distaktif`) is shown as stored and labelled; discrepancies become findings, never silent corrections (`docs/08-data-findings.md`).
 
 ## Workflow
