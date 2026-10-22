@@ -1,0 +1,16 @@
+Data Dictionary 		
+Principal	CSV File Name	Table Name
+INA	PerformanceINA.csv	dwh_prod.v_tsellinselloutina
+INA	MasterMappingEskaINA.csv	dwh_prod.v_sr_per_branchina
+INA	V_DateDim.csv	dwh_prod.dimdate
+INA	DistAktif	dwh_prod.distaktif
+INA	MasterDistINA.csv	dwh_prod.vt_sr_per_rsmina
+INA	DailyUploadStockEskaINA.csv	dwh_prod.mt_daily_updatestockina
+INA	DailyUploadEskaINA.csv	dwh_prod.mt_daily_updateina
+		
+ASW	V_DateDim.csv	dwh_prod.dimdate
+ASW	MasterDistASW.csv	dwh_prod.vt_sr_per_rsmasw
+ASW	DailyUploadEskaASW.csv	dwh_prod.mt_daily_updateasw
+ASW	DailyUploadStockEskaASW.csv	dwh_prod.mt_daily_updatestockasw
+ASW	PerformanceASW.csv	dwh_prod.v_tsellinselloutasw
+ASW	MasterMappingEskaASW.csv	dwh_prod.v_sr_per_branch
