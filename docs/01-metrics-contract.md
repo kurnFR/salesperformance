@@ -48,7 +48,8 @@ For each metric record: query location, query grain, filter behavior, and a test
 - `METRIC-011` `[O]` Define treatment of duplicate facts, inactive employees, missing region mapping, returns/negative sales, late-arriving or updated records.
 - `METRIC-012` `[P]` Date inputs are date-only in the business timezone, inclusive start and end, translated to a half-open timestamp range internally when source columns are timestamps.
 - `METRIC-013` `[C]` Compare unrounded values for all thresholds; round only the displayed label.
-- `METRIC-014` `[P]` Every metric response carries `dataAsOf` and `generatedAt`; stale or incomplete results show a warning.
+- `METRIC-014` `[P]` Every metric response carries `dataAsOf` (time of the last nightly refresh) and `generatedAt`; stale or incomplete results show a warning.
+- `METRIC-018` `[C]` Source data is **monthly**. The current month is **month-to-date as of the last nightly refresh**; there is no day-level data and no "last month to date". Comparing the in-progress month with a full month is not like-for-like and is labelled so.
 
 ## 4. Conditional bar colors (owner-confirmed)
 

@@ -14,7 +14,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ### Phase 1: Foundation
 - Monorepo, TypeScript strict, lint, test, CI; `AppShell`, sidebar, routing, theme provider, error boundaries, `/api/health`.
 - Repository interfaces with mock implementations; `fixtures/` and golden cases.
-- Authentication: admin-created users, Microsoft sign-in (Entra ID, OIDC) and local username/password with password change, using a development identity stub until the tenant is registered (DEC-038).
+- Authentication: admin-created local users (Argon2id, forced change of the temporary password, lockout, admin reset, change password) behind an `AuthProvider` interface. Microsoft sign-in is deferred.
 - Access-control foundation: `AccessContext`, capability catalog, scope-required repositories, `GET /api/me/access`, seed roles as data (`02-architecture.md` section 10). Use a development identity stub until DEC-007 is decided.
 - **Exit:** shell works in Chrome and Firefox; CI green; scope tests pass.
 
@@ -40,7 +40,8 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 
 ### Phase 7: AI Chat and Data Findings
 - Data Findings: checks, storage, sheet, indicators (`08-data-findings.md`). Can start earlier, after Phase 2, because it only needs source tables.
-- AI Chat: tool catalog over the existing services, verifier, pop-up UI, history, evaluation set (`07-ai-chat.md`). Needs DEC-040 (provider and data sharing) and DEC-041 (data grain) first.
+- AI Chat: tool catalog over the existing services, verifier, pop-up UI, history, evaluation set (`07-ai-chat.md`). Needs DEC-047 (gateway and allowed upstream models) and DEC-046 (data as-of source) first.
+- Gateway checks: fallback off, compression off, pinned model recorded (`07-ai-chat.md` section 9).
 - **Exit:** golden Q&A parity with dashboards; adversarial and scope tests pass; findings tests pass.
 
 ### Phase 8: Production hardening
@@ -49,12 +50,13 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ## 2. Acceptance criteria
 
 **Authentication**
-- Only admin-created, enabled users can sign in; an unknown Microsoft account is denied and nothing is auto-created.
-- Microsoft users sign in with their own account; local users sign in with username and password, must change a temporary password at first login, and can change it later.
+- Only admin-created, enabled users can sign in; nothing is created automatically.
+- Users sign in with username and password, must change a temporary password at first login, and can change it later.
 - Repeated failures lock the account temporarily; resets and disables work; no password appears in logs.
 
 **AI Chat**
-- Every number equals the dashboard service output; unavailable or out-of-scope data gets a plain "not available"; ambiguous names trigger a question; no causes or forecasts.
+- Every number equals the dashboard service output or an exact `calculate` result; unavailable or out-of-scope data gets a plain "not available"; typos and ambiguous names trigger a confirmation; no causes, forecasts or tables outside the approved ones.
+- "Month to date" requests get the monthly-data explanation and the refresh time; chat data older than 60 days is deleted.
 - Pop-up opens for visual answers, hides on close/background/other menu, stays in the chat, reopens on click.
 
 **Data Findings**

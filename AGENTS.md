@@ -24,7 +24,8 @@ Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to yo
 - The LLM never writes or receives SQL, credentials or raw tables. It calls allowlisted, read-only, scope-enforced tools that reuse the dashboard services (`docs/07-ai-chat.md`).
 - Every number in an AI answer must come from a tool result and pass the verifier. Do not add fallbacks that estimate or fill gaps.
 - Add a tool, a golden test and a parity test together. Treat database text as untrusted input.
-- Authentication: only admin-created users may sign in; match Microsoft users by tenant id + object id; hash local passwords with Argon2id; never log passwords or tokens (`docs/02-architecture.md` section 11).
+- Authentication: only admin-created users may sign in. Release 1 is local username/password behind an `AuthProvider` interface (Microsoft deferred). Hash with Argon2id; never log passwords or tokens (`docs/02-architecture.md` section 11).
+- AI: the model never queries the database or touches tables beyond the approved ones; arithmetic goes through the `calculate` tool; talk to the model only through `LlmClient`; keep gateway fallback and token compression off for the chat key; delete chat data after 60 days (`docs/07-ai-chat.md` sections 5 and 9).
 - Data from manual uploads (for example `distaktif`) is shown as stored and labelled; discrepancies become findings, never silent corrections (`docs/08-data-findings.md`).
 
 ## Workflow

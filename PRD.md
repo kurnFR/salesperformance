@@ -43,9 +43,10 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Period selection is **by month** (`DASH-003`, from Tableau).
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
-- **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-023`).
+- **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-036`).
 - **Data Findings** sheet lists anomalies to validate; manual-upload sources are labelled (`FIND-001`, `DASH-009`).
-- **Sign-in:** admin creates users; they sign in with their own Microsoft account, or with a username and password the admin creates (users can change it) (`AUTH-001` to `AUTH-009`).
+- **Sign-in:** admin creates users with a username and password; users can change their password after login. Microsoft sign-in is skipped for now (no Microsoft administrator) and can be added later (`AUTH-001` to `AUTH-010`).
+- **Freshness:** data is monthly and refreshed every night; the current month is month-to-date as of the last refresh and the refresh time is shown (`DASH-010`).
 
 ## 4. Goals and non-goals
 
@@ -80,7 +81,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - **Deny by default:** a user with no role or an empty scope sees nothing.
 - **Seed roles** for first use are ordinary editable rows (suggested: Viewer, Display (kiosk), Editor, Administrator); a technical administrator handles secrets and deployment outside the product UI.
 
-Design details: `docs/02-architecture.md` section 10; stored shapes: `docs/03-data-model.md` sections 2.5, 2.6 and 3. Sign-in is Microsoft account (admin-linked) or local username/password (DEC-007, `docs/02-architecture.md` section 11).
+Design details: `docs/02-architecture.md` section 10; stored shapes: `docs/03-data-model.md` sections 2.5, 2.6 and 3. Sign-in is admin-created local username/password in release 1; Microsoft sign-in is deferred (DEC-007, `docs/02-architecture.md` section 11).
 
 **Suggested seed capability sets** (`[P]`, editable by admins, shown only as a starting point):
 
@@ -114,7 +115,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
 | 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |
-| 7 | AI Chat and Data Findings | AI provider approval (DEC-040), data grain (DEC-041), findings thresholds (DEC-043) |
+| 7 | AI Chat and Data Findings | Gateway and allowed upstream models (DEC-047), data as-of source (DEC-046), findings thresholds (DEC-043) |
 | 8 | Production hardening | — |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
