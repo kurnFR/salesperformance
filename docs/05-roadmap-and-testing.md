@@ -7,8 +7,8 @@ Related: [`PRD.md`](../PRD.md) · [`decisions.md`](decisions.md)
 Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing requirement IDs.
 
 ### Phase 0: Discovery and data contract
-- Fill the source-mapping table (`03-data-model.md` section 4); obtain the Tableau workbook and the screenshot into `docs/reference/`.
-- Close blocking decisions in `decisions.md` (at least DEC-001 to DEC-004, DEC-006, DEC-007).
+- Verify the Tableau-derived columns in PostgreSQL (`03-data-model.md` section 4.6) and approve the mapping rows. The workbook, screenshots and table names are already in the repo.
+- Close blocking decisions in `decisions.md`: at least DEC-001 to DEC-004, DEC-006, DEC-020, DEC-021, DEC-027, DEC-028, DEC-030.
 - **Exit:** approved metric and API contracts; no guessed schema.
 
 ### Phase 1: Foundation
@@ -30,13 +30,19 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ### Phase 5: Playlist and presentation mode
 - Playlist admin, ordering, durations, rotation controller, kiosk mode, playback controls, kiosk authentication.
 
-### Phase 6: Additional sidebar dashboards
-- One at a time, each needing its own schema mapping, KPI definitions and acceptance examples.
+### Phase 6: Growth and upload dashboards, then further dashboards
+- Order: Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload. Each is built separately and needs its mapping rows approved and acceptance examples (`06-dashboard-catalog.md`).
+- Rolling 7-month window and growth logic (`GROW-001` to `GROW-008`) get unit tests including year-boundary windows (for example selected Mar-27) and zero last-year values.
+- Later dashboards follow the same rule: one at a time with approved schema, KPI definitions and examples.
 
 ### Phase 7: Production hardening
 - Security review, accessibility audit, performance/load tests, observability, backup/restore, deployment runbook, user acceptance testing, Tableau cut-over plan.
 
 ## 2. Acceptance criteria
+
+**All dashboards**
+- Every bar, card, growth point and grid cell has a keyboard-reachable tooltip showing target, real and % (growth also last-year and growth %) (`DASH-001`).
+- Month pickers drive all period filters (`DASH-003`).
 
 **First dashboard**
 - Date filters update all related widgets and reject invalid ranges.
@@ -46,6 +52,11 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Every row of the color test table passes; boundaries 69.99, 70, 99.99, 100 and above 100 are covered.
 - Region navigation works by mouse and keyboard.
 - Loading, empty, error and freshness states are understandable.
+
+**Growth and upload dashboards**
+- Window always equals the selected month and the 6 months before it, plus last year's same months; selecting the next month shifts it by one (`GROW-001`).
+- Growth equals the approved formula; closed months show growth, the current month does not; zero last-year shows n/a.
+- Upload cells match source rows (`Updated = 1`), and the row count equals the number of green cells.
 
 **Editor and themes**
 - View mode prevents accidental layout changes.

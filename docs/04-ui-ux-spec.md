@@ -2,7 +2,7 @@
 
 Related: [`PRD.md`](../PRD.md) · [`01-metrics-contract.md`](01-metrics-contract.md) · [`02-architecture.md`](02-architecture.md)
 
-Reference screenshot: `docs/reference/` (add it; it is evidence of arrangement only, not of schema or formulas).
+Reference screenshots: `docs/reference/` (four sheets; evidence of arrangement, colors and labels, not of schema or formulas). Per-dashboard layouts: [`06-dashboard-catalog.md`](06-dashboard-catalog.md).
 
 ## 1. Design principles
 
@@ -25,6 +25,11 @@ Reference screenshot: `docs/reference/` (add it; it is evidence of arrangement o
 - `UI-005` `[C]` Cancel stale requests; out-of-order responses never overwrite newer results.
 - `UI-006` `[P]` Shareable URL state where safe; reset-filters action.
 - `UI-007` `[C]` Filter changes update dependent cards and charts without a full page reload; loading, empty, stale and error states exist.
+- `UI-012` `[R]` Start/End period controls are **month pickers** (display "Oct-26"), not day pickers (`DASH-003`). Region and branch filters (Daily Upload) offer "All".
+- `UI-013` `[C]` **Tooltips** (`DASH-001`): on hover, keyboard focus and touch, every bar, card, growth point and grid cell shows target, real and % (growth: also last-year and growth %). Tooltips are reachable without a mouse, do not trap focus, and do not cover the element's own label. Content contract: `01-metrics-contract.md` section 7.
+- `UI-014` `[R]` Growth matrix: 5 region rows x 7 month columns, paired bars (last year, this year), growth line and arrow labels; month names rather than numbers; year shown per bar; horizontal scroll only inside the matrix on narrow screens.
+- `UI-015` `[R]` Daily Upload grid: sticky distributor column and day header; green Upload / orange Not Upload cells with a text or icon cue; future days blank; row count of upload days.
+- `UI-016` `[P]` Brand preset "Inafood dark" reproduces the Tableau look (navy gradient, orange outlines, logo); logo and backgrounds come from approved assets (the workbook contains `Logo Inafood.png` and background images; confirm usage rights before committing them).
 
 ### Theme and responsive
 - `UI-008` `[C]` Light, dark and system modes using shared design tokens.

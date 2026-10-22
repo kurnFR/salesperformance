@@ -8,9 +8,9 @@ This file is the short entry point: what we are building, why, for whom, and how
 
 ## 1. Summary
 
-Build a maintainable, responsive BI web application backed by the existing PostgreSQL database. Reproduce the supplied Tableau dashboard as the first view, then add configurable layouts, filters, light/dark themes, dashboard playlists and administration incrementally. It must work in current Chrome and Firefox and adapt to viewport changes.
+Build a maintainable, responsive BI web application backed by the existing PostgreSQL database. Reproduce the four supplied Tableau dashboards (Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload), then add configurable layouts, filters, light/dark themes, dashboard playlists and administration incrementally. It must work in current Chrome and Firefox and adapt to viewport changes.
 
-The owner will supply database tables and business definitions later. Until then: do not guess the production schema, do not create business tables, do not fabricate production metrics. Use typed contracts and clearly marked mock fixtures.
+The owner has supplied the source table names (`table_name`), the Tableau workbook and screenshots (`docs/reference/`). Column names are derived from the workbook and **must be verified in PostgreSQL** before use. Do not guess anything beyond that, do not create business tables, do not fabricate production metrics. Use typed contracts and clearly marked mock fixtures until each item's mapping is approved.
 
 ## 2. Problem and success measures
 
@@ -26,7 +26,23 @@ The owner will supply database tables and business definitions later. Until then
 | Critical/serious accessibility violations (axe) | 0 |
 | First dashboard LCP on a representative connection | <= 2.5 s |
 
-## 3. Goals and non-goals
+## 3. Dashboards in scope
+
+| # | Dashboard | Reference | What it shows | Spec |
+|---|---|---|---|---|
+| 1 | Sales Performance | `sheet1.png` | Team counts, role cards (RSM/ASM/SPV/DIST IN/OUT), Sell IN / Sell Out bars per region, working-day progress | `06` section 2 |
+| 2 | Growth Sell In | `sheet2-growth sell in.png` | Rolling 7 months, this year vs last year, per region, growth line | `06` section 3 |
+| 3 | Growth Sell Out | `sheet3-growth sell out.png` | Same layout using Sell Out | `06` section 3 |
+| 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
+
+**Cross-cutting requirements (owner-confirmed unless marked):**
+- Every chart element has a **tooltip** with target value, real value and % (`DASH-001`).
+- Growth dashboards always show a **rolling 7 months** ending at the selected month (default: current month); next month the window moves with it (`DASH-002`).
+- Period selection is **by month** (`DASH-003`, from Tableau).
+- **Principals:** INA and ASW exist in the data. Release 1 targets INA; contracts carry `principalId` (`DASH-004`, DEC-022).
+- Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
+
+## 4. Goals and non-goals
 
 **Goals**
 - Replace the Tableau dashboard using the existing PostgreSQL database as the source of truth.
@@ -44,7 +60,7 @@ The owner will supply database tables and business definitions later. Until then
 - Building every future dashboard in the first milestone.
 - Export (CSV/PNG/PDF), drill-through, annotations and alerting (candidates for later phases; confirm).
 
-## 4. Users and permissions
+## 5. Users and permissions
 
 | Role | Description |
 |---|---|
@@ -66,7 +82,7 @@ The owner will supply database tables and business definitions later. Until then
 
 Row-level data scope (for example, an RSM seeing only their own region) is an open decision: see `docs/decisions.md` (DEC-011).
 
-## 5. Requirement authority
+## 6. Requirement authority
 
 Every requirement carries a tag:
 
@@ -76,9 +92,9 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`.
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4).
 
-## 6. Roadmap at a glance
+## 7. Roadmap at a glance
 
 | Phase | Outcome | Needs from owner |
 |---|---|---|
@@ -88,7 +104,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 3 | Configurable achievement rules | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
-| 6 | More sidebar dashboards, one at a time | Per-dashboard schema + KPIs |
+| 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |
 | 7 | Production hardening | — |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
@@ -103,6 +119,8 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/06-dashboard-catalog.md` | The four dashboards: layout, widgets, tooltips, rolling window, per-dashboard requirements |
 | `docs/decisions.md` | Decision log with proposed defaults and status |
-| `docs/reference/` | Reference screenshot and Tableau artifacts |
+| `docs/reference/` | Screenshots, Tableau workbook, extracted Tableau formulas |
+| `table_name` | Data dictionary: CSV name to PostgreSQL table, per principal |
 | `AGENTS.md` | Rules and workflow for AI coding agents |

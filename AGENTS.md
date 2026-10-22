@@ -2,9 +2,16 @@
 
 Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to your task. Treat the specification as requirements, not proof that code, frameworks or schema exist. The repository may be empty apart from docs.
 
+## Where the facts are
+
+- Table names: `table_name` and `docs/03-data-model.md` section 4. Column names there are **derived from Tableau and unverified**; check `information_schema.columns` before writing SQL.
+- How Tableau calculates things today: `docs/reference/tableau-formula-extract.md` (evidence, not spec). The contract in `docs/01-metrics-contract.md` wins; conflicts are logged in `docs/decisions.md` (see DEC-020, DEC-021).
+- What each dashboard looks like: screenshots in `docs/reference/` and `docs/06-dashboard-catalog.md`.
+- Every chart element needs a tooltip with target, real and % (`DASH-001`). Growth dashboards use a rolling 7-month window (`DASH-002`). Periods are months (`DASH-003`). Carry `principalId` everywhere (`DASH-004`).
+
 ## Hard rules
 
-- Do not create or alter business tables, or guess table/column names, joins or formulas. Use mock repositories and `fixtures/` until the relevant source-mapping row in `docs/03-data-model.md` is `Approved`.
+- Do not create or alter business tables, or guess column names, joins or formulas beyond what `docs/03-data-model.md` states. Use mock repositories and `fixtures/` until the relevant mapping row (section 4.5) is `Approved`.
 - Do not apply `app_config` migrations until DEC-009 is confirmed.
 - Never commit secrets or real customer/sales data. Never hardcode production metrics, regions, headcounts, playlists or thresholds in presentation components.
 - Keep metric, working-day and threshold logic in tested domain/API code (`packages/dashboard-core`, API services), never duplicated in UI.

@@ -83,9 +83,12 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | `GET /api/health` | Liveness/readiness | Public |
 | `GET /api/dashboards` | List dashboards | Viewer+ |
 | `GET /api/dashboards/:dashboardId` | Dashboard definition + active layout | Viewer+ |
-| `GET /api/sales-performance/summary?startDate=&endDate=&regionId=` | Team totals, role cards | Viewer+ |
-| `GET /api/sales-performance/regions?startDate=&endDate=&regionId=` | Sell IN / Sell Out per region with statuses | Viewer+ |
-| `GET /api/calendar/working-day-progress?startDate=&endDate=&asOfDate=` | Working-day progress + metadata | Viewer+ |
+| `GET /api/sales-performance/summary?principalId=&startMonth=&endMonth=&regionId=` | Team totals, role cards | Viewer+ |
+| `GET /api/sales-performance/regions?principalId=&startMonth=&endMonth=&regionId=` | Sell IN / Sell Out per region with statuses | Viewer+ |
+| `GET /api/calendar/working-day-progress?month=&asOfDate=` | Working-day progress + metadata | Viewer+ |
+| `GET /api/sales-performance/growth?principalId=&month=&window=7&metric=sellIn\|sellOut` | Rolling-window growth matrix (`DASH-002`) | Viewer+ |
+| `GET /api/sales-performance/active-distributors?principalId=&month=` | Active / total distributors per region | Viewer+ |
+| `GET /api/uploads/daily?principalId=&month=&regionId=&branchId=&kind=sales\|stock` | Daily upload grid | Viewer+ |
 | `GET/PUT /api/settings/achievement-rules` | Rule set | Admin |
 | `GET/POST/PUT /api/playlists` | Playlists | Admin (read: Viewer+) |
 | `PUT /api/dashboards/:id/layout` with `If-Match: <version>` | Save layout (optimistic concurrency) | Editor+ |
@@ -98,8 +101,8 @@ Every endpoint documents purpose, permissions, filters, response fields, errors,
 ```json
 {
   "data": { },
-  "period": { "startDate": "2026-10-01", "endDate": "2026-10-31", "timezone": "TBD" },
-  "filtersApplied": { "regionId": "region-001" },
+  "period": { "startMonth": "2026-10", "endMonth": "2026-10", "timezone": "TBD" },
+  "filtersApplied": { "principalId": "INA", "regionId": null },
   "dataAsOf": "2026-10-21T23:00:00Z",
   "generatedAt": "2026-10-22T05:31:00Z",
   "warnings": [ { "code": "MISSING_TARGET", "scope": "region-002" } ]
