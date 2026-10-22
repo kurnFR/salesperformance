@@ -10,14 +10,14 @@ Related: [`PRD.md`](../PRD.md) · [`02-architecture.md`](02-architecture.md) · 
 |---|---|---|---|---|
 | METRIC-002 | Role total (RSM, ASM, SPV, SE) | Distinct entities at the role's level: RSM=region, ASM=branch, SPV=area, SE=`SLSNO` (see `03-data-model.md` 4.4) | `[R]` | Active flags, effective dates, SOA/SOI exclusion (DEC-028) |
 | METRIC-003 | Role headcount (card) | Distinct eligible people in role and scope | `[P]` | Same as above; DIST vs SE |
-| METRIC-004 | IN / OUT achieved count and % | `achieved_count / entity_count * 100`, where achieved = entity-level achievement >= working-day progress (screenshot-consistent) or >= 100% (earlier owner wording) | `[P]`, conflict (DEC-021) | Which threshold; IN = Sell IN? OUT = Sell Out? Denominator for entities without data |
+| METRIC-004 | IN / OUT achieved count and % | An entity is achieved when its achievement >= working-day progress (same as the bar's green condition 1). `achieved_count / entity_count * 100` | `[C]` | Denominator for entities without data (DEC-004) |
 | METRIC-005 | Sell IN achievement | `SUM(TOTALRealSellIn) / SUM(TOTALTargetSellIn) * 100` at the scope | `[R]` (Tableau) | Zero/missing target, unit (DEC-030) |
 | METRIC-006 | Sell Out achievement | `SUM(TOTALRealSellOut) / SUM(TOTALTargetSellOut) * 100` | `[R]` (Tableau) | Zero/missing target, unit |
 | METRIC-015 | Growth % (Sell IN / Sell Out) | `real(month, this year) / real(same month, last year) - 1` | `[R]` | Zero last-year handling (DEC-025) |
-| METRIC-016 | Active distributors per region | `Total Aktif / TOTAL DIST` from the active-distributor table | `[R]` | Meaning and resign handling (DEC-024) |
+| METRIC-016 | Active distributors per region | `SUM(Total Aktif) / SUM(TOTAL DIST) * 100` from `distaktif` for the month; also show "active / total" | `[C]` | Resign handling is inside the table columns |
 | METRIC-017 | Upload status per distributor per day | Upload when a row with `Updated = 1` exists for that day | `[R]` | Weekend/holiday, stock variant (DEC-026) |
 | METRIC-007 | Region scope | Approved region grouping and order | `[O]` | Keys, labels, hierarchy |
-| METRIC-008 | Working-day progress | `elapsed_working_days / total_working_days * 100`, capped to 0-100; elapsed excludes today (see 5.7) | `[C]` source & cap, `[R]` rule | Calendar columns, holidays, timezone (DEC-027) |
+| METRIC-008 | Working-day progress | `SUM(networkeddays elapsed) / SUM(networkeddays in month) * 100` from `dimdate`, capped to 0-100 | `[C]` | Whether today counts as elapsed (DEC-037) |
 | METRIC-009 | Display date | Current date in business timezone | `[P]` | Business timezone |
 
 **Aggregation rule:** aggregate actual and target at the intended scope first, then divide. Never average row-level percentages unless the owner defines it. Never join facts from different grains before aggregating without a documented safe strategy.
@@ -64,9 +64,9 @@ Inputs: `achievement` (unrounded %), `workingDayProgress` (unrounded %, server-c
 - `RULE-006` Thresholds, colors, boundary inclusivity and fallback are validated admin configuration (see [`03-data-model.md`](03-data-model.md#22-achievement-rule-set)); invalid saves are rejected and the last valid version stays active.
 - `RULE-007` Status is also exposed as text or icon, never color alone.
 - `RULE-008` `[R]` When working-day progress is 0, compare against a tiny epsilon (0.0001) so 0% achievement is not green (from Tableau `Color Working Days`). `[P]` pending confirmation (DEC-027).
-- `RULE-009` `[O]` Boundary at exactly 70%: the owner said 70% to 99% is yellow (inclusive); Tableau uses "greater than 70%" (exclusive). This contract uses inclusive 70 until confirmed (DEC-020).
+- `RULE-009` `[C]` Boundary: 70% up to 99% is yellow, so exactly 70% is **yellow** (inclusive). Tableau used "greater than 70%"; the app follows the owner.
 
-The Tableau formula for role bars (`%Capai RSM,ASM ColorSellIN`) is: green if achievement >= 100% or >= working-day progress; yellow if > 70%; else red. It matches the confirmed rule except for the 70% boundary.
+The Tableau formula for role bars (`%Capai RSM,ASM ColorSellIN`) is: green if achievement >= 100% or >= working-day progress; yellow if > 70%; else red. It matches the confirmed rule except for the 70% boundary, where the owner's rule wins.
 
 ```mermaid
 flowchart TD
@@ -146,14 +146,14 @@ sequenceDiagram
 ### 5.3 Role cards: RSM, ASM, SPV, DIST (or confirmed categories)
 Each card shows role total plus separate IN and OUT summaries.
 
-**Owner example `[C]`:** RSM (5), IN 20% / 1 means one of five RSMs is counted as achieved; 1/5*100 = 20%.
+**Confirmed rule `[C]` (DEC-021):** role cards use the **same rule as the bars**. An entity is *achieved* when its achievement >= working-day progress, which is exactly the bar's green condition 1. Because the rule is live, the count is not sticky: if tomorrow working-day progress rises above an entity's achievement, it stops being counted and the card number drops (for example RSM IN can go from 1 to 0).
 
-**What "achieved" means is in conflict** (DEC-021). The earlier wording said achievement >= 100%. The screenshot says otherwise: the highest region Sell IN is 77% (nobody reaches 100%), yet RSM IN shows 1 of 5, and Tableau has parallel "WD" calculations that flag an entity when achievement >= working-day progress (66.67% in the image, so only INA PULAU 1 at 77% qualifies). The RSM card (IN 1 of 5, OUT 0 of 5) can be cross-checked this way; the ASM, SPV and DIST cards cannot, because the image has no per-branch, per-area or per-distributor values, so they need a check against real data. **Proposed default `[P]`: achieved = entity achievement >= working-day progress**, pending owner confirmation.
+**Cross-check with the screenshot:** working-day progress 66.67%; only INA PULAU 1 Sell IN (77%) passes, so RSM IN = 1 of 5 = 20%; no Sell Out region passes, so RSM OUT = 0. The ASM, SPV and DIST cards cannot be cross-checked from the image (no per-branch, per-area or per-distributor values) and need a check against real data.
 
 ```
 entity_achievement = SUM(TOTALRealSellIn) / SUM(TOTALTargetSellIn)   (per entity, per month)   [OUT uses Sell Out]
-achieved_flag      = entity_achievement >= working_day_progress     (proposed; alt: >= 1.0)
-role_total         = distinct entities at the role's level in scope  (RSM=region, ASM=branch, SPV=area, DIST=selling point)
+achieved_flag      = entity_achievement >= working_day_progress
+role_total         = distinct entities at the role's level in the user's scope  (RSM=region, ASM=branch, SPV=area, DIST=selling point)
 in_achieved_count  = SUM(achieved_flag)
 in_achieved_pct    = in_achieved_count / role_total * 100            (multi-month: / (role_total * months))
 ```
@@ -162,9 +162,9 @@ in_achieved_pct    = in_achieved_count / role_total * 100            (multi-mont
 - Unknown achievement (missing target) is neither achieved nor failed; show data-quality context and apply the approved denominator policy (DEC-004).
 - Counts come from entity-level achievement values, not from an average role achievement.
 - Tableau evaluates the flag with a fixed level of detail per month and entity, then sums.
-- **Open:** whether SE appears on a card (the image shows DIST, header shows SE); DIST = selling point (DEC-002).
+- **Open:** whether SE appears on a card (the image shows DIST, header shows SE); DIST = selling point (DEC-002); DIST card total 144 vs active-distributor totals of 120 (DEC-034).
 
-**Acceptance tests:** 0/0, 0/5, 1/5, 5/5, missing target, exactly 100%.
+**Acceptance tests:** 0/0, 0/5, 1/5, 5/5, missing target, achievement exactly equal to working-day progress (counts), and a time-shift test: the same data with working-day progress moving from 66.67% to 70% changes RSM IN from 1 to 0.
 
 ### 5.4 Sell IN achievement bar
 `sell_in_achievement_pct = aggregated_sell_in_actual / aggregated_sell_in_target * 100` `[P]`. Displayed as whole percent on bars `[R]`. **Data needed:** grain, actual and target measures, period alignment, region mapping, exclusions, target changes over time, zero/missing policy. **Acceptance:** equals the independently calculated approved example; tooltip shows actual, target, period when approved for display.
@@ -183,15 +183,22 @@ Comes from the working-day table/calendar, **not** sales achievement `[C]`. Scre
 
 `working_day_progress_pct = clamp(elapsed_working_days / total_working_days_in_period * 100, 0, 100)`
 
-**Rule observed in Tableau `[R]`:**
-- Total = sum of `networkeddays` for all dates in the selected month.
-- Elapsed = sum of `networkeddays` for dates up to and including today, **minus 1** when the selected month is the current month (today is treated as not yet complete); for past months elapsed = total.
-- **Cross-check:** on 22-Oct-2026 the dashboard shows 66.67% = 18 / 27. October 2026 has 27 Monday-to-Saturday days; 19 of them fall on or before the 22nd, minus 1 for today gives 18. This suggests a **6-day working week with no holidays** in that month, to be confirmed against `dimdate` (`workingday(6)`, `holiday`, `networkeddays`).
-- When working-day progress is 0 (first day of month), Tableau substitutes 0.0001 for color comparisons so that 0% achievement is not shown as on-track (`Color Working Days`).
+**Source `[C]` (DEC-027):** the `dimdate` table already holds the calculated working-day value (`networkeddays`). The app **does not compute a calendar**; it sums that column for the selected month.
 
-**Proposed defaults** (DEC-027): elapsed = working days **strictly before today** (identical to Tableau when today is a working day, and correct when today is a Sunday or holiday, where Tableau's "minus 1" would undercount); past month 100%; future month 0%; zero working days in the month: unavailable.
+```
+total_working_days   = SUM(networkeddays) for dates in the selected month
+elapsed_working_days = SUM(networkeddays) for dates in the selected month before today   (current month)
+                       total_working_days                                                (past month)
+                       0                                                                 (future month)
+working_day_progress = clamp(elapsed / total * 100, 0, 100)
+```
 
-**UI:** circular indicator, percent, label "Working-day progress", as-of date, tooltip. Never described as achievement progress. **Acceptance:** 3 of 5 elapsed -> 60%; reproduces 18/27 = 66.67% for 22-Oct-2026 once the calendar is confirmed; weekends/holidays; first/last day; future dates; zero working days.
+- Holidays and weekends are whatever `dimdate` says; the app has no calendar rules of its own.
+- **Reference in Tableau `[R]`:** elapsed = sum for dates up to today, minus 1 for the current month (today is treated as incomplete). On 22-Oct-2026 the dashboard shows 66.67% = 18 / 27. "Before today" reproduces this whenever today is a working day; verify the 18 / 27 result against the real `dimdate` rows (DEC-037).
+- Zero total working days: unavailable.
+- When progress is 0 (first day of the month), color comparisons use a tiny epsilon (0.0001) so 0% achievement is not green (`RULE-008`, from Tableau `Color Working Days`).
+
+**UI:** circular indicator, percent, label "Working-day progress", as-of date, tooltip. Never described as achievement progress. **Acceptance:** 3 of 5 elapsed -> 60%; reproduces 18/27 = 66.67% for 22-Oct-2026 from real `dimdate` rows; first/last day; past, current and future months; zero working days.
 
 ### 5.8 Display date and refresh metadata
 - `[P]` Use the configured business timezone for the display date, not the browser's.
@@ -235,3 +242,7 @@ Every tooltip (mouse hover, keyboard focus, touch long-press) shows:
 | Status | Text of the color status (for example "Behind pace") |
 
 Growth points add last-year real, this-year real and growth %. Missing values read "unavailable". The tooltip values come from the same DTO as the bar, never recalculated in the UI. Unit and currency formatting: DEC-030.
+
+## 8. Scope applies to every metric (DEC-011, DEC-036)
+
+Every number is computed **inside the signed-in user's data scope** (allowed principals, regions and other scoped filters; see `02-architecture.md` section 10). A user limited to one region sees team totals, role cards, bars and active-distributor figures for that region only. Working-day progress is the same for everyone. A user cannot request data outside their scope by editing a URL or parameter; the server rejects or filters it.

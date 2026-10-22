@@ -14,14 +14,16 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ### Phase 1: Foundation
 - Monorepo, TypeScript strict, lint, test, CI; `AppShell`, sidebar, routing, theme provider, error boundaries, `/api/health`.
 - Repository interfaces with mock implementations; `fixtures/` and golden cases.
-- **Exit:** shell works in Chrome and Firefox; CI green.
+- Access-control foundation: `AccessContext`, capability catalog, scope-required repositories, `GET /api/me/access`, seed roles as data (`02-architecture.md` section 10). Use a development identity stub until DEC-007 is decided.
+- **Exit:** shell works in Chrome and Firefox; CI green; scope tests pass.
 
 ### Phase 2: First read-only Sales Performance dashboard
 - Filters, team totals, role cards, region navigation, Sell IN/Sell Out chart, working-day indicator, display date, freshness.
 - Connect PostgreSQL only after the relevant mapping rows are `Approved`.
 - **Exit:** outputs match owner-validated examples and Tableau parity samples.
 
-### Phase 3: Configurable achievement rules
+### Phase 3: Configurable achievement rules and access admin
+- Admin screens for roles, capabilities, scopes and user assignments (`UI-019`), with audit.
 - Admin settings, validation, preview, persistence, versioning, boundary tests from the color table.
 
 ### Phase 4: Dashboard editor
@@ -39,6 +41,12 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Security review, accessibility audit, performance/load tests, observability, backup/restore, deployment runbook, user acceptance testing, Tableau cut-over plan.
 
 ## 2. Acceptance criteria
+
+**Access control**
+- A user limited to INA cannot read ASW data by any request; a user limited to one region sees only that region everywhere, including totals and cards.
+- A user with full access sees both principals and switches with the buttons.
+- Roles, capabilities and scopes can be changed in the admin screen without a deploy, and the change takes effect within the documented window.
+- No role, principal, region or table name is hard-coded in the web or API code.
 
 **All dashboards**
 - Every bar, card, growth point and grid cell has a keyboard-reachable tooltip showing target, real and % (growth also last-year and growth %) (`DASH-001`).
@@ -96,7 +104,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 1. **Pure unit:** formulas, threshold evaluation, date normalization, layout validation, playlist transitions.
 2. **Repository/query:** approved SQL against a test database or controlled fixtures; validate grain and filters; double-counting test per metric.
 3. **Component:** filters, KPI states, chart fallback, editor controls, settings forms.
-4. **API:** schema validation, permissions, error shape, response contracts.
+4. **API and authorization:** schema validation, error shape, response contracts; for every endpoint, tests with users of different roles and scopes (out-of-scope principal or region, empty scope, full access, scope change, cache isolation between scopes).
 5. **Browser E2E (Playwright, Chromium + Firefox):** date filters, region switching, theme, sidebar resize, edit/save/reload, playlist timing and controls.
 6. **Accessibility:** automated axe plus manual keyboard and screen-reader review.
 7. **Visual regression (optional):** after the visual design is agreed, using stable fixtures.

@@ -89,7 +89,53 @@ Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must e
 { "principalId": "INA", "startMonth": "2026-10", "endMonth": "2026-10", "regionId": null, "branchId": null, "timezone": "TBD" }
 ```
 
-### 2.5 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
+### 2.5 Access policy (role, capabilities, scope) (`[P]`)
+
+```json
+{
+  "schemaVersion": 1,
+  "roleId": "role-asw-west",
+  "name": "ASW regional viewer",
+  "capabilities": ["dashboard.view"],
+  "scope": {
+    "principal": { "mode": "list", "values": ["ASW"] },
+    "region":    { "mode": "list", "values": ["TBD-region-key-1", "TBD-region-key-2"] },
+    "dashboard": { "mode": "all" }
+  }
+}
+```
+
+Full-access example: `"principal": { "mode": "all" }, "region": { "mode": "all" }`. Capability names are validated against the code's capability catalog; scope values are validated against known data values on save. User assignment: `{ "userId": "...", "roleIds": ["..."], "overrides": { "region": { "add": [], "remove": [] } } }`.
+
+### 2.6 Principal registry (`[P]`)
+
+Maps each principal to its physical tables so no query code hard-codes `ina`/`asw` names. Table names are allowlisted and come from the owner-approved data dictionary.
+
+```json
+{
+  "principals": [
+    { "id": "INA", "label": "INA", "tables": {
+        "performance": "dwh_prod.v_tsellinselloutina",
+        "mapping": "dwh_prod.v_sr_per_branchina",
+        "masterDistributor": "dwh_prod.vt_sr_per_rsmina",
+        "activeDistributors": "dwh_prod.distaktif",
+        "dailyUpload": "dwh_prod.mt_daily_updateina",
+        "dailyStockUpload": "dwh_prod.mt_daily_updatestockina" } },
+    { "id": "ASW", "label": "ASW", "tables": {
+        "performance": "dwh_prod.v_tsellinselloutasw",
+        "mapping": "dwh_prod.v_sr_per_branch",
+        "masterDistributor": "dwh_prod.vt_sr_per_rsmasw",
+        "activeDistributors": "TBD (DEC-035)",
+        "dailyUpload": "dwh_prod.mt_daily_updateasw",
+        "dailyStockUpload": "dwh_prod.mt_daily_updatestockasw" } }
+  ],
+  "sharedTables": { "dateDimension": "dwh_prod.dimdate" }
+}
+```
+
+The ASW mapping table name and the ASW active-distributor table are unconfirmed (DEC-035). Principal-specific row filters (for example the `distaktif` table is shared and filtered by region names) must be defined per approved mapping.
+
+### 2.7 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
 Every metric point carries what its tooltip needs, so the UI never recalculates:
 
@@ -131,7 +177,13 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.playlists` | `id`, `name`, `enabled`, `default_duration_seconds`, `on_load_failure` | |
 | `app_config.playlist_items` | `playlist_id`, `dashboard_id`, `position`, `duration_seconds`, `enabled` | FK to dashboards |
 | `app_config.assets` | `id`, `storage_key`, `mime_type`, `size_bytes`, `width`, `height`, `created_by` | Approved storage only |
-| `app_config.audit_events` | `id`, `actor`, `action`, `target`, `summary_json`, `created_at` | Safe summaries only, no secrets |
+| `app_config.roles` | `id`, `name`, `description`, `is_system`, `created_at` | Admin-managed; seed roles are normal rows |
+| `app_config.role_capabilities` | `role_id`, `capability` | Capability validated against the code catalog |
+| `app_config.role_scopes` | `role_id`, `dimension`, `mode` (`all`/`list`), `values_json` | One row per dimension per role |
+| `app_config.user_roles` | `user_id`, `role_id` | `user_id` from the identity provider (DEC-007) |
+| `app_config.user_scope_overrides` | `user_id`, `dimension`, `add_json`, `remove_json` | Optional |
+| `app_config.principals` | `id`, `label`, `tables_json`, `enabled` | Principal registry (2.6) |
+| `app_config.audit_events` | `id`, `actor`, `action`, `target`, `summary_json`, `created_at` | Safe summaries only, no secrets; includes permission changes |
 
 Requirements if approved: explicit migrations with constraints, indexes and rollback notes; keep revision history for shared layouts and rules; validate referenced dashboards exist before publishing; never silently overwrite a newer revision.
 
@@ -147,7 +199,7 @@ Source of table names: the repository file `table_name`. Column lists come from 
 | Mapping (org + salesman) | `dwh_prod.v_sr_per_branchina` | `dwh_prod.v_sr_per_branch` (no `asw` suffix; confirm, DEC-022) | Region, branch, area, selling point, salesman (SE) |
 | Master distributor | `dwh_prod.vt_sr_per_rsmina` | `dwh_prod.vt_sr_per_rsmasw` | Distributor hierarchy; join target for upload data |
 | Date dimension | `dwh_prod.dimdate` | `dwh_prod.dimdate` (shared) | Calendar and working days |
-| Active distributors | `dwh_prod.distaktif` | not listed (confirm) | Total / resigned / active distributors per region and month |
+| Active distributors | `dwh_prod.distaktif` | not listed (confirm, DEC-035) | Total / resigned / active distributors per region and month |
 | Daily upload | `dwh_prod.mt_daily_updateina` | `dwh_prod.mt_daily_updateasw` | Daily upload log per selling point |
 | Daily stock upload | `dwh_prod.mt_daily_updatestockina` | `dwh_prod.mt_daily_updatestockasw` | Daily stock upload log |
 
@@ -188,10 +240,10 @@ Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Sal
 | Sell Out actual and target | Performance: `TOTALRealSellOut`, `TOTALTargetSellOut` | Selling point per month | Derived from Tableau; DB verification pending |
 | Region list and order | Performance / Mapping: `REGIONCODE`, `REGIONNAME` | Region | Display order undefined (DEC-001) |
 | Team totals RSM/ASM/SPV/SE | Mapping: region, branch, area, `SLSNO` | Salesman | Derived; active flags undefined (DEC-028) |
-| Role achievement counts | Performance aggregated per entity per month, compared to threshold | Entity per month | Rule disputed (DEC-021) |
-| Working-day progress | Date dimension: `dates`, `networkeddays`, `monthyear` | Date | Derived; verify calendar (DEC-027) |
+| Role achievement counts | Performance aggregated per entity per month; achieved when achievement >= working-day progress | Entity per month | Rule confirmed (DEC-021); DB verification pending |
+| Working-day progress | `dimdate`: `dates`, `networkeddays`, `monthyear`; summed per month, no custom calendar | Date | Confirmed approach (DEC-027); verify 18 / 27 on 22-Oct-2026 |
 | Growth Sell In / Out | Performance, same month last year (12 months earlier) | Region per month | Derived from Tableau |
-| Active distributors per region | Active distributors: `TOTAL DIST`, `Total Aktif`, `Total Resign`, `Bulan` | Region/area per month | Derived; meaning to confirm (DEC-024) |
+| Active distributors per region | `distaktif`: `Total Aktif`, `TOTAL DIST`, `Bulan`; % = active / total | Region/area per month | Formula confirmed (DEC-024); DB verification pending |
 | Daily upload status | Daily upload: `INVOICE_DATE`, `Updated`, `KOTA`; join Master distributor on `KOTA` | Selling point per day | Derived; stock variant open (DEC-026) |
 
 An item is ready for production use only when its row is `Approved` and has a verified example (definition of ready in `05-roadmap-and-testing.md`). Until then it uses mock fixtures.

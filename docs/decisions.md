@@ -12,6 +12,12 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-005a | Working-day progress is capped to 0-100% on the server | 2026-10-22 | `01-metrics-contract.md` 5.7 |
 | DEC-005b | Working-day progress comes from the working-day table/calendar, not sales achievement | Earlier (owner) | `01-metrics-contract.md` 5.7 |
 | DEC-005c | Role card example: RSM (5), IN 20% / 1 = one of five counted as achieved. The threshold behind "achieved" is now disputed: see DEC-021 | Earlier (owner) | `01-metrics-contract.md` 5.3 |
+| DEC-020 | 70% up to 99% is yellow (70% inclusive) | 2026-10-22 (owner) | `01` RULE-009 |
+| DEC-021 | Role cards use the **same rule as the bars**: an entity is "achieved" when achievement >= working-day progress (bar condition 1). The count is live: when working-day progress rises above an entity's achievement it stops counting (for example RSM IN goes from 1 to 0) | 2026-10-22 (owner) | `01` 5.3, `06` PERF-002 |
+| DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
+| DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
+| DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
+| DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -32,11 +38,10 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 | ID | Question | Proposed default | Blocks | Status |
 |---|---|---|---|---|
-| DEC-007 | Identity provider for users | Organization SSO via OIDC if available; otherwise local accounts behind HTTPS; dev uses a stub role switcher | Phase 4 | Open |
+| DEC-007 | Identity provider and user provisioning (permissions key off its stable user id) | Organization SSO via OIDC if available; otherwise local accounts behind HTTPS; development uses a stub identity | Production release (stub until then) | Open |
 | DEC-008 | Hosting and approved image storage | Single container deployment; curated server-side asset library in v1 (no arbitrary uploads) | Phase 4 | Open |
 | DEC-009 | Where app-owned config lives | Separate `app_config` schema in the same PostgreSQL, created by migrations (`03-data-model.md` section 3) | Phase 3 | Proposed |
 | DEC-010 | Do filters persist across rotation or per dashboard? | Period filter shared; other filters per dashboard | Phase 5 | Proposed |
-| DEC-011 | Row-level data scope per user (for example an RSM sees only their region) | No row-level scope in v1; all viewers see all regions | Phase 2 | Open |
 | DEC-012 | Kiosk display authentication | Dedicated long-lived read-only display token, revocable by admin | Phase 5 | Proposed |
 | DEC-013 | UI language, number/date formatting, single vs multiple timezones across regions | Single business timezone; language confirmed by owner | Phase 1 | Open |
 | DEC-014 | Data refresh cadence, staleness threshold, caching, read replica or materialized views | Query on demand with short server cache (60 s); stale after 2x source cadence | Phase 2 | Proposed |
@@ -50,14 +55,18 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 | ID | Question | Evidence | Proposed default | Blocks | Status |
 |---|---|---|---|---|---|
-| DEC-020 | Is exactly 70% yellow or red? | Owner: 70% to 99% yellow. Tableau: "> 70%" yellow | Inclusive (70% is yellow) | Phase 2 tests | Proposed |
-| DEC-021 | Role-card "achieved" threshold: >= 100% or >= working-day progress | Screenshot: RSM IN 1 of 5 with max region 77%; Tableau has WD variants | >= working-day progress | Phase 2 | Open (important) |
-| DEC-022 | Principals: INA and ASW. Scope of release 1? ASW has 6 regions (adds SUMATERA 3); ASW mapping table is `v_sr_per_branch` without suffix; no ASW active-distributor table listed | Data dictionary, Tableau parameters | INA only in release 1; `principalId` in all contracts | Phase 2 | Proposed |
 | DEC-023 | Growth bar colors: this-year bars green/yellow, last-year bars green/red. Exact rule | Tableau `ColorSellIN -1` and `LY` formulas | Observed behavior (`06` GROW-005) | Growth phase | Open |
-| DEC-024 | Sheet 2 region cards "30 / 31 (97%)": meaning | Likely active / total distributors from `distaktif`. Sheet 3 shows role cards instead | Active / total distributors per region; confirm sheet 3 | Growth phase | Open |
 | DEC-025 | Growth with zero last-year value; hide growth for in-progress month | Tableau uses `ZN` and a closing-month filter | "n/a" when last-year is 0; hide for current month | Growth phase | Proposed |
 | DEC-026 | Daily Upload: row key (selling point vs city), day count, weekend/holiday, stock-upload variant, vacant rows | Screenshot 4 and workbook | Row = selling point; weekends neutral; stock variant as a toggle | Upload phase | Open |
-| DEC-027 | Working-day rule: today excluded; 6-day week; holidays; zero progress epsilon | 18 / 27 = 66.67% on 22-Oct-2026 suggests Mon to Sat, today excluded | Elapsed = working days strictly before today; verify with `dimdate` | Phase 2 | Proposed |
 | DEC-028 | SE definition: distinct `SLSNO`; exclude codes containing SOA/SOI? Use `FLAG_AKTIF`, `BranchActiveFlag`, `SLSTP`? | Workbook fields | Distinct `SLSNO`, active only, SOA/SOI excluded when owner confirms | Phase 2 | Open |
 | DEC-029 | Multi-month range: denominators for role counts (entities x months), or single month only | Tableau formula | Allow month ranges; denominator entities x months | Phase 2 | Open |
 | DEC-030 | Unit and currency of target/real (value or quantity), thousands format, abbreviation in tooltips | `TOTAL...` fields are integers; unit unknown | Show raw integers with thousands separators; unit per owner | Phase 2 | Open |
+
+## Follow-ups created by the owner's answers
+
+| ID | Question | Evidence | Proposed default | Blocks | Status |
+|---|---|---|---|---|---|
+| DEC-034 | DIST card shows 144 but the active-distributor totals on sheet 2 add up to 120 (31+25+35+16+13). Which source and filter defines the DIST card total? | Screenshots | DIST card = selling points from the mapping table; active % from `distaktif`; document both | Phase 2 | Open |
+| DEC-035 | ASW details: confirm mapping table (`v_sr_per_branch`), active-distributor table for ASW (none listed), region list (Tableau shows six incl. SUMATERA 3), and that ASW uses the same four dashboards | Data dictionary, workbook | Same dashboards; regions read from data; ASW table names in the principal registry | ASW build | Open |
+| DEC-036 | Scope dimensions beyond principal and region (branch/area, dashboard visibility) and whether totals/cards inside a dashboard are computed within the user's scope | Owner: "all filters like region" | Scope dimensions are a registry (principal, region, branch, dashboard); all totals and cards are computed within the user's scope | Phase 1 | Proposed |
+| DEC-037 | Working day "today": whether today counts as elapsed. Tableau excludes today (18 of 27 on 22-Oct-2026) | Workbook, screenshot | Sum `networkeddays` for dates before today within the month; verify it reproduces 66.67% | Phase 2 | Proposed |

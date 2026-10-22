@@ -25,6 +25,9 @@ Reference screenshots: `docs/reference/` (four sheets; evidence of arrangement, 
 - `UI-005` `[C]` Cancel stale requests; out-of-order responses never overwrite newer results.
 - `UI-006` `[P]` Shareable URL state where safe; reset-filters action.
 - `UI-007` `[C]` Filter changes update dependent cards and charts without a full page reload; loading, empty, stale and error states exist.
+- `UI-017` `[C]` Principal buttons (ASW, INA) in the top bar. Only allowed principals appear; a single allowed principal is preselected and shown as a label. Switching principal reloads data and resets filters whose values belong to the other principal.
+- `UI-018` `[C]` Region, branch and similar filters list only the user's allowed values; a single allowed value is preselected. If a saved link or playlist points outside the user's scope, show a clear "not available for your access" state, not an empty chart.
+- `UI-019` `[C]` Admin access screen: manage roles, capabilities, data scopes (`all` or a list per dimension) and user assignments; shows an effective-access preview for a chosen user; confirms destructive changes.
 - `UI-012` `[R]` Start/End period controls are **month pickers** (display "Oct-26"), not day pickers (`DASH-003`). Region and branch filters (Daily Upload) offer "All".
 - `UI-013` `[C]` **Tooltips** (`DASH-001`): on hover, keyboard focus and touch, every bar, card, growth point and grid cell shows target, real and % (growth: also last-year and growth %). Tooltips are reachable without a mouse, do not trap focus, and do not cover the element's own label. Content contract: `01-metrics-contract.md` section 7.
 - `UI-014` `[R]` Growth matrix: 5 region rows x 7 month columns, paired bars (last year, this year), growth line and arrow labels; month names rather than numbers; year shown per bar; horizontal scroll only inside the matrix on narrow screens.

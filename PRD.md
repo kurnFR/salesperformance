@@ -39,7 +39,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Every chart element has a **tooltip** with target value, real value and % (`DASH-001`).
 - Growth dashboards always show a **rolling 7 months** ending at the selected month (default: current month); next month the window moves with it (`DASH-002`).
 - Period selection is **by month** (`DASH-003`, from Tableau).
-- **Principals:** INA and ASW exist in the data. Release 1 targets INA; contracts carry `principalId` (`DASH-004`, DEC-022).
+- **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
 
 ## 4. Goals and non-goals
@@ -50,37 +50,39 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Keep metric definitions consistent, server-calculated and testable.
 - Let authorised editors add/remove widgets, drag and resize, edit text, and set backgrounds.
 - Let admins configure achievement thresholds/colors without code changes.
+- Let admins define roles, capabilities and data scopes (principal, region, other filters) per user, without code changes.
 - Provide an admin-managed playlist that rotates dashboards automatically (default 10 s each).
 - Build each sidebar dashboard incrementally on shared components and a shared design system.
 
 **Non-goals for the first release**
 - Replacing PostgreSQL or changing its business schema.
+- Hard-coded roles, principals or regions anywhere in code (all come from admin-managed configuration or data).
 - Guessing joins, column names, KPI formulas or role-label meanings.
 - A general-purpose arbitrary SQL editor.
 - Building every future dashboard in the first milestone.
 - Export (CSV/PNG/PDF), drill-through, annotations and alerting (candidates for later phases; confirm).
 
-## 5. Users and permissions
+## 5. Users, roles and permissions (configurable)
 
-| Role | Description |
-|---|---|
-| Viewer | View dashboards, use permitted filters, inspect values, use presentation mode |
-| Display (kiosk) `[P]` | Unattended screen showing a playlist; read-only; long-lived display credential |
-| Editor | Viewer + add/remove/move/resize widgets, edit text/appearance, preview, save layouts |
-| Administrator | Editor + manage dashboards, achievement rules, backgrounds, playlists, order, durations, access |
-| Technical administrator | Secrets, deployment, PostgreSQL connectivity, monitoring (no product UI rights implied) |
+**Nothing about access is hard-coded** (DEC-011, DEC-022). Admins define roles in an admin screen; each role has capabilities and a data scope; each user gets one or more roles.
 
-**Permission matrix** (`[P]`; enforced on the server, never only by hiding UI):
+- **Principal:** ASW and INA buttons in the web. A user sees only the principals their role allows. Only users granted full access can use both.
+- **Filters such as region:** each user is allowed one region, several, or all, set by admin. The same mechanism covers other filters (branch, dashboard visibility).
+- **Capabilities** (what a role may do) are checked by the server: view dashboards, edit layouts, manage achievement rules, manage playlists/assets, manage access. Which role holds which capability is data.
+- **All numbers** (team totals, cards, bars, active distributors) are computed inside the user's scope.
+- **Deny by default:** a user with no role or an empty scope sees nothing.
+- **Seed roles** for first use are ordinary editable rows (suggested: Viewer, Display (kiosk), Editor, Administrator); a technical administrator handles secrets and deployment outside the product UI.
 
-| Capability | Viewer | Display | Editor | Admin | Tech admin |
-|---|:-:|:-:|:-:|:-:|:-:|
-| View dashboards / change permitted filters | Yes | Yes | Yes | Yes | — |
-| Presentation mode / playlist playback | Yes | Yes | Yes | Yes | — |
-| Edit layouts, text, widgets | — | — | Yes | Yes | — |
-| Achievement rules, playlists, assets, access | — | — | — | Yes | — |
-| Secrets, DB connection, deployment | — | — | — | — | Yes |
+Design details: `docs/02-architecture.md` section 10; stored shapes: `docs/03-data-model.md` sections 2.5, 2.6 and 3. Identity provider and user provisioning are still open (DEC-007).
 
-Row-level data scope (for example, an RSM seeing only their own region) is an open decision: see `docs/decisions.md` (DEC-011).
+**Suggested seed capability sets** (`[P]`, editable by admins, shown only as a starting point):
+
+| Capability | Viewer | Display | Editor | Administrator |
+|---|:-:|:-:|:-:|:-:|
+| `dashboard.view`, change permitted filters, presentation mode | Yes | Yes | Yes | Yes |
+| `layout.edit` (widgets, text, backgrounds) | - | - | Yes | Yes |
+| `rules.manage`, `playlist.manage`, `assets.manage` | - | - | - | Yes |
+| `access.manage` (roles, scopes, users) | - | - | - | Yes |
 
 ## 6. Requirement authority
 

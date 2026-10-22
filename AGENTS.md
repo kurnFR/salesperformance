@@ -13,6 +13,7 @@ Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to yo
 
 - Do not create or alter business tables, or guess column names, joins or formulas beyond what `docs/03-data-model.md` states. Use mock repositories and `fixtures/` until the relevant mapping row (section 4.5) is `Approved`.
 - Do not apply `app_config` migrations until DEC-009 is confirmed.
+- Never hard-code roles, principals, regions, user names or physical table names in code or UI. They come from admin-managed configuration, the principal registry and data. Every repository call requires a scope argument; every endpoint checks capability and scope on the server.
 - Never commit secrets or real customer/sales data. Never hardcode production metrics, regions, headcounts, playlists or thresholds in presentation components.
 - Keep metric, working-day and threshold logic in tested domain/API code (`packages/dashboard-core`, API services), never duplicated in UI.
 - Do not merge or deploy without explicit authorization.

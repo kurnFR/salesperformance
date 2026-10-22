@@ -81,6 +81,8 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | Method and path | Purpose | Permission |
 |---|---|---|
 | `GET /api/health` | Liveness/readiness | Public |
+| `GET /api/me/access` | Signed-in user's capabilities and data scope (allowed principals, regions, dashboards); drives which buttons and filter options the UI shows | Authenticated |
+| `GET/POST/PUT /api/admin/roles`, `/api/admin/users/:id/roles`, `/api/admin/scopes` | Manage roles, capabilities, data scopes and user assignments | `access.manage` |
 | `GET /api/dashboards` | List dashboards | Viewer+ |
 | `GET /api/dashboards/:dashboardId` | Dashboard definition + active layout | Viewer+ |
 | `GET /api/sales-performance/summary?principalId=&startMonth=&endMonth=&regionId=` | Team totals, role cards | Viewer+ |
@@ -166,3 +168,49 @@ sequenceDiagram
 - `OPS-001` `[P]` Aim for LCP <= 2.5 s; set API latency targets once data volume and hosting are known.
 - `OPS-002` `[P]` Fetch active dashboard data first; prefetch only the next rotation item when safe.
 - `OPS-003` `[P]` Structured logs with request IDs, health endpoint, error tracking, query timing.
+
+## 10. Access control: configurable, not hard-coded (DEC-011, DEC-022, DEC-036)
+
+**Owner requirement:** the web has principal buttons (ASW, INA). Admins decide, per role and per user, which principals, regions and other filters each person can use. Some users see one principal, some both (full access); some see one region, some several. Roles and permissions are managed in an admin screen and stored as data.
+
+### 10.1 Model
+
+- **Capabilities** are the actions the code checks (for example `dashboard.view`, `layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`). The list is fixed in code because code must check it; **who has them is data**.
+- **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
+- **Data scope** is, per scope dimension, either `all` or an explicit list of values. Dimensions come from a registry: `principal`, `region`, `branch`, `dashboard` (extendable without changing route code).
+- **"Full access"** is `principal: all` (and `region: all`) on a role, not a hard-coded role name.
+- **Users** get one or more roles; an optional per-user override can add or remove scope values.
+- **Effective access** = union of the user's roles (capabilities and scope values per dimension), then user overrides. No role, or an empty scope, means **no access** (deny by default).
+- Principals, regions and branches are values read from approved data or the principal registry (`03-data-model.md` 2.6). They are never listed in code or in UI components.
+
+### 10.2 Enforcement (server only)
+
+```mermaid
+flowchart TD
+  R[Request] --> AU[Authenticate user]
+  AU --> AC[Build AccessContext<br/>capabilities + scope per dimension]
+  AC --> CP{"capability<br/>allowed?"}
+  CP -- no --> D403[403 Forbidden]
+  CP -- yes --> VS{"requested principal/region<br/>inside scope?"}
+  VS -- no --> D403
+  VS -- yes --> SV[Service: apply scope to every query]
+  SV --> RP[Repository requires a scope argument]
+  RP --> DB[(PostgreSQL)]
+  RP --> OUT[Response computed only from in-scope rows]
+```
+
+- `SEC-006` `[C]` Permissions and data scope are resolved on the server for every request; hiding buttons in the UI is never the control.
+- `SEC-007` `[C]` Repositories take a mandatory scope argument; there is no code path that queries business tables without it.
+- `SEC-008` `[C]` All totals, role cards, bars and active-distributor figures are computed within scope (`01-metrics-contract.md` section 8). When a filter is not supplied, the default is "all values the user is allowed", never "everything".
+- `SEC-009` `[P]` Cache keys include a hash of the scope, so one user's cached result is never served to a user with a different scope.
+- `SEC-010` `[P]` Changes to roles, capabilities, scopes and user assignments are audited (who, what, when) and take effect on the next request or within a short, documented cache window.
+- `SEC-011` `[C]` The admin UI manages roles, capabilities, scopes and assignments with validation (cannot remove the last user holding `access.manage`).
+- `SEC-012` `[P]` Seed roles for first use (for example Viewer, Editor, Administrator, Display) are ordinary editable data, not special-cased in code.
+- `SEC-013` `[O]` Identity provider and how users are created (DEC-007): permissions key off a stable user identifier from the provider.
+
+### 10.3 What the UI does with scope
+
+- Principal buttons show only allowed principals; with exactly one allowed, it is preselected and the control is a static label.
+- Region, branch and similar filters list only allowed values; with exactly one allowed, preselected.
+- A playlist or layout shared across users still renders per viewer scope; a dashboard the viewer is not allowed to see is skipped in rotation.
+- Kiosk displays use a display credential that is itself a user-like identity with its own role and scope (DEC-012).
