@@ -104,12 +104,14 @@ Enforce permissions on the server, not only by hiding frontend controls. Select 
 
 ### Achievement color settings
 - Configure thresholds, semantic colors, and rule priority in admin settings; never hardcode these rules in chart components.
-- Recommended default precedence:
-  1. Achievement >=100%: success color.
-  2. Otherwise achievement >= working-day progress: on-track color (green).
-  3. Otherwise achievement >= configurable warning minimum (default 70%): warning color (yellow).
-  4. Otherwise: behind-target color (red).
-- This precedence resolves the overlap between the example “above working-day progress is green” and “70%–99% is yellow.” The owner must approve it before release.
+- **Owner-confirmed rule** (see section 17.8 for the full contract and test table). Two conditions are evaluated in a fixed order:
+  1. **Condition 1 (working-day pace):** if achievement >= working-day progress, the bar is **green**. Equality counts as green. This applies even when achievement is below 70%.
+  2. **Condition 2 (achievement band)**, evaluated only when condition 1 did not produce green (achievement < working-day progress):
+     - achievement < warning minimum (default 70%): **red**
+     - warning minimum <= achievement < 100%: **yellow**
+     - achievement >= 100%: **green** (safe fallback; unreachable once working-day progress is capped at 100%)
+- Condition 1 can only produce green. A "red" result from the working-day comparison is never final; it falls through to condition 2. Example: working-day progress 80% and achievement 75% is **yellow**, not red.
+- Working-day progress is capped to the range 0-100% by the server, so the rule is deterministic.
 - Validate threshold ordering/ranges and contrast; provide preview, restore defaults, safe fallback, and audit/version history where practical.
 - Color must not be the only status signal; include labels/icons or text descriptions.
 
@@ -286,7 +288,7 @@ Security review, accessibility audit, performance/load tests, observability, bac
 2. Clarify whether DIST and SE are distinct and which belongs in KPI cards.
 3. Confirm achievement formulas, aggregation order, and zero/missing target handling.
 4. Confirm IN/OUT meaning and whether counts are people with achievement >=100%.
-5. Approve conditional-color precedence.
+5. ~~Approve conditional-color precedence.~~ **Resolved (owner-confirmed):** see section 17.8.
 6. Confirm business timezone and working-day semantics.
 7. Confirm identity provider and Viewer/Editor/Admin permissions.
 8. Confirm hosting and approved image storage.
@@ -452,7 +454,7 @@ Test zero target, missing target, negative/adjusted facts where applicable, and 
 
 This formula is not complete until the owner defines whether elapsed days are counted through today, how the selected period interacts with today, and how holidays/non-working days are represented. The server/API is authoritative.
 
-**Required policy decisions:** business timezone, current/as-of date, inclusive boundaries, holidays, weekends, partial periods, future periods, periods with no working days, and whether progress is capped at 0%/100%.
+**Required policy decisions:** business timezone, current/as-of date, inclusive boundaries, holidays, weekends, partial periods, future periods, periods with no working days. Progress must be capped to 0-100% (owner-confirmed requirement for the color rule in 17.8).
 
 **UI:** circular indicator, percentage, clear “Working-day progress” label, as-of date, and explanatory tooltip. It must not be described as achievement progress.
 
@@ -460,23 +462,55 @@ This formula is not complete until the owner defines whether elapsed days are co
 
 ### 17.8 Conditional bar colors
 
+**Status:** Owner-confirmed.
+
 **Purpose:** Visually compare achievement against elapsed working-day progress and a configurable warning band.
 
-The owner described green when achievement is above today's working-day percentage, yellow for achievement from 70% through 99%, otherwise red. These conditions overlap when achievement is between 70% and 99% and also above working-day progress. The product owner must approve precedence.
+**Inputs:** `achievement` (unrounded %), `workingDayProgress` (unrounded %, server-capped to 0-100), `warningMin` (default 70), `successMin` (default 100).
 
-**Recommended proposed precedence (not yet owner-confirmed):**
-1. Achievement >= working-day progress -> green/on-track.
-2. Else achievement >= warning minimum (default 70%) and <100% -> yellow/warning.
-3. Else -> red/behind.
-4. If achievement >=100% but working-day progress is somehow >100%, apply the approved precedence and flag invalid calendar/configuration data rather than silently guessing.
+**Rule (evaluated in this order; first match wins):**
+1. If `achievement >= workingDayProgress` -> **green / on-track**. Equality is green. Applies even when achievement is below `warningMin`.
+2. Else if `achievement < warningMin` -> **red / behind**.
+3. Else if `achievement < successMin` -> **yellow / warning**.
+4. Else -> **green / on-track** (safe fallback; unreachable when working-day progress <= 100).
 
-This version prioritizes the owner's stated comparison to working-day progress. An alternative is to give >=100% an unconditional success color first; that changes outcomes when working-day progress is over 100%. Select one rule explicitly in settings and test it.
+Condition 1 can only yield green. When it does not apply, the result comes from the achievement band (conditions 2-4). The working-day comparison alone never produces a final red.
+
+```
+status(ach, wd):
+  if ach is null:  return unavailable
+  if wd is not null and ach >= wd:  return green
+  if ach < warningMin:  return red
+  if ach < successMin:  return yellow
+  return green
+```
+
+If working-day progress is missing, skip step 1, evaluate the achievement band only, and show a data-quality warning.
+
+**Reference test table (working-day progress = WD, achievement = ACH):**
+
+| WD | ACH | Result | Reason |
+|---|---|---|---|
+| 80% | 75% | Yellow | ACH < WD, falls through; 70% <= ACH < 100% |
+| 80% | 60% | Red | ACH < WD and ACH < 70% |
+| 66.67% | 66.67% | Green | ACH = WD counts as on-track |
+| 66.67% | 66.66% | Red | ACH < WD and ACH < 70% |
+| 90% | 70% | Yellow | Exactly 70% is in the yellow band |
+| 90% | 69.99% | Red | Just below warning minimum |
+| 90% | 99.99% | Yellow | Not yet 100% |
+| 90% | 100% | Green | Fallback / band green |
+| 40% | 50% | Green | ACH >= WD, even though ACH < 70% |
+| 100% | 100% | Green | ACH >= WD |
+| missing | 75% | Yellow | Skip step 1, band only, show warning |
+| any | missing | Unavailable (neutral) | Never colored red or green |
+
+Compare unrounded values; round only the displayed label. Status must also be exposed as text/icon, not color alone.
 
 **Settings contract:** store rule order, threshold(s), colors, inclusive/exclusive boundaries, and fallback behavior in validated configuration. Use semantic tokens (success/warning/danger) mapped to accessible theme colors; allow administrators to configure supported colors while enforcing contrast and preserving non-color status labels.
 
 **Comparison precision:** compare unrounded numeric values; round only the displayed label.
 
-**Acceptance boundary tests:** achievement just below/equal/above working-day progress; 69.99%, 70%, 99%, 100%; missing achievement; missing working-day progress; invalid threshold configuration.
+**Acceptance boundary tests:** every row of the reference test table above; achievement just below/equal/above working-day progress; 69.99%, 70%, 99.99%, 100%; missing achievement; missing working-day progress; invalid threshold configuration.
 
 ### 17.9 Display date and refresh metadata
 
