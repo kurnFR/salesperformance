@@ -1,0 +1,115 @@
+# UI/UX Specification
+
+Related: [`PRD.md`](../PRD.md) · [`01-metrics-contract.md`](01-metrics-contract.md) · [`02-architecture.md`](02-architecture.md)
+
+Reference screenshot: `docs/reference/` (add it; it is evidence of arrangement only, not of schema or formulas).
+
+## 1. Design principles
+
+- **Professional analytics first:** legible data, clear hierarchy, minimal decoration, predictable interactions.
+- **Dense but not cramped:** keep the Tableau view's information density with better spacing.
+- **Configurable, not arbitrary:** flexible layout inside a stable design system and supported widgets.
+- **Consistent semantics:** same metric, status, filter and action look and behave the same everywhere.
+- **Responsive by default:** adapt to available width/height; the screenshot resolution is not the layout spec.
+- **Accessible by design:** keyboard, labels, contrast, chart alternatives, reduced motion.
+
+## 2. Functional UI requirements
+
+### Navigation and shell
+- `UI-001` `[C]` Collapsible sidebar with accessible toggle and modular dashboard sections; new dashboards can be added one at a time without rewriting the shell.
+- `UI-002` `[C]` Charts resize when the sidebar collapses, the browser resizes or orientation changes.
+- `UI-003` `[P]` Each dashboard shows title, optional description and last-updated timestamp.
+
+### Filters and state
+- `UI-004` `[C]` Global, dashboard-level and widget-level filters with explicit scope; validated on client and server.
+- `UI-005` `[C]` Cancel stale requests; out-of-order responses never overwrite newer results.
+- `UI-006` `[P]` Shareable URL state where safe; reset-filters action.
+- `UI-007` `[C]` Filter changes update dependent cards and charts without a full page reload; loading, empty, stale and error states exist.
+
+### Theme and responsive
+- `UI-008` `[C]` Light, dark and system modes using shared design tokens.
+- `UI-009` `[C]` Current stable Chrome and Firefox; responsive on smaller screens; no needless page-wide horizontal scroll.
+- `UI-010` `[P]` Presentation/kiosk mode maximizes chart space and hides editing controls.
+- `UI-011` `[C]` Honor reduced-motion; readable contrast in both themes.
+
+### Dashboard editor
+- `EDIT-001` `[C]` Separate View and Edit modes. View: chart interactions on, layout drag/resize off.
+- `EDIT-002` `[C]` Grid drag/drop, resize, snapping, spacing, responsive breakpoints.
+- `EDIT-003` `[C]` Widget registry: KPI card, bar chart, text/heading, image/background; later widgets plug into the same registry.
+- `EDIT-004` `[C]` Add, remove, duplicate, move, resize, reorder, rename, configure widgets.
+- `EDIT-005` `[C]` Text supports safe limited formatting; never unsanitized HTML.
+- `EDIT-006` `[P]` Background controls: approved asset, fit/position, overlay/opacity, contrast. Suggest a curated asset library in v1 instead of arbitrary uploads.
+- `EDIT-007` `[C]` Save, preview, cancel/revert, unsaved-change warning, versioned layout, validation.
+- `EDIT-008` `[C]` Layouts store typed JSON only, never code or SQL.
+- `EDIT-009` `[P]` Concurrent saves use optimistic versioning; conflicts prompt reload/compare.
+
+### Dashboard rotation
+- `PLAY-001` `[C]` Admin selects dashboards, order, enabled state, per-item duration; default 10 s.
+- `PLAY-002` `[P]` Enforce a minimum duration (proposed 5 s).
+- `PLAY-003` `[C]` Controls: start, pause, resume, next, previous, exit.
+- `PLAY-004` `[C]` One controller/state machine; timers and listeners cleaned up; no overlapping intervals.
+- `PLAY-005` `[C]` No rotation while editing or with unsaved changes.
+- `PLAY-006` `[C]` Visible, non-blocking behavior on dashboard load failure (skip or keep last good, by setting); never a blank screen.
+- `PLAY-007` `[O]` Whether filters persist across rotation or each dashboard keeps its own (DEC-010).
+- `PLAY-008` `[C]` Playlists persist server-side once storage is approved.
+
+### Achievement colors
+- Configure thresholds and colors in admin settings, never hardcoded in chart components. Provide preview, restore defaults, safe fallback, validation of ordering/range/contrast, audit/version history where practical. Rule itself: `01-metrics-contract.md` section 4.
+
+## 3. Layout zones
+
+1. **Sidebar:** collapsible navigation, dashboard groups, current selection.
+2. **Top bar:** title/breadcrumb, global filters, theme control, refresh/freshness indicator, authorized actions.
+3. **Canvas:** responsive grid of registered widgets.
+4. **Edit toolbar (edit mode):** add widget, undo/cancel, save/publish, unsaved status.
+5. **Presentation controls:** unobtrusive pause/resume, next/previous, exit, optional time remaining.
+6. **Admin settings:** achievement rules, playlists, layout permissions, approved assets.
+
+Not every dashboard uses every zone; the shell stays consistent.
+
+## 4. Visual tokens and typography
+
+Define tokens centrally; no per-component hardcoded colors.
+
+- Canvas, surface, elevated surface, border, primary/secondary/muted text, focus ring.
+- Brand/accent, success, warning, danger, info.
+- Chart series, gridlines, tooltip surfaces, selected-tab, hover/focus states.
+- Spacing scale, radius, elevation, font families/sizes/line heights, chart label sizes.
+
+Neutral professional base with a restrained accent. The screenshot's orange/blue may be an optional brand preset but must not dictate all components or reduce contrast. Light and dark both use semantic tokens.
+
+## 5. Responsive behavior
+
+- CSS grid/flex and breakpoints; no fixed pixel placement of the whole dashboard.
+- Container-aware chart resize after sidebar, grid, theme or viewport changes.
+- Narrow widths: stack/reflow; never shrink labels to unreadable sizes.
+- Table needing horizontal scroll scrolls inside its own region only.
+- Define and test a minimum viewport in Phase 1 after identifying target displays (`[O]`: TV resolution, aspect ratio, distance).
+- Support browser zoom and high-DPI.
+- Rotation must not cause layout jumps between dashboards with different widget counts.
+
+## 6. Interaction states
+
+Every interactive component defines: default, hover, focus-visible, pressed/selected, disabled, loading, empty, error, success (where applicable); keyboard navigation and focus restore after dialogs; confirmation for destructive actions (remove widget, delete playlist); undo or cancel in editing flows; toasts that do not steal focus or vanish before reading; draft state or confirmation before publishing shared configuration.
+
+## 7. Chart UX
+
+- Tooltips: series, region, period, actual/target (where approved), formatted achievement.
+- Consistent axis units, number formatting, labels, legends.
+- Never rely on red/green alone: add text, symbols or accessible descriptions (`RULE-007`).
+- No clipped labels or overlapping bars on small containers.
+- Provide a table or text summary for screen readers.
+- Respect reduced motion; avoid animated transitions during fast rotation.
+- Chart colors follow the theme and the configured rules.
+
+## 8. Accessibility
+
+- `A11Y-001` `[C]` Target WCAG 2.2 AA: keyboard access, visible focus, semantic labels, contrast.
+- `A11Y-002` `[C]` Chart data alternatives (table/summary) for every chart.
+- `A11Y-003` `[C]` Region tabs and selected state operable by keyboard and announced.
+- `A11Y-004` `[C]` Loading placeholders never presented as real zero values.
+- `A11Y-005` `[P]` Automated axe checks in CI plus manual keyboard and screen-reader review before release.
+
+## 9. Content localisation (`[O]`)
+
+Interface language (Bahasa Indonesia, English, or both), number/date/percent formatting, and whether a single business timezone suffices across all regions (DEC-013).
