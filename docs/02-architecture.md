@@ -95,6 +95,9 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | `GET/POST/PUT /api/playlists` | Playlists | Admin (read: Viewer+) |
 | `PUT /api/dashboards/:id/layout` with `If-Match: <version>` | Save layout (optimistic concurrency) | Editor+ |
 | Asset list/upload | After storage is approved | Admin |
+| `POST /api/ai/chat`, `GET /api/ai/sessions`, `GET /api/ai/results/:id`, `POST /api/ai/results/:id/refresh` | AI data chat (`07-ai-chat.md`) | `ai.chat.use` |
+| `GET /api/findings`, `PUT /api/findings/:id` | Data findings (`08-data-findings.md`) | `findings.view` / `findings.manage` |
+| `POST /api/auth/login`, `POST /api/auth/change-password`, `GET /api/auth/microsoft/callback` | Local login, password change, Microsoft sign-in | Public / Authenticated |
 
 Every endpoint documents purpose, permissions, filters, response fields, errors, cache policy and freshness. Never return SQL, connection strings, stack traces or internal sensitive identifiers.
 
@@ -175,7 +178,8 @@ sequenceDiagram
 
 ### 10.1 Model
 
-- **Capabilities** are the actions the code checks (for example `dashboard.view`, `layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`). The list is fixed in code because code must check it; **who has them is data**.
+- **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
+- **Filter policy per role:** each filter is `hidden`, `locked` (fixed to the role's scope value) or `editable` within the allowed values.
 - **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
 - **Data scope** is, per scope dimension, either `all` or an explicit list of values. Dimensions come from a registry: `principal`, `region`, `branch`, `dashboard` (extendable without changing route code).
 - **"Full access"** is `principal: all` (and `region: all`) on a role, not a hard-coded role name.
@@ -206,7 +210,8 @@ flowchart TD
 - `SEC-010` `[P]` Changes to roles, capabilities, scopes and user assignments are audited (who, what, when) and take effect on the next request or within a short, documented cache window.
 - `SEC-011` `[C]` The admin UI manages roles, capabilities, scopes and assignments with validation (cannot remove the last user holding `access.manage`).
 - `SEC-012` `[P]` Seed roles for first use (for example Viewer, Editor, Administrator, Display) are ordinary editable data, not special-cased in code.
-- `SEC-013` `[O]` Identity provider and how users are created (DEC-007): permissions key off a stable user identifier from the provider.
+- `SEC-013` `[C]` Users are created by an admin and signed in through Microsoft or local credentials (section 11); permissions key off the app's own user id, linked to the sign-in identity.
+- `SEC-014` `[C]` **Admin has full control** over what each role may use: switch features and filters on or off, and change a role's capabilities and scope after the role or user was created. Changes apply to existing users of that role.
 
 ### 10.3 What the UI does with scope
 
@@ -214,3 +219,39 @@ flowchart TD
 - Region, branch and similar filters list only allowed values; with exactly one allowed, preselected.
 - A playlist or layout shared across users still renders per viewer scope; a dashboard the viewer is not allowed to see is skipped in rotation.
 - Kiosk displays use a display credential that is itself a user-like identity with its own role and scope (DEC-012).
+
+## 11. Authentication: Microsoft account or local username/password (DEC-007)
+
+**Owner requirements `[C]`:** the admin creates the user and links a Microsoft account; after the admin sets the role and gives the user the access information, the user signs in with their **own Microsoft account**. If a person has no Microsoft account, the admin creates a **username and password**; the user can **change the password after login**.
+
+### 11.1 User lifecycle
+
+```mermaid
+flowchart TD
+  A[Admin creates user<br/>name, sign-in method, roles, scope] --> M{"Sign-in method"}
+  M -- Microsoft --> M1[Admin enters the user's Microsoft account]
+  M -- Local --> L1[Admin sets username + temporary password]
+  M1 --> I[Admin gives user the access info<br/>site address + how to sign in]
+  L1 --> I
+  I --> S1[User signs in with own Microsoft account]
+  I --> S2[User signs in with username + password]
+  S1 --> V{"Account matches<br/>an enabled app user?"}
+  V -- no --> D[Access denied page<br/>no account is auto-created]
+  V -- yes --> OK[Session with roles and scope]
+  S2 --> OK
+  OK --> CP[Local users: change password any time;<br/>forced on first login]
+```
+
+- `AUTH-001` `[C]` Only users created by an admin can sign in. A valid Microsoft account that is not linked to an enabled app user is denied; nothing is created automatically.
+- `AUTH-002` `[C]` Microsoft sign-in uses Microsoft Entra ID (OpenID Connect, authorization code with PKCE). The server validates issuer, audience, tenant and signature. After first link, matching uses the tenant id and the immutable object id, not the email address, which can change.
+- `AUTH-003` `[C]` Local accounts (username and password) exist for people without a Microsoft account. The user can change their password after login.
+- `AUTH-004` `[P]` Local password rules: hashed with Argon2id; the admin-set password is temporary and must be changed at first login; minimum length and a breached-password check; rate limiting and temporary lockout after repeated failures; the password is shown to the admin once and never stored or logged in clear text; admin can reset or disable an account.
+- `AUTH-005` `[P]` One sign-in method per user by default (admin chooses); allowing both is an admin option.
+- `AUTH-006` `[C]` After the admin sets the role, the admin screen shows an **onboarding information** block to copy: site address, sign-in method, and for local users the username (and the temporary password once). Sending it by email is optional and open (DEC-038).
+- `AUTH-007` `[P]` Sessions use HttpOnly, Secure, SameSite cookies, CSRF protection, idle and absolute timeouts; sign-out; every sign-in, failure, lockout and password change is audited without secrets.
+- `AUTH-008` `[P]` Kiosk displays use their own revocable credential (DEC-012), not a person's account.
+- `AUTH-009` `[O]` Microsoft tenant: single organization or several, who registers the app, redirect addresses, and whether MFA is enforced in Microsoft (DEC-038). Multi-factor for local accounts is open (DEC-039).
+
+## 12. AI service boundary
+
+The AI chat (`07-ai-chat.md`) is a server module: `/api/ai/chat` builds the user's AccessContext, calls the LLM provider with a catalog of read-only data tools (no SQL, no credentials), validates tool arguments, runs tools through the same services and repositories as the dashboards, verifies every number in the answer against tool results, and returns structured result blocks. Provider keys stay server-side. Chat history and results are stored per user (`03-data-model.md` section 3). New endpoints: `POST /api/ai/chat`, `GET /api/ai/sessions`, `GET /api/ai/results/:resultId`, `POST /api/ai/results/:resultId/refresh`.

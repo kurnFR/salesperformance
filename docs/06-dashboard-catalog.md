@@ -10,6 +10,7 @@ Tags: `[C]` owner-confirmed, `[R]` reference-observed (screenshot or Tableau wor
 - `DASH-002` `[C]` **Rolling 7-month window** on the Growth dashboards: always the selected month plus the 6 months before it. When the calendar moves to the next month, the window moves with it (for example selected Oct-26 shows Apr to Oct; Nov-26 shows May to Nov). The default selected month is the current business month.
 - `DASH-003` `[R]` **Period selection is by month.** Start_Date and End_Date are month pickers (shown as "Oct-26"), not day pickers.
 - `DASH-004` `[C]` **Principal is chosen in the web with buttons ASW and INA.** Both are in release 1. Which principals a user can pick is set by admin permissions (see `DASH-008`); a user with one allowed principal gets it preselected, and only users with full access can switch between both. Tables per principal come from the principal registry (`03-data-model.md` 2.6), not from code (DEC-022, DEC-035).
+- `DASH-009` `[C]` Where a figure comes from a manual upload (active distributors from `distaktif`), the dashboard labels the source and shows the latest month present, and links to related data findings (`FIND-003`, `FIND-004`).
 - `DASH-008` `[C]` **Configurable access.** Principal, region and other filters show only the values the signed-in user is allowed; some users have one region, some several, some all. Roles, capabilities and data scopes are managed by admins and stored as data, never hard-coded. Every number on every dashboard is computed within the user's scope (`02-architecture.md` section 10).
 - `DASH-005` `[R]` Shared header on dashboards 1 to 3: logo, title, Start_Date / End_Date, team counts (RSM, ASM, SPV, SE), working-day progress ring, display date.
 - `DASH-006` `[R]` Visual style of the Tableau dashboards: dark navy gradient background, orange outlined cards and headings, white values. This becomes an optional brand preset on top of the light/dark tokens (see `04-ui-ux-spec.md`).
@@ -29,7 +30,7 @@ Tags: `[C]` owner-confirmed, `[R]` reference-observed (screenshot or Tableau wor
 - `PERF-002` `[C]` Card counts use the same rule as the bars: an entity counts as achieved when achievement >= working-day progress. In the screenshot only INA PULAU 1 Sell IN (77% against 66.67%) qualifies, so RSM IN is 1 of 5 = 20%. The count is live: if working-day progress later exceeds an entity's achievement, it stops counting (RSM IN becomes 0) (DEC-021).
 - `PERF-003` `[C]` Tooltip on bars: target, real, achievement %. Card tooltip: entities counted, headcount, % (`[O]`: list the names that achieved, as Tableau's "#List ... Capai" sheets suggest).
 - `PERF-004` `[R]` Values above 100% must render (axis extends); regions come from data, not hard-coded.
-- `PERF-005` `[O]` Role cards for DIST show IN/OUT without labels in the image; confirm DIST means selling point (distributor) and that SE appears only in the header (DEC-002). The DIST card total (144) differs from the sum of active-distributor totals on sheet 2 (120); define each source (DEC-034).
+- `PERF-005` `[O]` Role cards for DIST show IN/OUT without labels in the image; confirm DIST means selling point (distributor) and that SE appears only in the header (DEC-002). The DIST card total (144, a distinct count from the database) can differ from the sum of active-distributor totals on sheet 2 (120, a manual Excel upload in `distaktif`); both are shown as stored and the gap is a data finding (DEC-034, `08-data-findings.md`).
 
 ## 3. Dashboards 2 and 3: Growth Sell In and Growth Sell Out (`sheet2`, `sheet3`)
 
@@ -64,6 +65,14 @@ Requirements:
 - `UPLD-006` `[O]` Rows labelled VACANT or without data are shown empty; define handling.
 - `UPLD-007` `[P]` Status must not rely on color alone (text/icon, A11Y); tooltip shows date, distributor, status.
 
-## 5. Navigation and playlist
+## 5. Dashboard 5: Data Findings (new, owner-requested)
+
+A separate sheet listing anomalies and findings that need validation, for example the difference between the distinct DIST count (144) and the manually uploaded active-distributor total (120). Full spec: [`08-data-findings.md`](08-data-findings.md). Requirement IDs `FIND-001` to `FIND-006`.
+
+## 6. AI Chat (right panel)
+
+An icon in the right panel opens a chat that answers questions from the data and can show pop-up charts, cards, lines and bars. Full spec: [`07-ai-chat.md`](07-ai-chat.md). Requirement IDs `AI-001` to `AI-023`.
+
+## 7. Navigation and playlist
 
 All four dashboards are sidebar entries and can be playlist items (default 10 s). Dashboards 1 to 3 share the month filter; DEC-010 decides whether it persists across rotation.

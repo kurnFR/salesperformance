@@ -18,6 +18,11 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
 | DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
 | DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
+| DEC-007 | Users are created by an admin and linked to a Microsoft account; the user signs in with their own Microsoft account. For people without one, the admin creates a username and password and the user can change it after login | 2026-10-22 (owner) | `02` section 11 |
+| DEC-034 | DIST total (144) is a distinct count from the database; active-distributor totals come from a **manual Excel upload** (`distaktif`) that may be stale or wrong. Both are shown as stored; mismatches go to a separate **Data Findings** sheet for validation | 2026-10-22 (owner) | `08-data-findings.md`, `DASH-009` |
+| DEC-035 | A table name without the INA suffix belongs to ASW (so `v_sr_per_branch` is the ASW mapping); each principal has its own regions, branches and other data. Open remainder: `distaktif` (DEC-044) | 2026-10-22 (owner) | `03` 2.6 |
+| DEC-036 | Admin sets roles when creating users and keeps full control afterwards: can change what a role is allowed, and switch features and filters on or off | 2026-10-22 (owner) | `02` section 10, SEC-014 |
+| DEC-045 | AI Chat icon in the right panel; answers only from database data; no assumption or hallucination; pop-up chart/card/line/bar; pop-up hides but the result stays in chat and reopens | 2026-10-22 (owner) | `07-ai-chat.md` |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -38,7 +43,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 | ID | Question | Proposed default | Blocks | Status |
 |---|---|---|---|---|
-| DEC-007 | Identity provider and user provisioning (permissions key off its stable user id) | Organization SSO via OIDC if available; otherwise local accounts behind HTTPS; development uses a stub identity | Production release (stub until then) | Open |
 | DEC-008 | Hosting and approved image storage | Single container deployment; curated server-side asset library in v1 (no arbitrary uploads) | Phase 4 | Open |
 | DEC-009 | Where app-owned config lives | Separate `app_config` schema in the same PostgreSQL, created by migrations (`03-data-model.md` section 3) | Phase 3 | Proposed |
 | DEC-010 | Do filters persist across rotation or per dashboard? | Period filter shared; other filters per dashboard | Phase 5 | Proposed |
@@ -66,7 +70,16 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 | ID | Question | Evidence | Proposed default | Blocks | Status |
 |---|---|---|---|---|---|
-| DEC-034 | DIST card shows 144 but the active-distributor totals on sheet 2 add up to 120 (31+25+35+16+13). Which source and filter defines the DIST card total? | Screenshots | DIST card = selling points from the mapping table; active % from `distaktif`; document both | Phase 2 | Open |
-| DEC-035 | ASW details: confirm mapping table (`v_sr_per_branch`), active-distributor table for ASW (none listed), region list (Tableau shows six incl. SUMATERA 3), and that ASW uses the same four dashboards | Data dictionary, workbook | Same dashboards; regions read from data; ASW table names in the principal registry | ASW build | Open |
-| DEC-036 | Scope dimensions beyond principal and region (branch/area, dashboard visibility) and whether totals/cards inside a dashboard are computed within the user's scope | Owner: "all filters like region" | Scope dimensions are a registry (principal, region, branch, dashboard); all totals and cards are computed within the user's scope | Phase 1 | Proposed |
 | DEC-037 | Working day "today": whether today counts as elapsed. Tableau excludes today (18 of 27 on 22-Oct-2026) | Workbook, screenshot | Sum `networkeddays` for dates before today within the month; verify it reproduces 66.67% | Phase 2 | Proposed |
+
+## Follow-ups from the AI chat, sign-in and findings requirements
+
+| ID | Question | Proposed default | Blocks | Status |
+|---|---|---|---|---|
+| DEC-038 | Microsoft tenant: single organization? Who registers the app in Entra ID? Redirect addresses, MFA enforced in Microsoft? Send onboarding info by email or copy only? | Single tenant; copy-only onboarding info | Production sign-in | Open |
+| DEC-039 | Local account policy: minimum length, forced change at first login, lockout, MFA for local accounts | 12+ characters, forced change, lockout after 5 failures, no MFA in v1 | Phase 1 | Proposed |
+| DEC-040 | AI: LLM provider, approval to send aggregated tool results to it, chat retention, who may read chats, spend cap | Provider chosen by owner; aggregated results only; retention 90 days; only the owner of a chat reads it | AI phase | Open |
+| DEC-041 | **Data grain of the performance view.** Month-to-date versus last-month-to-date (the owner's example) needs day-level rows. Are `TOTAL...` fields monthly or daily? | Assume monthly until verified; the AI says "not available" for MTD | AI phase, Phase 2 | Open (important) |
+| DEC-042 | AI reply language | Same language as the user's question (Bahasa Indonesia or English) | AI phase | Proposed |
+| DEC-043 | Findings thresholds and severity (outlier ceiling, upload-gap days, difference tolerance), who validates, retention | Warning above 10% difference; upload gap 3 days; validators are users with `findings.manage` | Findings phase | Proposed |
+| DEC-044 | Does `distaktif` contain both principals' regions (filtered by region), or INA only (ASW has no table)? | Shared table filtered by the principal's region codes | ASW build | Open |

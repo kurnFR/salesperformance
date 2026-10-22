@@ -96,7 +96,12 @@ Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must e
   "schemaVersion": 1,
   "roleId": "role-asw-west",
   "name": "ASW regional viewer",
-  "capabilities": ["dashboard.view"],
+  "capabilities": ["dashboard.view:sales-performance", "ai.chat.use", "findings.view"],
+  "filters": {
+    "principal": { "visibility": "editable" },
+    "region":    { "visibility": "editable" },
+    "branch":    { "visibility": "hidden" }
+  },
   "scope": {
     "principal": { "mode": "list", "values": ["ASW"] },
     "region":    { "mode": "list", "values": ["TBD-region-key-1", "TBD-region-key-2"] },
@@ -105,7 +110,7 @@ Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must e
 }
 ```
 
-Full-access example: `"principal": { "mode": "all" }, "region": { "mode": "all" }`. Capability names are validated against the code's capability catalog; scope values are validated against known data values on save. User assignment: `{ "userId": "...", "roleIds": ["..."], "overrides": { "region": { "add": [], "remove": [] } } }`.
+Full-access example: `"principal": { "mode": "all" }, "region": { "mode": "all" }`. Filter `visibility` is `hidden`, `locked` or `editable`. Capability names are validated against the code's capability catalog; scope values are validated against known data values on save. User assignment: `{ "userId": "...", "roleIds": ["..."], "overrides": { "region": { "add": [], "remove": [] } } }`.
 
 ### 2.6 Principal registry (`[P]`)
 
@@ -125,7 +130,7 @@ Maps each principal to its physical tables so no query code hard-codes `ina`/`as
         "performance": "dwh_prod.v_tsellinselloutasw",
         "mapping": "dwh_prod.v_sr_per_branch",
         "masterDistributor": "dwh_prod.vt_sr_per_rsmasw",
-        "activeDistributors": "TBD (DEC-035)",
+        "activeDistributors": "dwh_prod.distaktif (confirm if shared, DEC-044)",
         "dailyUpload": "dwh_prod.mt_daily_updateasw",
         "dailyStockUpload": "dwh_prod.mt_daily_updatestockasw" } }
   ],
@@ -133,7 +138,7 @@ Maps each principal to its physical tables so no query code hard-codes `ina`/`as
 }
 ```
 
-The ASW mapping table name and the ASW active-distributor table are unconfirmed (DEC-035). Principal-specific row filters (for example the `distaktif` table is shared and filtered by region names) must be defined per approved mapping.
+The ASW mapping table is `dwh_prod.v_sr_per_branch` (confirmed by the owner: a name without the `ina` suffix is ASW; each principal has its own region, branch and other data). The table `distaktif` has no suffix but is listed under INA: whether it holds both principals' regions is open (DEC-044). Principal-specific row filters (for example the `distaktif` table is shared and filtered by region names) must be defined per approved mapping.
 
 ### 2.7 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
@@ -183,6 +188,11 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.user_roles` | `user_id`, `role_id` | `user_id` from the identity provider (DEC-007) |
 | `app_config.user_scope_overrides` | `user_id`, `dimension`, `add_json`, `remove_json` | Optional |
 | `app_config.principals` | `id`, `label`, `tables_json`, `enabled` | Principal registry (2.6) |
+| `app_config.users` | `id`, `display_name`, `sign_in_method` (`microsoft`/`local`), `enabled`, `created_by`, `created_at` | Created by admins only |
+| `app_config.auth_identities` | `user_id`, `provider`, `tenant_id`, `object_id`, `account_hint`, `linked_at` | Microsoft link; matching by tenant + object id |
+| `app_config.local_credentials` | `user_id`, `username`, `password_hash`, `must_change`, `failed_attempts`, `locked_until`, `changed_at` | Argon2id hash only |
+| `app_config.data_findings`, `data_finding_notes` | See `08-data-findings.md` section 3.1 | Findings and history |
+| `app_config.ai_sessions`, `ai_messages`, `ai_results` | `user_id`, question, tool-call summary, result spec JSON, `data_as_of`, timestamps | Per-user chat history and reopenable results; retention open (DEC-040) |
 | `app_config.audit_events` | `id`, `actor`, `action`, `target`, `summary_json`, `created_at` | Safe summaries only, no secrets; includes permission changes |
 
 Requirements if approved: explicit migrations with constraints, indexes and rollback notes; keep revision history for shared layouts and rules; validate referenced dashboards exist before publishing; never silently overwrite a newer revision.
@@ -196,10 +206,10 @@ Source of table names: the repository file `table_name`. Column lists come from 
 | Logical name | INA table | ASW table | Role in the product |
 |---|---|---|---|
 | Performance (sales, targets) | `dwh_prod.v_tsellinselloutina` | `dwh_prod.v_tsellinselloutasw` | Sell In / Sell Out actual and target per selling point and month |
-| Mapping (org + salesman) | `dwh_prod.v_sr_per_branchina` | `dwh_prod.v_sr_per_branch` (no `asw` suffix; confirm, DEC-022) | Region, branch, area, selling point, salesman (SE) |
+| Mapping (org + salesman) | `dwh_prod.v_sr_per_branchina` | `dwh_prod.v_sr_per_branch` (confirmed: no suffix means ASW) | Region, branch, area, selling point, salesman (SE) |
 | Master distributor | `dwh_prod.vt_sr_per_rsmina` | `dwh_prod.vt_sr_per_rsmasw` | Distributor hierarchy; join target for upload data |
 | Date dimension | `dwh_prod.dimdate` | `dwh_prod.dimdate` (shared) | Calendar and working days |
-| Active distributors | `dwh_prod.distaktif` | not listed (confirm, DEC-035) | Total / resigned / active distributors per region and month |
+| Active distributors | `dwh_prod.distaktif` | not listed (DEC-044) | Total / resigned / active distributors per region and month. **Uploaded manually from Excel; may be stale or contain errors** (see `08-data-findings.md`) |
 | Daily upload | `dwh_prod.mt_daily_updateina` | `dwh_prod.mt_daily_updateasw` | Daily upload log per selling point |
 | Daily stock upload | `dwh_prod.mt_daily_updatestockina` | `dwh_prod.mt_daily_updatestockasw` | Daily stock upload log |
 

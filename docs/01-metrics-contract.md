@@ -14,7 +14,7 @@ Related: [`PRD.md`](../PRD.md) · [`02-architecture.md`](02-architecture.md) · 
 | METRIC-005 | Sell IN achievement | `SUM(TOTALRealSellIn) / SUM(TOTALTargetSellIn) * 100` at the scope | `[R]` (Tableau) | Zero/missing target, unit (DEC-030) |
 | METRIC-006 | Sell Out achievement | `SUM(TOTALRealSellOut) / SUM(TOTALTargetSellOut) * 100` | `[R]` (Tableau) | Zero/missing target, unit |
 | METRIC-015 | Growth % (Sell IN / Sell Out) | `real(month, this year) / real(same month, last year) - 1` | `[R]` | Zero last-year handling (DEC-025) |
-| METRIC-016 | Active distributors per region | `SUM(Total Aktif) / SUM(TOTAL DIST) * 100` from `distaktif` for the month; also show "active / total" | `[C]` | Resign handling is inside the table columns |
+| METRIC-016 | Active distributors per region | `SUM(Total Aktif) / SUM(TOTAL DIST) * 100` from `distaktif` for the month; also show "active / total" | `[C]` | Source is a manual Excel upload: label it and expose staleness (`FIND-003`) |
 | METRIC-017 | Upload status per distributor per day | Upload when a row with `Updated = 1` exists for that day | `[R]` | Weekend/holiday, stock variant (DEC-026) |
 | METRIC-007 | Region scope | Approved region grouping and order | `[O]` | Keys, labels, hierarchy |
 | METRIC-008 | Working-day progress | `SUM(networkeddays elapsed) / SUM(networkeddays in month) * 100` from `dimdate`, capped to 0-100 | `[C]` | Whether today counts as elapsed (DEC-037) |
@@ -162,7 +162,7 @@ in_achieved_pct    = in_achieved_count / role_total * 100            (multi-mont
 - Unknown achievement (missing target) is neither achieved nor failed; show data-quality context and apply the approved denominator policy (DEC-004).
 - Counts come from entity-level achievement values, not from an average role achievement.
 - Tableau evaluates the flag with a fixed level of detail per month and entity, then sums.
-- **Open:** whether SE appears on a card (the image shows DIST, header shows SE); DIST = selling point (DEC-002); DIST card total 144 vs active-distributor totals of 120 (DEC-034).
+- **Open:** whether SE appears on a card (the image shows DIST, header shows SE); DIST = selling point (DEC-002); the DIST card total (a distinct count from the database) can differ from the active-distributor total (manual upload in `distaktif`); both are shown as stored and differences are logged as findings (DEC-034, `08-data-findings.md`).
 
 **Acceptance tests:** 0/0, 0/5, 1/5, 5/5, missing target, achievement exactly equal to working-day progress (counts), and a time-shift test: the same data with working-day progress moving from 66.67% to 70% changes RSM IN from 1 to 0.
 

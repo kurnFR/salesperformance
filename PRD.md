@@ -26,7 +26,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | Critical/serious accessibility violations (axe) | 0 |
 | First dashboard LCP on a representative connection | <= 2.5 s |
 
-## 3. Dashboards in scope
+## 3. Dashboards and features in scope
 
 | # | Dashboard | Reference | What it shows | Spec |
 |---|---|---|---|---|
@@ -34,6 +34,8 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | 2 | Growth Sell In | `sheet2-growth sell in.png` | Rolling 7 months, this year vs last year, per region, growth line | `06` section 3 |
 | 3 | Growth Sell Out | `sheet3-growth sell out.png` | Same layout using Sell Out | `06` section 3 |
 | 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
+| 5 | Data Findings | (new) | Anomalies and findings to validate, such as DIST total vs manual active-distributor upload | `08` |
+| - | AI Chat | (new, right panel icon) | Answers questions from the data only, with pop-up charts that stay in the chat | `07` |
 
 **Cross-cutting requirements (owner-confirmed unless marked):**
 - Every chart element has a **tooltip** with target value, real value and % (`DASH-001`).
@@ -41,6 +43,9 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Period selection is **by month** (`DASH-003`, from Tableau).
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
+- **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-023`).
+- **Data Findings** sheet lists anomalies to validate; manual-upload sources are labelled (`FIND-001`, `DASH-009`).
+- **Sign-in:** admin creates users; they sign in with their own Microsoft account, or with a username and password the admin creates (users can change it) (`AUTH-001` to `AUTH-009`).
 
 ## 4. Goals and non-goals
 
@@ -50,7 +55,9 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Keep metric definitions consistent, server-calculated and testable.
 - Let authorised editors add/remove widgets, drag and resize, edit text, and set backgrounds.
 - Let admins configure achievement thresholds/colors without code changes.
-- Let admins define roles, capabilities and data scopes (principal, region, other filters) per user, without code changes.
+- Let admins define roles, capabilities and data scopes (principal, region, other filters) per user, and switch features and filters on or off per role at any time, without code changes.
+- Let users ask an AI assistant questions about the data, with answers grounded only in the data.
+- Surface data anomalies for validation instead of hiding them.
 - Provide an admin-managed playlist that rotates dashboards automatically (default 10 s each).
 - Build each sidebar dashboard incrementally on shared components and a shared design system.
 
@@ -73,7 +80,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - **Deny by default:** a user with no role or an empty scope sees nothing.
 - **Seed roles** for first use are ordinary editable rows (suggested: Viewer, Display (kiosk), Editor, Administrator); a technical administrator handles secrets and deployment outside the product UI.
 
-Design details: `docs/02-architecture.md` section 10; stored shapes: `docs/03-data-model.md` sections 2.5, 2.6 and 3. Identity provider and user provisioning are still open (DEC-007).
+Design details: `docs/02-architecture.md` section 10; stored shapes: `docs/03-data-model.md` sections 2.5, 2.6 and 3. Sign-in is Microsoft account (admin-linked) or local username/password (DEC-007, `docs/02-architecture.md` section 11).
 
 **Suggested seed capability sets** (`[P]`, editable by admins, shown only as a starting point):
 
@@ -94,7 +101,7 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4).
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication).
 
 ## 7. Roadmap at a glance
 
@@ -107,7 +114,8 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
 | 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |
-| 7 | Production hardening | — |
+| 7 | AI Chat and Data Findings | AI provider approval (DEC-040), data grain (DEC-041), findings thresholds (DEC-043) |
+| 8 | Production hardening | — |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 
@@ -121,6 +129,8 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/07-ai-chat.md` | AI chat: grounded-answer design, tools, pop-up behavior, rules, tests |
+| `docs/08-data-findings.md` | Data findings sheet: checks, record, workflow |
 | `docs/06-dashboard-catalog.md` | The four dashboards: layout, widgets, tooltips, rolling window, per-dashboard requirements |
 | `docs/decisions.md` | Decision log with proposed defaults and status |
 | `docs/reference/` | Screenshots, Tableau workbook, extracted Tableau formulas |

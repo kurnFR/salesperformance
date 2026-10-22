@@ -19,6 +19,14 @@ Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to yo
 - Do not merge or deploy without explicit authorization.
 - Mock data must be labelled `MOCK` and is never evidence of business truth.
 
+## AI chat rules for the codebase
+
+- The LLM never writes or receives SQL, credentials or raw tables. It calls allowlisted, read-only, scope-enforced tools that reuse the dashboard services (`docs/07-ai-chat.md`).
+- Every number in an AI answer must come from a tool result and pass the verifier. Do not add fallbacks that estimate or fill gaps.
+- Add a tool, a golden test and a parity test together. Treat database text as untrusted input.
+- Authentication: only admin-created users may sign in; match Microsoft users by tenant id + object id; hash local passwords with Argon2id; never log passwords or tokens (`docs/02-architecture.md` section 11).
+- Data from manual uploads (for example `distaktif`) is shown as stored and labelled; discrepancies become findings, never silent corrections (`docs/08-data-findings.md`).
+
 ## Workflow
 
 1. **Before coding:** read the PRD and decision log; list which requirements you touch (by ID) and whether each is `[C]`, `[P]` or `[O]`. State assumptions. Ask only questions that block the next milestone; for anything with a proposed default in `decisions.md`, use the default and say so.
