@@ -294,3 +294,12 @@ sequenceDiagram
 - `OPS-009` `[P]` Data findings checks (`08-data-findings.md`) run after each completed refresh instead of on a fixed schedule.
 - `OPS-010` `[P]` A reopened AI result older than the current `dataVersion` shows "newer data available" with a Refresh action (`07` section 7).
 - Near-real-time later: the same event path works if refresh becomes incremental; the signal moves from "run finished" to "batch finished".
+- `OPS-011` `[P]` **Freshness tiers are configuration per data source**, so each source can move at its own pace and the UI and AI wording follow it:
+
+```mermaid
+flowchart LR
+  T1["Tier 1: monthly data,<br/>refreshed by the nightly ETL (now)"] --> T2["Tier 2: day-level values or<br/>daily snapshots (Marketing / SE, planned)"]
+  T2 --> T3["Tier 3: near real time<br/>(batches during the day, later)"]
+```
+
+Each registered data source declares its grain (`month`, `day`, `intraday`) and its refresh signal; `dataAsOf`, caching and the AI's "month to date" behavior are derived from that declaration.

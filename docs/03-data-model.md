@@ -185,7 +185,7 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
       { "id": "branch",      "dimension": "branch",      "parent": "region",      "measuresFrom": "performance" },
       { "id": "spv",         "dimension": "spv",         "parent": "branch",      "measuresFrom": "performance" },
       { "id": "distributor", "dimension": "distributor", "parent": "spv",         "measuresFrom": "performance" },
-      { "id": "se",          "dimension": "se",          "parent": "distributor", "measuresFrom": null, "entitiesFrom": "mapping", "note": "no SE target exists yet (DEC-059)" }
+      { "id": "se",          "dimension": "se",          "parent": "distributor", "measuresFrom": "seMonthly", "entitiesFrom": "mapping", "status": "planned: SE target and sell-out arrive with the Marketing module (DEC-059, DEC-070)" }
     ] },
     { "id": "productCatalog", "department": "marketing", "status": "planned",
       "levels": [ { "id": "item", "label": "Product name", "key": "pcode", "measuresFrom": null } ],
@@ -195,13 +195,16 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "targetIn",  "label": "Target Sell IN",  "source": "TOTALTargetSellIn" },
     { "id": "targetOut", "label": "Target Sell OUT", "source": "TOTALTargetSellOut" },
     { "id": "realIn",    "label": "Real Sell IN",    "source": "TOTALRealSellIn" },
-    { "id": "realOut",   "label": "Real Sell OUT",   "source": "TOTALRealSellOut" }
+    { "id": "realOut",   "label": "Real Sell OUT",   "source": "TOTALRealSellOut" },
+    { "id": "seTarget",  "label": "SE target (month)",       "source": "TBD (DEC-070)", "level": "se", "status": "planned" },
+    { "id": "seSellOut", "label": "SE sell out (month to date)", "source": "TBD (DEC-070)", "level": "se", "status": "planned" }
   ],
   "derived": [
     { "id": "achIn",  "label": "Achievement IN %",  "formula": "realIn / targetIn" },
     { "id": "achOut", "label": "Achievement OUT %", "formula": "realOut / targetOut" },
     { "id": "gapIn",  "label": "Shortfall IN",      "formula": "max(targetIn - realIn, 0)" },
-    { "id": "paceIn", "label": "Pace gap IN",       "formula": "achIn - workingDayProgress" }
+    { "id": "paceIn", "label": "Pace gap IN",       "formula": "achIn - workingDayProgress" },
+    { "id": "seAchOut", "label": "SE achievement %", "formula": "seSellOut / seTarget", "level": "se", "status": "planned" }
   ],
   "period": { "source": "Periode", "granularity": "month" }
 }
@@ -225,7 +228,7 @@ Request and response (placeholders):
   "dataAsOf": "TBD", "truncated": false }
 ```
 
-Source columns are Tableau-derived and unverified (`4.2`). All four measures are selectable and none is mandatory (DEC-052). A level whose `measuresFrom` is `null` returns entities only and its measures come back as `"notAvailable"`, never 0. `GET /api/sales-detail/hierarchy` returns the levels, which measures each supports, and the deepest level the signed-in user may open.
+Source columns are Tableau-derived and unverified (`4.2`). All measures are selectable and none is mandatory (DEC-052). Each measure declares the level(s) it exists at: the four sales measures exist from Region to Distributor; `seTarget` and `seSellOut` exist only at the SE level and are planned (DEC-070). A measure that does not exist at a level reads "not available" there. A level whose `measuresFrom` is `null` returns entities only and its measures come back as `"notAvailable"`, never 0. `GET /api/sales-detail/hierarchy` returns the levels, which measures each supports, and the deepest level the signed-in user may open.
 
 ### 2.9 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
@@ -336,7 +339,7 @@ Postgres folds unquoted identifiers to lowercase and column names with spaces or
 | DIST | `SELLINGPOINTNAME` (144) | Selling-point flags |
 | SE | `SLSNO` distinct (260), with codes containing "SOA" or "SOI" excluded in some counts | `SE Excl SOA/SOI` fields |
 
-Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE). **Targets exist only per selling point (distributor)**; no SE target is created yet (owner, DEC-059). **Item = product name with product code `pcode`**; it is a separate product dimension that belongs to the Marketing dashboard, added later (DEC-060).
+Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE). **In the current tables, targets exist only per selling point (distributor).** The owner says the SE-level monthly target and the month-to-date sell-out value per salesperson will be used in the Marketing module, which also enables day-by-day achievement (DEC-059, DEC-070). Whether they already exist in a table, and which one, is open. **Item = product name with product code `pcode`**; it is a separate product dimension that belongs to the Marketing dashboard, added later (DEC-060).
 
 ### 4.5 Mapping status per dashboard item
 

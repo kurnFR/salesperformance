@@ -63,6 +63,10 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 **Management**
 - Executive Summary numbers equal the Sales Performance service output for the same scope; a regional manager never sees another region in tiles, rankings, exports or shared links; derived metrics (`METRIC-019` to `METRIC-021`) match hand calculations including zero remaining days and zero target.
 
+**Daily progress (when a day-level source exists)**
+- The line equals cumulative real divided by the monthly target for each day; the pace line equals elapsed working days over total from `dimdate`; colors follow the rule table; missing days are shown as missing; a monthly-only source never offers the view.
+- SE-level rows show target, sell-out and achievement; the SE sum versus the distributor's Real Sell OUT difference appears as "Unassigned / difference" and as a data finding.
+
 **Departments**
 - A user's department switch and role control navigation, API, AI tools, export and shared links; direct URL or API access to a disabled department is refused.
 - Planned departments show "Coming soon" only to users who have them enabled; disabling a department hides it.
@@ -179,4 +183,4 @@ A metric may go to production implementation when:
 The shell, themes, navigation, editor scaffolding and mock-backed UI may proceed earlier if mock data is clearly labeled and no irreversible data-model assumptions are made.
 
 ### Later phases (not scheduled): further departments
-- Marketing (product dashboards with product name and `pcode`), Finance, HR and others. Each is added as a department entry plus a module manifest, with its own approved data mapping, KPIs, scope dimensions and, for Finance and HR, the sensitivity rules in `10-departments-and-modules.md` section 6.
+- Marketing (product dashboards with product name and `pcode`; SE-level monthly target and sell-out; daily progress and near-real-time achievement per `PROG-001`), Finance, HR and others. Each is added as a department entry plus a module manifest, with its own approved data mapping, KPIs, scope dimensions and, for Finance and HR, the sensitivity rules in `10-departments-and-modules.md` section 6.

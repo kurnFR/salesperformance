@@ -98,26 +98,34 @@ Example from the owner (the columns and values are **only an example, not a fixe
 
 ### 6.1 Hierarchy and drill-down
 
-The dimension columns come from the organisation hierarchy (the mapping view). The user can **drill down from the top level to the deepest level that exists**, down to SE. Targets exist only per selling point, so SE rows carry no target yet.
+The dimension columns come from the organisation hierarchy (the mapping view). The user can **drill down from the top level to the deepest level that exists**, down to SE. In the current tables targets exist only per selling point, so SE rows carry names and counts only until the SE-level source arrives with the Marketing module (DEC-070).
 
 ```mermaid
 flowchart TD
   subgraph FACTS["Target and real values available today (performance table)"]
     R["Region (RSM)"] --> B["Branch (ASM)"] --> S["Area (SPV)"] --> D["Selling point (DIST)"]
   end
-  D --> E["Salesman (SE): entities from the mapping, no target or facts yet"]
+  D --> E["Salesman (SE): entities from the mapping; monthly target and sell-out arrive with the Marketing module"]
 ```
 
 Product (item, with `pcode`) is **not** part of this hierarchy. It is a separate product dimension that belongs to the Marketing dashboard, added later (`10-departments-and-modules.md`).
 
 - `PIVOT-014` `[C]` **Drill down by hierarchy.** After the user has chosen the columns, each row of a hierarchical dimension can be expanded to the next level (Region > Branch > SPV > Distributor > SE) for as long as a deeper level exists. Collapsing returns to the parent.
 - `PIVOT-015` `[P]` **Two modes** over the same chosen columns: *Flat* (chosen dimension columns side by side, as in the owner's example, with subtotals) and *Drill* (a tree: start at any level, expand rows level by level, with a breadcrumb). The chosen fact columns stay while drilling.
-- `PIVOT-016` `[P]` Every node shows the chosen measures aggregated for its whole subtree, so a parent equals the sum of its children (percent columns are recalculated as `SUM(real) / SUM(target)`, never summed). Facts that cannot be placed on a lower level appear under an **Unassigned** node so totals still reconcile.
-- `PIVOT-017` `[C]` **Levels without data are never filled in.** Region to Distributor have target and real values today. The SE level shows only what the source holds: SE rows from the mapping (names, counts) with the measures marked "not available at this level", until SE targets and facts exist in a table (DEC-059). Zero is never shown in place of "not available".
+- `PIVOT-016` `[P]` Every node shows the chosen measures aggregated for its whole subtree, so a parent equals the sum of its children (percent columns are recalculated as `SUM(real) / SUM(target)`, never summed). Facts that cannot be placed on a lower level appear under an **Unassigned** node so totals still reconcile. When a child level comes from a **different source** (the SE sell-out sum versus the distributor's real Sell OUT), the difference is shown as "Unassigned / difference" and logged as a data finding, never forced to match (DEC-073).
+- `PIVOT-017` `[C]` **Levels without data are never filled in.** Region to Distributor have target and real values today. The SE level shows only what the source holds: SE rows from the mapping (names, counts) with the measures marked "not available at this level", until the SE-level source (monthly target and month-to-date sell-out per salesperson) is registered (DEC-070). When it is, SE rows show `SE target` and `SE sell out` and their achievement, colored by the same pace rule. Zero is never shown in place of "not available".
 - `PIVOT-018` `[P]` Children load on demand (one level at a time, with the same period, filters, scope and measures), with a row cap and a "refine your filters" message; an "expand to level N" control is bounded by the same cap.
 - `PIVOT-019` `[P]` **Admin can cap the deepest level a role may see** (for example, the CEO to Distributor, an SPV to SE). Scope also applies at every level: a user only expands into values they may see. The cap is a role setting, not code (`02` section 10).
 - `PIVOT-020` `[P]` Accessible tree-grid: keyboard expand/collapse, announced level and state, focus kept on the same row after expanding.
 - `PIVOT-021` `[P]` The hierarchy is defined by a registry (`03-data-model.md` section 2.8), not hard-coded, so adding a level later (for example SE facts, or the product catalog in Marketing) needs a registry entry and a source, not a redesign.
+
+### 6.2 Daily progress (planned, arrives with the Marketing module)
+
+- `PROG-001` `[P]` **Day-by-day achievement.** For any entity that has a monthly target and day-level (or daily snapshot) values, a line chart shows cumulative achievement per day against the **working-day pace line** (elapsed working days up to that day divided by total working days, from `dimdate`). The status color follows the confirmed rule (RULE-001 to RULE-005) at each day. Tooltip: date, target, real to date, %, pace %.
+- `PROG-002` `[P]` Applies first to SE sell-out against the SE monthly target, and to any other level for which day-level data is registered.
+- `PROG-003` `[C]` **Near-real-time later.** The view works with the current nightly refresh and with a faster refresh later; only the refresh signal changes (`02-architecture.md` section 13).
+- `PROG-004` `[O]` Needs day-level rows, or a daily snapshot of the month-to-date sum written by the ETL each day; the current performance view is monthly (DEC-071).
+- `PROG-005` `[P]` Until a day-level source exists the view is not offered; no day values are interpolated or estimated.
 
 ## 7. AI Chat (right panel)
 

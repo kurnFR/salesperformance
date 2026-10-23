@@ -11,6 +11,7 @@ Tags: `[C]` owner-confirmed, `[P]` proposed, `[O]` open.
 - `DEPT-003` `[C]` A **department role can be added to every user** and each department can be **enabled or disabled per user**.
 - `DEPT-004` `[C]` The **department table does not exist yet**, so the app creates and manages its own department list (admin-managed), instead of reading one from the business database.
 - `DEPT-005` `[C]` Marketing will own the **product (item)** dashboards, with the product name and `pcode` (product code). Product data is not part of the Sales release (DEC-060).
+- `DEPT-019` `[C]` Marketing will also use the **monthly target and month-to-date sell-out value per salesperson (SE)** to show **achievement progress day by day**, and near real time later (DEC-070, DEC-071). It supplies the SE level of the Sales hierarchy and the daily-progress view (`06-dashboard-catalog.md` section 6.2).
 
 ## 2. Model
 
@@ -83,7 +84,7 @@ Adding a department is a registry job, not a redesign. Each module ships a manif
 | Department | Status | What is known | Needs before it can go active |
 |---|---|---|---|
 | Sales | Active (this project) | Four reference sheets, pivot, Executive Summary, AI, findings | See `decisions.md` |
-| Marketing | Planned | Product (item) dashboards; product name with `pcode` | Approved product tables, KPIs, owners |
+| Marketing | Planned (next after Sales, DEC-065) | Product (item) dashboards with product name and `pcode`; SE monthly target and month-to-date sell-out; day-by-day achievement, near real time later | Approved product and SE tables (names, grain), KPIs, owners |
 | Finance | Planned | Nothing yet | Schema, KPIs, scope dimensions, sensitivity rules |
 | HR | Planned | Nothing yet | Schema, KPIs, scope dimensions, sensitivity rules |
 | Other departments | Later | The platform supports adding them | Department entry plus a module manifest |

@@ -258,3 +258,9 @@ All are arithmetic on values already on the dashboards. None is a forecast, and 
 - `METRIC-022` **Aggregation in tables and totals:** totals and subtotals are computed by the server from underlying values; percent columns are `SUM(real) / SUM(target)` at each level, never an average of percentages and never a sum of rounded values. A grand total of the user's visible rows is labelled "within your access".
 
 Examples (mock): target 5000, real 2000 -> shortfall 3000; with 9 remaining working days, needed per day = 333.33; achievement 40%, working-day progress 66.67% -> pace gap -26.67 points.
+
+## 10. Planned metrics (SE level and daily progress; sources not registered yet)
+
+- `METRIC-023` `[P]` **SE achievement** = `SE sell out (month to date) / SE target (month)`, colored by the same rule (RULE-001 to RULE-005). Uses a sell-out target per SE; Sell IN is not an SE-level measure (DEC-072).
+- `METRIC-024` `[P]` **Daily progress** for day `d` = `cumulative real up to d / monthly target`, compared with `pace(d) = elapsed working days up to d / total working days` from `dimdate` (same working-day source as 5.7). Needs day-level values or daily snapshots (DEC-071). Missing days are shown as missing, never interpolated.
+- `METRIC-025` `[P]` **Month to date versus last month to date**: when a day-level source exists, last month's value is cut off at the same working day (or calendar day, DEC-071), so the comparison is like-for-like. On monthly-only sources it remains unavailable (`METRIC-018`).
