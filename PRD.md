@@ -110,10 +110,10 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 
 | Phase | Outcome | Needs from owner |
 |---|---|---|
-| 0 | Discovery, approved data contract and decisions | Schema, data dictionary, examples, calendar rules |
-| 1 | App shell, routing, themes, health check, mock fixtures | — |
-| 2 | First read-only Sales Performance dashboard on real data | Approved formulas + verified examples |
-| 3 | Configurable achievement rules | Rule defaults confirmed |
+| 0 | Discovery, approved data contract and decisions | Verified columns and grain (DEC-001), SE/DIST definitions, units, owner answers in `docs/decisions.md` |
+| 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in (per-user MFA option), access-control foundation | Encryption key location (DEC-049) |
+| 2 | Sales Performance dashboard on real data for INA and ASW: principal buttons, scoped data, tooltips, working-day progress from `dimdate`, auto-refresh after ETL | Approved mapping rows and verified examples; ETL refresh signal (DEC-048) |
+| 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
 | 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |

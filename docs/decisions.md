@@ -4,6 +4,16 @@ Every open question has a **proposed default** so work can continue; the default
 
 Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (blocked, no default) · `Superseded`.
 
+## What needs the owner now (highest impact first)
+
+1. **DEC-001** Run the verification queries in `03-data-model.md` section 4.6 (column names and types, grain, region order). Nothing real can be built on the data until this is done.
+2. **DEC-048** Can the ETL's last step write a refresh log row and `NOTIFY`? This drives auto-refresh and the "data as of" time.
+3. **DEC-049** Where the encryption master key lives (API keys and MFA secrets).
+4. **DEC-002, DEC-028** Exact meaning of DIST and SE, and which SE rows count (active flags, SOA/SOI exclusion).
+5. **DEC-029, DEC-030** Multi-month role-count denominators; unit and format of target and real values.
+6. **DEC-023, DEC-026** Growth bar colors; Daily Upload details.
+7. **DEC-013, DEC-017, DEC-008** UI language, target screens, hosting.
+
 ## Confirmed
 
 | ID | Decision | Confirmed | Where used |
@@ -11,30 +21,30 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-005 | Color rule: if achievement >= working-day progress -> green (even below 70%); otherwise <70% red, 70% to <100% yellow, >=100% green. Equality is green. Yellow overrides red when behind pace but >=70% | 2026-10-22 (owner, in chat) | `01-metrics-contract.md` section 4 |
 | DEC-005a | Working-day progress is capped to 0-100% on the server | 2026-10-22 | `01-metrics-contract.md` 5.7 |
 | DEC-005b | Working-day progress comes from the working-day table/calendar, not sales achievement | Earlier (owner) | `01-metrics-contract.md` 5.7 |
-| DEC-005c | Role card example: RSM (5), IN 20% / 1 = one of five counted as achieved. The threshold behind "achieved" is now disputed: see DEC-021 | Earlier (owner) | `01-metrics-contract.md` 5.3 |
+| DEC-005c | Role card example: RSM (5), IN 20% / 1 = one of five counted as achieved. The threshold behind "achieved" is settled in DEC-021 | Earlier (owner) | `01-metrics-contract.md` 5.3 |
+| DEC-007 | Users are created by an admin (original wording also planned Microsoft accounts; Microsoft is now skipped, see DEC-007a and DEC-038) | 2026-10-22 (owner) | `02` section 11 |
+| DEC-007a | Release 1 sign-in is admin-created username and password; users can change their password (supersedes the Microsoft part of DEC-007) | 2026-10-22 (owner) | `02` section 11 |
+| DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
 | DEC-020 | 70% up to 99% is yellow (70% inclusive) | 2026-10-22 (owner) | `01` RULE-009 |
 | DEC-021 | Role cards use the **same rule as the bars**: an entity is "achieved" when achievement >= working-day progress (bar condition 1). The count is live: when working-day progress rises above an entity's achievement it stops counting (for example RSM IN goes from 1 to 0) | 2026-10-22 (owner) | `01` 5.3, `06` PERF-002 |
 | DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
-| DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
 | DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
 | DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
-| DEC-007 | Users are created by an admin (original wording also planned Microsoft accounts; Microsoft is now skipped, see DEC-007a and DEC-038) | 2026-10-22 (owner) | `02` section 11 |
-| DEC-034 | DIST total (144) is a distinct count from the database; active-distributor totals come from a **manual Excel upload** (`distaktif`) that may be stale or wrong. Both are shown as stored; mismatches go to a separate **Data Findings** sheet for validation | 2026-10-22 (owner) | `08-data-findings.md`, `DASH-009` |
-| DEC-035 | A table name without the INA suffix belongs to ASW (so `v_sr_per_branch` is the ASW mapping); each principal has its own regions, branches and other data. Open remainder: `distaktif` (DEC-044) | 2026-10-22 (owner) | `03` 2.6 |
-| DEC-036 | Admin sets roles when creating users and keeps full control afterwards: can change what a role is allowed, and switch features and filters on or off | 2026-10-22 (owner) | `02` section 10, SEC-014 |
-| DEC-045 | AI Chat icon in the right panel; answers only from database data; no assumption or hallucination; pop-up chart/card/line/bar; pop-up hides but the result stays in chat and reopens | 2026-10-22 (owner) | `07-ai-chat.md` |
-| DEC-041 | Data is **monthly**, refreshed every night; the current month is month-to-date as of the last refresh. For "month to date" questions the AI says only monthly periods exist (no "last month to date"). Near-real-time refresh is planned later | 2026-10-22 (owner) | `01` METRIC-018, `07` AI-026, `DASH-010` |
-| DEC-044 | `distaktif` holds both INA and ASW regions now and will be split into separate tables later. Until then filter by each principal's region codes; after the split change only the principal registry | 2026-10-22 (owner) | `03` 2.6 |
-| DEC-038 | Microsoft sign-in is **skipped** for now (no Microsoft administrator). Revisit when one is available | 2026-10-22 (owner) | `02` section 11, AUTH-009 |
-| DEC-007a | Release 1 sign-in is admin-created username and password; users can change their password (supersedes the Microsoft part of DEC-007) | 2026-10-22 (owner) | `02` section 11 |
-| DEC-040b | AI chat history is deleted after **60 days** | 2026-10-22 (owner) | `07` AI-035 |
-| DEC-046a | AI behavior: confirms typos/wrong questions and suggests alternatives, answers after confirmation; answers from dashboard data; may do logical calculation; no free database queries and no tables outside the existing ones | 2026-10-22 (owner) | `07` AI-007, AI-008, AI-024 |
-| DEC-047 | The AI provider is **configurable in settings**: admin selects provider (9Router, OmniRoute, local model, Claude, Gemini, OpenAI/Codex, any OpenAI-compatible), model, and saves the API key; can switch any time | 2026-10-22 (owner) | `07` section 9, AI-037 to AI-047 |
-| DEC-046 | An **ETL** loads source data, refreshes materialized views and runs stored procedures, taking almost 3 hours. Dashboards must **auto-refresh** when data changes | 2026-10-22 (owner) | `02` section 13, `DASH-011` |
-| DEC-039 | **MFA is configurable per user**: admin enables or disables it for each user who needs it. Remaining local-account policy values stay as proposed | 2026-10-22 (owner) | `02` AUTH-010, AUTH-011 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
+| DEC-034 | DIST total (144) is a distinct count from the database; active-distributor totals come from a **manual Excel upload** (`distaktif`) that may be stale or wrong. Both are shown as stored; mismatches go to a separate **Data Findings** sheet for validation | 2026-10-22 (owner) | `08-data-findings.md`, `DASH-009` |
+| DEC-035 | A table name without the INA suffix belongs to ASW (so `v_sr_per_branch` is the ASW mapping); each principal has its own regions, branches and other data. `distaktif` is covered by DEC-044 | 2026-10-22 (owner) | `03` 2.6 |
+| DEC-036 | Admin sets roles when creating users and keeps full control afterwards: can change what a role is allowed, and switch features and filters on or off | 2026-10-22 (owner) | `02` section 10, SEC-014 |
+| DEC-038 | Microsoft sign-in is **skipped** for now (no Microsoft administrator). Revisit when one is available | 2026-10-22 (owner) | `02` section 11, AUTH-009 |
+| DEC-039 | **MFA is configurable per user**: admin enables or disables it for each user who needs it. Remaining local-account policy values stay as proposed | 2026-10-22 (owner) | `02` AUTH-010, AUTH-011 |
+| DEC-040b | AI chat history is deleted after **60 days** | 2026-10-22 (owner) | `07` AI-035 |
+| DEC-041 | Data is **monthly**, loaded by the ETL (nightly today); the current month is month-to-date as of the last completed refresh. For "month to date" questions the AI says only monthly periods exist (no "last month to date"). Near-real-time refresh is planned later | 2026-10-22 (owner) | `01` METRIC-018, `07` AI-026, `DASH-010` |
+| DEC-044 | `distaktif` holds both INA and ASW regions now and will be split into separate tables later. Until then filter by each principal's region codes; after the split change only the principal registry | 2026-10-22 (owner) | `03` 2.6 |
+| DEC-045 | AI Chat icon in the right panel; answers only from database data; no assumption or hallucination; pop-up chart/card/line/bar; pop-up hides but the result stays in chat and reopens | 2026-10-22 (owner) | `07-ai-chat.md` |
+| DEC-046 | An **ETL** loads source data, refreshes materialized views and runs stored procedures, taking almost 3 hours. Dashboards must **auto-refresh** when data changes | 2026-10-22 (owner) | `02` section 13, `DASH-011` |
+| DEC-046a | AI behavior: confirms typos/wrong questions and suggests alternatives, answers after confirmation; answers from dashboard data; may do logical calculation; no free database queries and no tables outside the existing ones | 2026-10-22 (owner) | `07` AI-007, AI-008, AI-024 |
+| DEC-047 | The AI provider is **configurable in settings**: admin selects provider (9Router, OmniRoute, local model, Claude, Gemini, OpenAI/Codex, any OpenAI-compatible), model, and saves the API key; can switch any time | 2026-10-22 (owner) | `07` section 9, AI-037 to AI-047 |
 
 ## Blocking Phase 0 and 2
 
@@ -44,9 +54,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-002 | Are DIST and SE distinct? Which appear on cards vs header? | Treat as distinct until told otherwise | Wrong cards/totals | Phase 2 | Open |
 | DEC-003 | Org hierarchy and roll-up | Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE); achievement aggregated per level (`03` 4.4) | Wrong role achievement | Phase 2 | Proposed |
 | DEC-004 | Achievement formulas, aggregation order, zero/missing target, denominator for people without data | Aggregate then divide; missing target = unavailable; missing-data people excluded from denominator but flagged | Wrong percentages | Phase 2 | Proposed |
-| DEC-004a | Do IN/OUT mean Sell IN/Sell Out? Does exactly 100% count? | Yes, and yes (>=100%) | Wrong counts | Phase 2 | Proposed |
-| DEC-006 | Business timezone and working-day semantics (as-of date, holidays, past/future periods, zero working days) | Business timezone confirmed by owner (placeholder `TBD`); past period 100%, future 0%, zero working days unavailable | Wrong progress, wrong colors | Phase 2 | Proposed |
-| DEC-006a | Default date range on first load | Current calendar month to date | Confusing first view | Phase 2 | Proposed |
+| DEC-004a | Do IN/OUT on the role cards mean Sell IN and Sell Out? | Yes | Wrong counts | Phase 2 | Proposed |
+| DEC-006 | Business timezone used for "today" and the display date (working days themselves come from `dimdate`, DEC-027) | Asia/Jakarta unless the owner says otherwise; past month 100%, future month 0%, zero working days unavailable | Wrong progress near midnight | Phase 2 | Proposed |
+| DEC-006a | Default period on first load | Current calendar month (month picker, month-to-date as of the last refresh) | Confusing first view | Phase 2 | Proposed |
 
 ## Platform and operations
 
@@ -56,8 +66,8 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-009 | Where app-owned config lives | Separate `app_config` schema in the same PostgreSQL, created by migrations (`03-data-model.md` section 3) | Phase 3 | Proposed |
 | DEC-010 | Do filters persist across rotation or per dashboard? | Period filter shared; other filters per dashboard | Phase 5 | Proposed |
 | DEC-012 | Kiosk display authentication | Dedicated long-lived read-only display token, revocable by admin | Phase 5 | Proposed |
-| DEC-013 | UI language, number/date formatting, single vs multiple timezones across regions | Single business timezone; language confirmed by owner | Phase 1 | Open |
-| DEC-014 | Data refresh cadence, staleness threshold, caching, read replica or materialized views | Query on demand with short server cache (60 s); stale after 2x source cadence | Phase 2 | Proposed |
+| DEC-013 | UI language (Bahasa Indonesia, English or both), number/date formatting, single vs multiple timezones across regions | Single business timezone; English labels as in the Tableau screenshots until the owner decides | Phase 1 | Open |
+| DEC-014 | Staleness threshold and caching (refresh itself is covered by DEC-046 and DEC-048) | Cache keyed by `dataVersion` (no fixed TTL needed); warn when no completed ETL run is seen for 36 hours | Phase 2 | Proposed |
 | DEC-015 | Layouts/playlists scope: global, per role, per user, per display | Global layouts; one default playlist; per-display playlists later | Phase 4 | Proposed |
 | DEC-016 | Rotation minimum duration and failure behavior | Minimum 5 s; on failure skip with notice | Phase 5 | Proposed |
 | DEC-017 | Target displays (resolution, aspect, viewing distance) and minimum viewport | 1920x1080 and 1366x768 desktop; tablet-width reflow | Phase 1 | Open |

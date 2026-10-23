@@ -213,8 +213,8 @@ User-authored content, not metrics. Store safe structured text with limited form
 ## 6. Growth metrics and rolling 7-month window
 
 - `METRIC-015` `[R]` `growth_pct(m) = (real(m, year Y) - real(m, year Y-1)) / real(m, year Y-1)`; Tableau computes this with `ZN()` (null to 0) and a 12-month lookback. When last year's real is 0 or missing the result is undefined: show "n/a" (DEC-025).
-- `GROW-001` `[C]` Window: months `M-6 ... M` where `M` is the selected month (default the current business month), each with its last-year counterpart (`M-18 ... M-12`). Moving to the next month shifts the window by one month. Windows cross year boundaries chronologically.
-- `GROW-003` `[R]` Growth labels only for closed months (Tableau `Filter until closing month`); the in-progress month shows bars without growth.
+- Window (`GROW-001` in `06-dashboard-catalog.md`) `[C]`: months `M-6 ... M` where `M` is the selected month (default the current business month), each with its last-year counterpart (`M-18 ... M-12`). Moving to the next month shifts the window by one month. Windows cross year boundaries chronologically.
+- Growth labels (`GROW-003` in `06-dashboard-catalog.md`) `[R]`: only for closed months (Tableau `Filter until closing month`); the in-progress month shows bars without growth.
 - Direction: positive shows an up arrow (green), negative a down arrow (white in the reference).
 - Growth for Sell Out uses real Sell Out. Achievement % and colors on each bar follow section 4 / `06-dashboard-catalog.md` (DEC-023).
 
