@@ -16,7 +16,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-092** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
+- **DEC-085 to DEC-096** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -79,6 +79,8 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-083 | The TV is driven by a **mini PC over HDMI**, so a mouse works | 2026-10-22 (owner) | `04` DASH-012 |
 | DEC-084 | The ETL **sometimes drops, truncates and adds columns** | 2026-10-22 (owner) | `02` OPS-017 to OPS-021 |
 | DEC-086 | **Reg** = Regular, a product group sold every day. **Fes** = Festive, a product group sold seasonally. The owner wants their achievement analysed | 2026-10-22 (owner) | `11` INS-015 to INS-019, `01` METRIC-039 |
+| DEC-087 | **SLI** = Sell IN (sale to the distributor); **SLO** = Sell OUT (sale from the distributor to the customer). `RealQtySLI` and `RealQtySLO` are realised quantities; `TargetQtyEskaSLO` is the Sell OUT target by quantity; `TargetValueEskaSLO` is the Sell OUT target by value; `RealSellInReg/Fes` are values | 2026-10-22 (owner) | `03` 4.2, `01` METRIC-042 |
+| DEC-088 | `CUSTNO` is the **customer code** and `CUSTNAME` the customer name | 2026-10-22 (owner) | `03` 4.4, `11` INS-022 |
 
 ## Blocking Phase 0 and 2
 
@@ -142,11 +144,12 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
 | DEC-081 | Status values and time zone of `dwh_prod.etl_refresh_log` (running or failed rows, null `end_time`, local or UTC) | Checked by the schema check (DEC-076); a newer `start_time` without a newer successful `end_time` means "refresh in progress" | Phase 2 | Proposed |
 | DEC-082 | Ask the ETL (Pentaho) to log the start and end of its load step (not only `Refresh Materialized Views`) so the maintenance window is exact; Pentaho jobs can write their own log tables | Estimate the window from log history until then | Phase 2 | Proposed |
-| DEC-085 | The one new dashboard is **Performance Drivers** (views: Gap, Channel, Persistence, Distribution and ambition, YTD, Network, Product groups Regular and Festive; Volume and Productivity later) | As in `11` | Phase 6 | Proposed |
-| DEC-087 | Meaning of `RealQtySLI`, `RealQtySLO`, `TargetQtyEskaSLO`, `TargetValueEskaSLO` (units, Eska SLO) | Not used until explained | Phase 6 | Open |
-| DEC-088 | Productivity: join key between the performance view and the mapping view (selling point code vs `KODESCABANG`), meaning of `CUSTNO` and `FLAG_AKTIF` | Not used until confirmed | Phase 6 | Open |
+| DEC-085 | The one new dashboard is **Performance Drivers** (views: Gap, Channel, Persistence, Distribution and ambition, YTD, Network, Product groups Regular and Festive, Volume and coverage) | As in `11` | Phase 6 | Proposed |
 | DEC-089 | First month of the year for YTD (calendar or fiscal) | January | Phase 6 | Proposed |
 | DEC-090 | Default thresholds: chronic streak 3 closed months; momentum 2 points; top N 5; sell-through bands | As listed | Phase 6 | Proposed |
 | DEC-091 | Pace expectation for Festive (seasonal) products: the working-day pace can mislead for a seasonal group | Same rule for both groups with a visible note; closed months against 100%; owner may define a seasonal expectation | Phase 6 | Proposed |
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
+| DEC-094 | Unit of the quantity columns (pieces, cartons, kilograms) and how to label it | Show the unit label from a setting; "units" until told | Phase 6 | Open |
+| DEC-095 | Is `TargetValueEskaSLO` the same measure as `TOTALTargetSellOut` or a different source? Which one do dashboards use? | Dashboards use `TOTALTargetSellOut`; the schema check compares them and differences become findings | Phase 6 | Open |
+| DEC-096 | Remaining mapping questions: join key between the performance and mapping views (selling point code versus `KODESCABANG`), meaning of `FLAG_AKTIF`, `SLSTP`, `TEAM`; the mapping is a current snapshot with no history | Productivity uses the current mapping, labelled so; join confirmed by the schema check | Phase 6 | Open |

@@ -36,7 +36,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
 | 5 | Data Findings | (new) | Anomalies and findings to validate, such as DIST total vs manual active-distributor upload | `08` |
 | 6 | Sales Detail (pivot) | (owner example, not a fixed layout) | The user chooses columns (hierarchy dimensions and fact values) over a period range, with totals, drill-down through the hierarchy down to SE and item where data exists, and export | `06` section 6 |
-| 7 | Performance Drivers | (new, owner-requested insight dashboard) | Where the missing value is, Sell IN versus Sell OUT signal, persistence and momentum, status distribution and target ambition, year to date, Regular versus Festive product groups, network health; volume and productivity later | `11` |
+| 7 | Performance Drivers | (new, owner-requested insight dashboard) | Where the missing value is, Sell IN versus Sell OUT signal, persistence and momentum, status distribution and target ambition, year to date, Regular versus Festive product groups, network health, volume versus value and field coverage | `11` |
 | - | Executive Summary | (new) | One-screen view for CEO, General Manager and Regional Manager: pace, regions, needs-attention, movers, data health | `09` |
 | - | AI Chat | (new, right panel icon) | Answers questions from the data only, with pop-up charts that stay in the chat | `07` |
 

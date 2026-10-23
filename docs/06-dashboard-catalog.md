@@ -87,7 +87,7 @@ Example from the owner (the columns and values are **only an example, not a fixe
 - `PIVOT-001` `[C]` A detail table with dimension columns, fact columns and a **grand total** row.
 - `PIVOT-002` `[C]` A **period range filter**: the user chooses a start and an end period from the list of available periods (months). Facts are summed over the range.
 - `PIVOT-003` `[C]` The user **chooses which dimension columns to show**, in any combination. The dimensions form a **hierarchy** (see below): Region (RSM), Branch (ASM), SPV (area), Distributor (selling point), then Salesman (SE) and Item where the data exists. `[P]` City (`KOTA`) as a flat, non-hierarchical column.
-- `PIVOT-004` `[C]` The user **chooses which fact columns to show** from every available measure: Target Sell IN, Target Sell OUT, Real Sell IN, Real Sell OUT, and the same four for Regular and Festive. `[P]` derived columns: achievement % for Sell IN and Sell OUT, shortfall to target, pace gap (`01` section 9). Nothing is fixed to the owner's example (DEC-052).
+- `PIVOT-004` `[C]` The user **chooses which fact columns to show** from every available measure: Target Sell IN, Target Sell OUT, Real Sell IN, Real Sell OUT, the same four for Regular and Festive, and the quantity measures (Real Sell IN quantity, Real Sell OUT quantity, Target Sell OUT quantity). `[P]` derived columns: achievement % for Sell IN and Sell OUT, shortfall to target, pace gap (`01` section 9). Nothing is fixed to the owner's example (DEC-052).
 - `PIVOT-005` `[C]` **Grand total** at the bottom. `[P]` Subtotals at each grouping level with expand and collapse. Totals are calculated **by the server from the underlying values**, never by adding rounded numbers on screen. Percent columns are `SUM(real) / SUM(target)` at every level, not an average of row percentages.
 - `PIVOT-006` `[P]` Sorting, a filter on each dimension (only values the user may see), search, column chooser, frozen header, and server-side paging or virtual scrolling for large result sets.
 - `PIVOT-007` `[P]` Percent columns use the bar color rule (RULE-001 to RULE-005) with a text or icon cue (`A11Y`).
@@ -108,6 +108,7 @@ flowchart TD
     R["Region (RSM)"] --> B["Branch (ASM)"] --> S["Area (SPV)"] --> D["Selling point (DIST)"]
   end
   D --> E["Salesman (SE): entities from the mapping; monthly target and sell-out arrive with the Marketing module"]
+  E --> C["Customer (CUSTNO, CUSTNAME): names only, no figures"]
 ```
 
 Product (item, with `pcode`) is **not** part of this hierarchy. It is a separate product dimension that belongs to the Marketing dashboard, added later (`10-departments-and-modules.md`).

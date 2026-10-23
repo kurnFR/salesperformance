@@ -37,7 +37,8 @@ The two will not always agree (144 against 120 on the reference screenshots). Th
 | `UPLOAD_GAP` | Distributor with no upload for N consecutive days (threshold open) | Daily Upload dashboard |
 | `TYPE_TOTAL_MISMATCH` | `TOTAL` target or real differs from Regular plus Festive (Sell IN or Sell OUT) | Total 1000, Regular 600 + Festive 300 |
 | `SELL_OUT_ABOVE_SELL_IN` | Sell OUT far above Sell IN for a distributor over several months (threshold DEC-043) | Possible mapping or upload error |
-| `QTY_VALUE_MISMATCH` | Quantity with no value, or the reverse (when quantity columns are registered, DEC-087) | Real value 0 with quantity above 0 |
+| `QTY_VALUE_MISMATCH` | Quantity with no value, or the reverse (`RealQtySLI/SLO` against the value columns) | Real value 0 with quantity above 0 |
+| `TARGET_SOURCE_MISMATCH` | `TargetValueEskaSLO` differs from `TOTALTargetSellOut` for the same scope and month | Two Sell OUT targets that disagree |
 | `SCHEMA_DRIFT` | A registered column is missing, renamed or retyped after an ETL run (`OPS-021`) | Column dropped by the ETL |
 | `PARTIAL_DATA` | A fresh result is implausibly small compared with the last good one (`OPS-020`) | Current month rows missing |
 | `USER_REPORTED` | A user flags a number from any chart ("report anomaly") with a note | Free text |
