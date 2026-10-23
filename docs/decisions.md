@@ -7,12 +7,13 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 ## What needs the owner now (highest impact first)
 
 1. **DEC-001** Run the verification queries in `03-data-model.md` section 4.6 (column names and types, grain, region order). Nothing real can be built on the data until this is done.
-2. **DEC-048** Can the ETL's last step write a refresh log row and `NOTIFY`? This drives auto-refresh and the "data as of" time.
-3. **DEC-049** Where the encryption master key lives (API keys and MFA secrets).
+2. **DEC-048** Give me the ETL log table's name and columns (and which row means the views used by the dashboards finished refreshing).
+3. **DEC-052** For the Sales Detail table: one "Target" column or two (Target Sell IN and Target Sell OUT)?
 4. **DEC-002, DEC-028** Exact meaning of DIST and SE, and which SE rows count (active flags, SOA/SOI exclusion).
 5. **DEC-029, DEC-030** Multi-month role-count denominators; unit and format of target and real values.
 6. **DEC-023, DEC-026** Growth bar colors; Daily Upload details.
 7. **DEC-013, DEC-017, DEC-008** UI language, target screens, hosting.
+8. **DEC-054, DEC-057** Executive Summary content, and which roles are CEO, General Manager and Regional Manager (is Regional Manager the RSM?).
 
 ## Confirmed
 
@@ -30,6 +31,10 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
 | DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
 | DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
+| DEC-049 | The encryption master key is entered by the administrator in the server's `.env`; the app refuses to start without it | 2026-10-22 (owner) | `02` SEC-015 |
+| DEC-048a | The ETL materialized-view refresh log **already exists in a log table**; the app reads it for the "data as of" time and the refresh signal (polling) | 2026-10-22 (owner) | `02` OPS-005 |
+| DEC-039a | MFA method is **TOTP** | 2026-10-22 (owner) | `02` AUTH-011 |
+| DEC-058 | Sales Detail (pivot): user picks a period range, dimension headers (region, branch, SPV, distributor) and fact values (target, real Sell IN, real Sell OUT), with a grand total | 2026-10-22 (owner) | `06` section 6 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -72,7 +77,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-016 | Rotation minimum duration and failure behavior | Minimum 5 s; on failure skip with notice | Phase 5 | Proposed |
 | DEC-017 | Target displays (resolution, aspect, viewing distance) and minimum viewport | 1920x1080 and 1366x768 desktop; tablet-width reflow | Phase 1 | Open |
 | DEC-018 | Tableau parity: sample periods and tolerance (workbook now provided) | 3 recent months incl. Oct-26; exact match after rounding | Phase 2 exit | Proposed |
-| DEC-019 | Out-of-scope features: export, drill-through, annotations, alerts | All deferred past v1 | Phase 6 | Proposed |
+| DEC-019 | Out-of-scope features | Export and drill-down are **in scope** for management (`MGMT-004`, `MGMT-007`). Annotations and push alerts stay deferred | Phase 6 | Proposed |
 
 ## New decisions from the Tableau workbook, screenshots and data dictionary
 
@@ -98,7 +103,12 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-040 | AI remainder: who may read chats (retention is 60 days, confirmed), usage limits | Only the owner of a chat reads it; non-content usage counters kept | AI phase | Proposed |
 | DEC-042 | AI reply language | Same language as the user's question (Bahasa Indonesia or English) | AI phase | Proposed |
 | DEC-043 | Findings thresholds and severity (outlier ceiling, upload-gap days, difference tolerance), who validates, retention | Warning above 10% difference; upload gap 3 days; validators are users with `findings.manage` | Findings phase | Proposed |
-| DEC-048 | ETL refresh signal: can the ETL's final step write a refresh log row (run id, started, finished, status) and `NOTIFY`? Name of the log table. Can materialized views use `REFRESH ... CONCURRENTLY` (unique indexes)? Which time does the ETL start? | Log row + `NOTIFY` (poll as fallback); concurrent refresh if possible | Phase 2 | Open (important) |
-| DEC-049 | Where does the encryption master key (for API keys and MFA secrets) live: server environment variable, secret manager, or file readable only by the service? Who holds it and how is it rotated? | Server secret outside the database, held by the technical administrator | Phase 1 | Open |
 | DEC-050 | Data-sharing acknowledgement when a non-local AI provider is activated: wording, who may acknowledge | Admin acknowledges; stored in the audit log | AI phase | Proposed |
 | DEC-051 | Optional secondary AI profile used only when the active one is down (`AI-047`) | Off by default | AI phase | Open |
+| DEC-048 | ETL refresh log details: table name, columns, how to tell that the views used by the dashboards finished refreshing, expected start time and duration (almost 3 hours) | Poll the log every 60 s; use the finish time of the last successful run | Phase 2 | Open |
+| DEC-052 | Sales Detail: the source has separate targets for Sell IN and Sell OUT. Show one "Target" or two? | Two columns (Target Sell IN, Target Sell OUT) | Phase 6 | Open |
+| DEC-053 | Export scope: formats (Excel, CSV, PDF/image), row limit, who may export | Excel, CSV and PDF/image snapshot; row limit 50,000; capability `export.use` per role; no scheduled delivery in v1 | Phase 6 | Proposed |
+| DEC-054 | Executive Summary content and default landing page per role | As in `09-management-experience.md` section 3 and 4 | Phase 2 | Proposed |
+| DEC-055 | Alert and delivery channels (in-app only, email, WhatsApp) | In-app Needs-attention list only in v1 | Phase 7 | Open |
+| DEC-056 | Derived management metrics (pace gap, shortfall, needed per remaining working day) | As in `01` section 9 | Phase 2 | Proposed |
+| DEC-057 | Management roles: CEO and General Manager see all; Regional Manager = RSM sees own region(s)? Any ASM/SPV views? | As in `09` section 2 | Phase 2 | Proposed |

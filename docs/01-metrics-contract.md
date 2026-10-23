@@ -247,3 +247,14 @@ Growth points add last-year real, this-year real and growth %. Missing values re
 ## 8. Scope applies to every metric (DEC-011, DEC-036)
 
 Every number is computed **inside the signed-in user's data scope** (allowed principals, regions and other scoped filters; see `02-architecture.md` section 10). A user limited to one region sees team totals, role cards, bars and active-distributor figures for that region only. Working-day progress is the same for everyone. A user cannot request data outside their scope by editing a URL or parameter; the server rejects or filters it.
+
+## 9. Derived metrics for management (`[P]`, DEC-056)
+
+All are arithmetic on values already on the dashboards. None is a forecast, and each is labelled as such in the UI.
+
+- `METRIC-019` **Pace gap** (percentage points) = `achievement - working_day_progress`. Positive means ahead of pace.
+- `METRIC-020` **Shortfall to target** = `max(target - real, 0)`, in the same unit as the target (unit: DEC-030).
+- `METRIC-021` **Needed per remaining working day to reach 100%** = `shortfall / remaining_working_days`, with `remaining_working_days = total_working_days - elapsed_working_days` from `dimdate` (elapsed counts days before today, so remaining includes today). Shown only for the current month when remaining days > 0 and target > 0; otherwise "n/a". It says what the target requires, not what will happen.
+- `METRIC-022` **Aggregation in tables and totals:** totals and subtotals are computed by the server from underlying values; percent columns are `SUM(real) / SUM(target)` at each level, never an average of percentages and never a sum of rounded values. A grand total of the user's visible rows is labelled "within your access".
+
+Examples (mock): target 5000, real 2000 -> shortfall 3000; with 9 remaining working days, needed per day = 333.33; achievement 40%, working-day progress 66.67% -> pace gap -26.67 points.

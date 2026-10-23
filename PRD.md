@@ -35,6 +35,8 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | 3 | Growth Sell Out | `sheet3-growth sell out.png` | Same layout using Sell Out | `06` section 3 |
 | 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
 | 5 | Data Findings | (new) | Anomalies and findings to validate, such as DIST total vs manual active-distributor upload | `08` |
+| 6 | Sales Detail (pivot) | (owner example) | Choose dimensions (region, branch, SPV, distributor) and facts (target, real Sell IN, real Sell OUT) over a period range, with totals and export | `06` section 6 |
+| - | Executive Summary | (new) | One-screen view for CEO, General Manager and Regional Manager: pace, regions, needs-attention, movers, data health | `09` |
 | - | AI Chat | (new, right panel icon) | Answers questions from the data only, with pop-up charts that stay in the chat | `07` |
 
 **Cross-cutting requirements (owner-confirmed unless marked):**
@@ -43,6 +45,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Period selection is **by month** (`DASH-003`, from Tableau).
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
+- **Management use:** Executive Summary, regional view, drill-down, rankings, export and share, glossary, phone layout, saved views (`MGMT-001` to `MGMT-018`, `docs/09-management-experience.md`).
 - **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-047`).
 - **Data Findings** sheet lists anomalies to validate; manual-upload sources are labelled (`FIND-001`, `DASH-009`).
 - **Sign-in:** admin creates users with a username and password; users can change their password after login. Microsoft sign-in is skipped for now (no Microsoft administrator) and can be added later (`AUTH-001` to `AUTH-011`).
@@ -104,20 +107,20 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication).
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail).
 
 ## 7. Roadmap at a glance
 
 | Phase | Outcome | Needs from owner |
 |---|---|---|
 | 0 | Discovery, approved data contract and decisions | Verified columns and grain (DEC-001), SE/DIST definitions, units, owner answers in `docs/decisions.md` |
-| 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in (per-user MFA option), access-control foundation | Encryption key location (DEC-049) |
-| 2 | Sales Performance dashboard on real data for INA and ASW: principal buttons, scoped data, tooltips, working-day progress from `dimdate`, auto-refresh after ETL | Approved mapping rows and verified examples; ETL refresh signal (DEC-048) |
+| 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in with per-user TOTP, `.env` master key, access-control foundation | — |
+| 2 | Sales Performance dashboard and Executive Summary on real data for INA and ASW: principal buttons, scoped data, tooltips, working-day progress from `dimdate`, auto-refresh from the ETL log, drill-down | Approved mapping rows and verified examples; ETL log table details (DEC-048) |
 | 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
-| 6 | Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved |
-| 7 | AI Chat and Data Findings | Encryption key location (DEC-049), findings thresholds (DEC-043), ETL refresh signal (DEC-048) |
+| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; target definition (DEC-052) |
+| 7 | AI Chat and Data Findings | Findings thresholds (DEC-043); alert channels if wanted (DEC-055) |
 | 8 | Production hardening | — |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
@@ -132,6 +135,7 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/09-management-experience.md` | Management review: gaps found, personas, Executive Summary, derived metrics, export/share |
 | `docs/07-ai-chat.md` | AI chat: grounded-answer design, tools, pop-up behavior, rules, tests |
 | `docs/08-data-findings.md` | Data findings sheet: checks, record, workflow |
 | `docs/06-dashboard-catalog.md` | The four dashboards: layout, widgets, tooltips, rolling window, per-dashboard requirements |

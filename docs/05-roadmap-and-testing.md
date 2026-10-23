@@ -20,10 +20,12 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 
 ### Phase 2: First read-only Sales Performance dashboard
 - Filters, team totals, role cards, region navigation, Sell IN/Sell Out chart, working-day indicator, display date, freshness.
+- Executive Summary, Regional Manager view and drill-down links (`09-management-experience.md`), reusing these services.
 - Connect PostgreSQL only after the relevant mapping rows are `Approved`.
 - **Exit:** outputs match owner-validated examples and Tableau parity samples.
 
 ### Phase 3: Configurable achievement rules and access admin
+- Glossary, default landing per role, saved views (`MGMT-003`, `MGMT-009`, `MGMT-011`).
 - Admin screens for roles, capabilities, scopes and user assignments (`UI-019`), with audit.
 - Admin settings, validation, preview, persistence, versioning, boundary tests from the color table.
 
@@ -34,7 +36,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Playlist admin, ordering, durations, rotation controller, kiosk mode, playback controls, kiosk authentication.
 
 ### Phase 6: Growth and upload dashboards, then further dashboards
-- Order: Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload. Each is built separately and needs its mapping rows approved and acceptance examples (`06-dashboard-catalog.md`).
+- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload. Each is built separately and needs its mapping rows approved and acceptance examples (`06-dashboard-catalog.md`).
 - Rolling 7-month window and growth logic (`GROW-001` to `GROW-008`) get unit tests including year-boundary windows (for example selected Mar-27) and zero last-year values.
 - Later dashboards follow the same rule: one at a time with approved schema, KPI definitions and examples.
 
@@ -49,9 +51,20 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 
 ## 2. Acceptance criteria
 
+**Sales Detail (pivot)**
+- The user can choose period range, dimension headers (with order) and fact columns; a grand total is shown; totals equal server aggregation of the underlying rows, and percent columns equal `SUM(real) / SUM(target)` at every level.
+- The owner's example row is reproduced from a mock fixture (Sell IN 2000 and Sell OUT 3000 against target 5000).
+- Only allowed principals and regions appear; the grand total is labelled "within your access"; a field id outside the catalog is rejected; the row cap and timeout return a clear message.
+- Excel/CSV export equals the on-screen result and carries filters, scope note and as-of.
+
+**Management**
+- Executive Summary numbers equal the Sales Performance service output for the same scope; a regional manager never sees another region in tiles, rankings, exports or shared links; derived metrics (`METRIC-019` to `METRIC-021`) match hand calculations including zero remaining days and zero target.
+
 **Authentication**
 - Only admin-created, enabled users can sign in; nothing is created automatically.
 - Users sign in with username and password, must change a temporary password at first login, and can change it later.
+- TOTP: when MFA is enabled for a user, enrollment and a valid code are required at every sign-in; a reused code is rejected; clock drift of one step is accepted; recovery codes work once.
+- The app refuses to start without a valid master key in `.env`; keys and MFA secrets are unreadable in the database; key rotation re-encrypts all values.
 - Repeated failures lock the account temporarily; resets and disables work; no password appears in logs.
 
 **Auto-refresh**

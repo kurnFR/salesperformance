@@ -160,7 +160,56 @@ The ASW mapping table is `dwh_prod.v_sr_per_branch` (confirmed by the owner: a n
 
 The API key is **never** returned: the API exposes only `stored` and `last4`. Adapter is one of `openai-compatible`, `anthropic`, `gemini`.
 
-### 2.8 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
+### 2.8 Sales Detail field catalog and query (`[P]`, `PIVOT-011`)
+
+The pivot never accepts a column name from the browser. It accepts **ids** from this allowlisted catalog; the server maps ids to approved columns.
+
+```json
+{
+  "schemaVersion": 1,
+  "dimensions": [
+    { "id": "region",      "label": "Region",      "source": "REGIONNAME" },
+    { "id": "branch",      "label": "Branch",      "source": "BRANCHNAME" },
+    { "id": "spv",         "label": "SPV",         "source": "NAMAAREA" },
+    { "id": "distributor", "label": "Distributor", "source": "SELLINGPOINTNAME" },
+    { "id": "city",        "label": "City",        "source": "KOTA", "optional": true }
+  ],
+  "measures": [
+    { "id": "targetIn",  "label": "Target Sell IN",  "source": "TOTALTargetSellIn" },
+    { "id": "targetOut", "label": "Target Sell OUT", "source": "TOTALTargetSellOut" },
+    { "id": "realIn",    "label": "Real Sell IN",    "source": "TOTALRealSellIn" },
+    { "id": "realOut",   "label": "Real Sell OUT",   "source": "TOTALRealSellOut" }
+  ],
+  "derived": [
+    { "id": "achIn",  "label": "Achievement IN %",  "formula": "realIn / targetIn" },
+    { "id": "achOut", "label": "Achievement OUT %", "formula": "realOut / targetOut" },
+    { "id": "gapIn",  "label": "Shortfall IN",      "formula": "max(targetIn - realIn, 0)" },
+    { "id": "paceIn", "label": "Pace gap IN",       "formula": "achIn - workingDayProgress" }
+  ],
+  "period": { "source": "Periode", "granularity": "month" }
+}
+```
+
+Request and response (placeholders):
+
+```json
+{ "principalId": "INA", "period": { "from": "2026-09", "to": "2026-10" },
+  "dimensions": ["region", "branch", "spv", "distributor"],
+  "measures": ["targetIn", "realIn", "realOut"],
+  "filters": { "region": ["TBD-region-key"] },
+  "sort": { "by": "achIn", "dir": "asc" }, "page": { "size": 100, "cursor": null } }
+```
+
+```json
+{ "rows": [ { "level": 4, "keys": { "region": "TBD", "branch": "TBD", "spv": "TBD", "distributor": "TBD" },
+              "values": { "targetIn": 0, "realIn": 0, "realOut": 0 }, "status": { "achIn": "red" } } ],
+  "subtotals": [], "grandTotal": { "values": { "targetIn": 0, "realIn": 0, "realOut": 0 }, "scopeNote": "within your access" },
+  "dataAsOf": "TBD", "truncated": false }
+```
+
+Source columns are Tableau-derived and unverified (`4.2`). Whether the Sell IN and Sell OUT targets are shown as one "Target" or two is open (DEC-052).
+
+### 2.9 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
 Every metric point carries what its tooltip needs, so the UI never recalculates:
 
@@ -202,7 +251,7 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.playlists` | `id`, `name`, `enabled`, `default_duration_seconds`, `on_load_failure` | |
 | `app_config.playlist_items` | `playlist_id`, `dashboard_id`, `position`, `duration_seconds`, `enabled` | FK to dashboards |
 | `app_config.assets` | `id`, `storage_key`, `mime_type`, `size_bytes`, `width`, `height`, `created_by` | Approved storage only |
-| `app_config.roles` | `id`, `name`, `description`, `is_system`, `created_at` | Admin-managed; seed roles are normal rows |
+| `app_config.roles` | `id`, `name`, `description`, `is_system`, `default_landing`, `created_at` | Admin-managed; seed roles are normal rows; `default_landing` per `MGMT-003` |
 | `app_config.role_capabilities` | `role_id`, `capability` | Capability validated against the code catalog |
 | `app_config.role_scopes` | `role_id`, `dimension`, `mode` (`all`/`list`), `values_json` | One row per dimension per role |
 | `app_config.user_roles` | `user_id`, `role_id` | `user_id` from the identity provider (DEC-007) |
@@ -212,7 +261,9 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.user_mfa` | `user_id`, `enabled`, `method` (`totp`), `secret_encrypted`, `recovery_codes_hash`, `enrolled_at`, `reset_at` | Enabled or disabled per user by an admin |
 | `app_config.ai_provider_profiles` | `id`, `name`, `adapter`, `base_url`, `model`, `api_key_encrypted`, `key_last4`, `enabled`, `is_active`, `qualification_status`, `tested_at`, `acknowledged_by`, `created_by` | Key encrypted with a server master key (DEC-049) |
 | `app_config.ai_settings` | `enabled`, `temperature`, `max_tool_calls`, `rate_limit`, `retention_days` | Single row |
-| `app_config.etl_refresh_log` (proposed; may be owned by the ETL) | `run_id`, `started_at`, `finished_at`, `status` | Written by the ETL's final step; source of `dataAsOf` (DEC-048) |
+| ETL refresh log (**exists already**, owned by the ETL; read-only for the app) | name and columns to verify (DEC-048) | Source of `dataAsOf` and the refresh signal; the app never writes it |
+| `app_config.saved_views` | `id`, `user_id`, `dashboard_id`, `name`, `view_json`, `is_default` | Pivot layouts and filters (`MGMT-009`) |
+| `app_config.usage_events` | `week`, `role_id`, `page`, `action`, `count` | Privacy-safe counts only, no content (`MGMT-018`) |
 | `app_config.auth_identities` | `user_id`, `provider`, `tenant_id`, `object_id`, `account_hint`, `linked_at` | **Reserved for deferred Microsoft sign-in** (not used in release 1) |
 | `app_config.local_credentials` | `user_id`, `username`, `password_hash`, `must_change`, `failed_attempts`, `locked_until`, `changed_at` | Argon2id hash only |
 | `app_config.data_findings`, `data_finding_notes` | See `08-data-findings.md` section 3.1 | Findings and history |
@@ -275,7 +326,8 @@ Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Sal
 | Region list and order | Performance / Mapping: `REGIONCODE`, `REGIONNAME` | Region | Display order undefined (DEC-001) |
 | Team totals RSM/ASM/SPV/SE | Mapping: region, branch, area, `SLSNO` | Salesman | Derived; active flags undefined (DEC-028) |
 | Role achievement counts | Performance aggregated per entity per month; achieved when achievement >= working-day progress | Entity per month | Rule confirmed (DEC-021); DB verification pending |
-| Data refresh time (`dataAsOf`) | ETL refresh log (table name to be defined with the ETL owner, DEC-048); `finished_at` of the last successful run | Run | Proposed |
+| Data refresh time (`dataAsOf`) | Existing ETL refresh log table (name and columns to verify, DEC-048); finish time of the last successful run | Run | Table exists; verification pending |
+| Sales Detail (pivot) | Performance table via the field catalog (2.8): region, branch, area, selling point, target, real Sell IN, real Sell OUT; period `Periode` | Selling point per month | Derived from Tableau; DB verification pending |
 | Working-day progress | `dimdate`: `dates`, `networkeddays`, `monthyear`; summed per month, no custom calendar | Date | Confirmed approach (DEC-027); verify 18 / 27 on 22-Oct-2026 |
 | Growth Sell In / Out | Performance, same month last year (12 months earlier) | Region per month | Derived from Tableau |
 | Active distributors per region | `distaktif`: `Total Aktif`, `TOTAL DIST`, `Bulan`; % = active / total | Region/area per month | Formula confirmed (DEC-024); DB verification pending |

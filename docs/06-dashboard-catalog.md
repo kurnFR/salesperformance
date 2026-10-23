@@ -71,10 +71,35 @@ Requirements:
 
 A separate sheet listing anomalies and findings that need validation, for example the difference between the distinct DIST count (144) and the manually uploaded active-distributor total (120). Full spec: [`08-data-findings.md`](08-data-findings.md). Requirement IDs `FIND-001` to `FIND-006`.
 
-## 6. AI Chat (right panel)
+## 6. Dashboard 6: Sales Detail (pivot-style table, owner-requested)
+
+**Purpose:** a detail table where the user chooses the header names (dimensions) and the fact values (measures) and sees totals. The workbook's older `DetailPerAreaSellIN` and `DetailPerAreaSellOut` sheets (separate Sell In and Sell Out detail by area) are replaced by this single, flexible view.
+
+Example from the owner (values are an example, not data):
+
+| Region | Branch | SPV | Distributor | Target | Real Sell IN | Real Sell OUT |
+|---|---|---|---|---|---|---|
+| INA JAWA 1 | JAKARTA | SPV JAKARTA | ABC | 5000 | 2000 | 3000 |
+| **Grand total** | | | | 5000 | 2000 | 3000 |
+
+- `PIVOT-001` `[C]` A detail table with dimension columns, fact columns and a **grand total** row.
+- `PIVOT-002` `[C]` A **period range filter**: the user chooses a start and an end period from the list of available periods (months). Facts are summed over the range.
+- `PIVOT-003` `[C]` The user **chooses which dimension headers to show and their order**. Available dimensions: Region, Branch, SPV (area), Distributor (selling point). `[P]` City (`KOTA`). Salesman (SE) is **not** a dimension because the target and real values are stored per selling point and month, not per salesman (`03-data-model.md` section 4.2).
+- `PIVOT-004` `[C]` The user **chooses which fact columns to show**: Target, Real Sell IN, Real Sell OUT. `[P]` derived columns: achievement % for Sell IN and Sell OUT, shortfall to target, pace gap (`01` section 9). The source has separate targets for Sell In and Sell Out; whether to show one "Target" or two is open (DEC-052).
+- `PIVOT-005` `[C]` **Grand total** at the bottom. `[P]` Subtotals at each grouping level with expand and collapse. Totals are calculated **by the server from the underlying values**, never by adding rounded numbers on screen. Percent columns are `SUM(real) / SUM(target)` at every level, not an average of row percentages.
+- `PIVOT-006` `[P]` Sorting, a filter on each dimension (only values the user may see), search, column chooser, frozen header, and server-side paging or virtual scrolling for large result sets.
+- `PIVOT-007` `[P]` Percent columns use the bar color rule (RULE-001 to RULE-005) with a text or icon cue (`A11Y`).
+- `PIVOT-008` `[P]` Export to Excel and CSV (MGMT-007).
+- `PIVOT-009` `[P]` Saved views: dimensions, facts, order, period and filters, per user (MGMT-009).
+- `PIVOT-010` `[C]` Access scope applies: the user sees only allowed principals and regions, and the grand total says it is "within your access".
+- `PIVOT-011` `[P]` **Governed query, no free SQL.** Dimensions and measures come from an allowlisted field catalog (`03-data-model.md` section 2.8). The server builds a fixed, parameterized aggregation (grouping with roll-up for totals) over the approved performance table. Limits: at most 4 dimensions, a row cap with a clear "refine your filters" message, query timeout.
+- `PIVOT-012` `[P]` Drill-down links: from any Sales Performance or Executive Summary item to this table pre-filtered (MGMT-004).
+- `PIVOT-013` `[P]` The example row above becomes the first golden fixture (clearly labelled mock): with a single Target of 5000, Sell IN is 40% and Sell OUT is 60%.
+
+## 7. AI Chat (right panel)
 
 An icon in the right panel opens a chat that answers questions from the data and can show pop-up charts, cards, lines and bars. Full spec: [`07-ai-chat.md`](07-ai-chat.md). Requirement IDs `AI-001` to `AI-047`.
 
-## 7. Navigation and playlist
+## 8. Navigation and playlist
 
 All four dashboards are sidebar entries and can be playlist items (default 10 s). Dashboards 1 to 3 share the month filter; DEC-010 decides whether it persists across rotation.

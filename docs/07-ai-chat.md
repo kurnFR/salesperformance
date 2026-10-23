@@ -52,6 +52,7 @@ Each tool lives beside the dashboard service it reuses (parity guaranteed by con
 | `getActiveDistributors(principal, regions[], period)` | Active, total, % | METRIC-016 |
 | `getWorkingDayProgress(period)` | Elapsed, total, % | METRIC-008 |
 | `getUploadStatus(principal, filters, month)` | Upload days per distributor | METRIC-017 |
+| `getDetailRows(principal, period, dimensions[], measures[], filters, topN)` | Rows and totals from the Sales Detail service, capped; supports ranking questions (lowest achievement, largest shortfall) | `PIVOT-*`, METRIC-019 to 022 |
 | `getDataFindings(principal, scope)` | Open anomalies relevant to the answer | `08-data-findings.md` |
 | `resolveEntity(kind, text)` | Deterministic fuzzy match of a typed name (region, metric, period) to allowed values, with candidates and similarity | Allowed values in scope |
 | `calculate(operation, inputs)` | Exact arithmetic on **values returned by other tools**: sum, difference, ratio, percent change, average, min, max, rank, share of total. Returns the result and the formula | Deterministic code, not the model |
@@ -98,6 +99,7 @@ Values above are placeholders. The same tooltip contract as dashboards applies (
 - `AI-019` `[P]` Limits: per-user rate limit, maximum tool calls per question, maximum rows per result, request timeout, and a spend cap; limits show a clear message.
 - `AI-020` `[P]` Treat all database text (names, notes) as untrusted data, never as instructions (prompt-injection defense).
 
+- `AI-048` `[P]` **Starter questions by role** appear as buttons (`MGMT-014`), for example "Which region is furthest behind pace?", "Which SPVs in my region are below 70%?", "How much is needed per remaining working day to reach 100%?". Each maps to existing tools and is in the golden test set.
 - `AI-024` `[C]` **Confirm-then-answer flow.** When the question has a typo, an unknown or ambiguous name, a period that does not exist, or asks for something the data cannot give, the AI replies with its best understanding and options ("Did you mean Sell IN for INA JAWA 1?") as buttons, and may suggest related questions. It runs the tools and shows the result only after the user confirms. An exact, unambiguous question is answered directly without a confirmation step. Name matching is done by the deterministic `resolveEntity` tool, not by the model's guess.
 - `AI-025` `[C]` Any calculation is disclosed: the answer shows the inputs and the formula (for example "Total Sell In = region 1 + region 2 + ..."). Calculations only use values already shown or available in the dashboards.
 - `AI-026` `[C]` The current month is **month-to-date as of the last completed data refresh**. Answers label it so and show the refresh time. A comparison of the in-progress month with a full month is labelled "not like-for-like". The AI does not scale, pace-adjust or project figures unless the user asks for a defined calculation on existing values.

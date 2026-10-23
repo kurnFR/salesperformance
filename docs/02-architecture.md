@@ -29,6 +29,8 @@ Rules: no SQL in the browser; no database credentials in the browser; business t
 
 **Backend:** Fastify + TypeScript · `pg` with pooling, timeouts, bounded results · Drizzle ORM + drizzle-kit for app-owned tables only (`app_config`) · Zod at request, response and config boundaries · Pino with redaction · `@fastify/helmet`, `@fastify/cors`, `@fastify/rate-limit` · `@fastify/swagger` + UI for API contracts · least-privilege DB credentials.
 
+**Export:** Excel and CSV generated on the server with a maintained spreadsheet library (verify version at Phase 1); PDF and image snapshots rendered from a print-optimised page with headless Chromium (Playwright is already in the stack). Exports run inside the user's scope and add filters, scope note and data as-of to the file.
+
 **Quality and delivery:** pnpm workspaces · Vitest, Testing Library, user-event, jest-axe · Playwright (Chromium and Firefox) · ESLint, typescript-eslint, Prettier · CI: frozen-lockfile install, lint, typecheck, unit tests, build, E2E.
 
 **Do not add** Redux, a second charting library, overlapping form libraries or a second ORM without a documented need.
@@ -92,6 +94,10 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | `GET /api/calendar/working-day-progress?month=&asOfDate=` | Working-day progress + metadata | Viewer+ |
 | `GET /api/sales-performance/growth?principalId=&month=&window=7&metric=sellIn\|sellOut` | Rolling-window growth matrix (`DASH-002`) | Viewer+ |
 | `GET /api/sales-performance/active-distributors?principalId=&month=` | Active / total distributors per region | Viewer+ |
+| `GET /api/executive-summary?principalId=&month=` | Executive Summary blocks (headline, tiles, needs-attention, movers, data health) within scope (`09-management-experience.md`) | Viewer+ |
+| `POST /api/sales-detail/query` (read-only; body: period range, dimensions, measures, filters, sort, page) | Pivot-style detail with totals; validated against the field catalog (`PIVOT-011`) | Viewer+ |
+| `POST /api/export/sales-detail`, `POST /api/export/snapshot` | Excel/CSV of a table; PDF/image snapshot of a dashboard (`MGMT-007`) | `export.use` |
+| `GET/PUT /api/me/views`, `GET /api/glossary` | Saved views; metric glossary generated from the metrics contract | Authenticated |
 | `GET /api/uploads/daily?principalId=&month=&regionId=&branchId=&kind=sales\|stock` | Daily upload grid | Viewer+ |
 | `GET/PUT /api/settings/achievement-rules` | Rule set | Admin |
 | `GET/POST/PUT /api/playlists` | Playlists | Admin (read: Viewer+) |
@@ -180,7 +186,7 @@ sequenceDiagram
 
 ### 10.1 Model
 
-- **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`, `ai.settings.manage`, `mfa.manage`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
+- **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`, `ai.settings.manage`, `mfa.manage`, `export.use`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
 - **Filter policy per role:** each filter is `hidden`, `locked` (fixed to the role's scope value) or `editable` within the allowed values.
 - **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
 - **Data scope** is, per scope dimension, either `all` or an explicit list of values. Dimensions come from a registry: `principal`, `region`, `branch`, `dashboard` (extendable without changing route code).
@@ -213,6 +219,7 @@ flowchart TD
 - `SEC-011` `[C]` The admin UI manages roles, capabilities, scopes and assignments with validation (cannot remove the last user holding `access.manage`).
 - `SEC-012` `[P]` Seed roles for first use (for example Viewer, Editor, Administrator, Display) are ordinary editable data, not special-cased in code.
 - `SEC-013` `[C]` Users are created by an admin and sign in with local credentials in release 1 (section 11); permissions key off the app's own user id, so adding Microsoft later does not change roles or scopes.
+- `SEC-015` `[C]` **Master key in `.env`.** The administrator sets the encryption master key in the server's `.env` file (for example `APP_MASTER_KEY`, a random 32-byte value). The app refuses to start if it is missing or invalid. It is never stored in the database, never logged, never sent to a client. `.env` is git-ignored (verified in `.gitignore`) and the repository ships `.env.example` with names only. File permission restricts it to the service account. It encrypts AI API keys and MFA secrets with AES-256-GCM; each encrypted value carries a key id so the key can be rotated (re-encrypt command, then swap). **If the key is lost, saved API keys must be entered again and users must re-enroll MFA**, so the administrator keeps a secure backup separate from database backups (DEC-049).
 - `SEC-014` `[C]` **Admin has full control** over what each role may use: switch features and filters on or off, and change a role's capabilities and scope after the role or user was created. Changes apply to existing users of that role.
 
 ### 10.3 What the UI does with scope
@@ -249,7 +256,7 @@ flowchart TD
 - `AUTH-008` `[P]` Kiosk displays use their own revocable credential (DEC-012), not a person's account.
 - `AUTH-009` `[D]` **Deferred:** Microsoft sign-in (Entra ID, OpenID Connect) needs a Microsoft administrator to register the app. When available, add a provider that links a user by tenant id and object id, still only for admin-created users. The `auth_identities` table is reserved for that.
 - `AUTH-010` `[C]` **MFA is configurable per user.** Admin opens a user and has an **Enable / Disable MFA** button. Only users who need MFA have it. When enabled, the user enrolls at the next sign-in (authenticator-app QR or key) and then enters a code after the password every time.
-- `AUTH-011` `[P]` MFA method: TOTP (authenticator app). Recovery codes shown once at enrollment; the admin can reset a user's MFA (lost phone) or disable it; users cannot disable their own MFA; MFA secrets are encrypted at rest; code attempts are rate-limited; enable, disable, enroll and reset are audited. Capability: `mfa.manage` (assignable per role). Other methods (for example passkeys) can be added later.
+- `AUTH-011` `[C]` MFA method: **TOTP** (authenticator app, RFC 6238: 6 digits, 30-second step, one step of clock drift allowed, a used code cannot be reused). Recovery codes shown once at enrollment; the admin can reset a user's MFA (lost phone) or disable it; users cannot disable their own MFA; MFA secrets are encrypted at rest; code attempts are rate-limited; enable, disable, enroll and reset are audited. Capability: `mfa.manage` (assignable per role). Other methods (for example passkeys) can be added later.
 
 ## 12. AI service boundary
 
@@ -268,8 +275,8 @@ sequenceDiagram
   participant API as API server
   participant UI as Browsers (dashboards, kiosks, AI results)
   ETL->>DB: load tables, refresh materialized views, run procedures
-  ETL->>DB: final step: write refresh log row (finished, run id) and NOTIFY
-  DB-->>API: notification (LISTEN) or API poll of the log row
+  ETL->>DB: refresh log row is written (table already exists)
+  API->>DB: poll the refresh log (default every 60 s, NOTIFY optional later)
   API->>API: bump dataVersion, set dataAsOf, clear caches
   API-->>UI: server-sent event "data refreshed"
   UI->>API: refetch current queries (cache invalidated)
@@ -277,7 +284,7 @@ sequenceDiagram
 ```
 
 - `OPS-004` `[C]` Dashboards, kiosk/playlist displays and open AI results update automatically after a refresh finishes, without a manual reload and without flicker (current view stays until new data arrives).
-- `OPS-005` `[P]` The ETL's final step writes one row to a refresh log (run id, started, finished, status) and issues `NOTIFY`. The app uses the log's finished time as `dataAsOf`. If `NOTIFY` is not possible, the API polls the log row every minute (cheap query). Fallback if no log can be added: a lightweight fingerprint query (latest period and row counts), `[O]`.
+- `OPS-005` `[C]` The **ETL refresh log table already exists** (owner, DEC-048). The app only reads it: the finish time of the last successful refresh is `dataAsOf`, and a change in that value is the "data refreshed" signal. The API polls it (default every 60 seconds, configurable); a cheap query. `NOTIFY` from the ETL is an optional later improvement, not a requirement. The table name, its columns, and how to tell that the views used by the dashboards finished refreshing are verified in Phase 0 (DEC-048).
 - `OPS-006` `[P]` `dataVersion` is part of every cache key, so stale cached numbers are never served after a refresh. Cache lifetime is configuration.
 - `OPS-007` `[P]` While a run is in progress the UI may show "refresh in progress, data as of <previous completion>" (needs the log to record the start). Failed runs show the previous completed `dataAsOf` and a warning.
 - `OPS-008` `[P]` **Avoid read blocking:** a plain `REFRESH MATERIALIZED VIEW` locks readers for its duration. Prefer `REFRESH MATERIALIZED VIEW CONCURRENTLY` (needs a unique index on each view) so dashboards stay readable during the run. This is a database/ETL decision for the owner.
