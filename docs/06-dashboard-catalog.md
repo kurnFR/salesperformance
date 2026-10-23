@@ -128,11 +128,15 @@ Product (item, with `pcode`) is **not** part of this hierarchy. It is a separate
 - `PROG-004` `[C]` The SE sell-out source **already has real values per day** (owner, DEC-071), so no snapshot table is needed. The ETL still refreshes **nightly**, so the line ends at the last completed refresh (yesterday) and says "data as of". A more frequent ETL or daily snapshots can come later for near real time. The current sales performance view stays monthly.
 - `PROG-005` `[P]` Until the SE day-level source is registered (after the Sales release is validated, `DEPT-020`) the view is not offered; no day values are interpolated or estimated, and a day without a value is shown as missing.
 
-## 7. AI Chat (right panel)
+## 7. Dashboard 7: Performance Drivers (insight, owner-requested)
+
+A new dashboard built only from data already in the project but not used by any dashboard: where the missing value is, channel (Sell IN versus Sell OUT) signal, persistence and momentum, status distribution and target ambition, year to date, network health, and later mix, volume and productivity. Full spec: [`11-insight-dashboard.md`](11-insight-dashboard.md). Requirement IDs `INS-001` to `INS-014`. Default presentation: `half`.
+
+## 8. AI Chat (right panel)
 
 An icon in the right panel opens a chat that answers questions from the data and can show pop-up charts, cards, lines and bars. Full spec: [`07-ai-chat.md`](07-ai-chat.md). Requirement IDs `AI-001` to `AI-047`.
 
-## 8. Navigation, departments and playlist
+## 9. Navigation, departments and playlist
 
 The product is a platform of departments (`10-departments-and-modules.md`): Sales is the only active one now; Marketing, Finance and HR are planned and appear as "Coming soon" for users who have them enabled. All dashboards in this catalog belong to the Sales department.
 

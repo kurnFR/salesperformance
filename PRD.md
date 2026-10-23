@@ -36,6 +36,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
 | 5 | Data Findings | (new) | Anomalies and findings to validate, such as DIST total vs manual active-distributor upload | `08` |
 | 6 | Sales Detail (pivot) | (owner example, not a fixed layout) | The user chooses columns (hierarchy dimensions and fact values) over a period range, with totals, drill-down through the hierarchy down to SE and item where data exists, and export | `06` section 6 |
+| 7 | Performance Drivers | (new, owner-requested insight dashboard) | Where the missing value is, Sell IN versus Sell OUT signal, persistence and momentum, status distribution and target ambition, year to date, network health; mix and productivity later | `11` |
 | - | Executive Summary | (new) | One-screen view for CEO, General Manager and Regional Manager: pace, regions, needs-attention, movers, data health | `09` |
 | - | AI Chat | (new, right panel icon) | Answers questions from the data only, with pop-up charts that stay in the chat | `07` |
 
@@ -46,7 +47,8 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
 - **Language:** English and Bahasa Indonesia; default English; admin can change the default; users can switch (`I18N-001` to `I18N-007`).
-- **CEO TV:** 4K display with half-screen dashboards (CCTV on the other half) and full-screen dashboards; the CEO chooses which dashboards rotate and how long, and remote-controls the TV (`PLAY-009` to `PLAY-013`, `UI-037`, `UI-038`).
+- **CEO TV:** a mini PC on a 4K TV with two windows: the CCTV viewer and the dashboard browser. Default is the dashboard on half of the screen; the user can switch it to full by hand. The dashboard **auto-fits** the window (no blank space) in either size. The CEO chooses which dashboards rotate and how long, and remote-controls the TV (`PLAY-009` to `PLAY-013`, `UI-037`, `UI-041`).
+- **Server:** Ubuntu 20.04 with Docker, Node.js 24, PostgreSQL 12.22; the app runs in Docker and is tested on PostgreSQL 12 and a current version (`OPS-022` to `OPS-024`). The ETL sometimes drops, truncates and adds columns, so dashboards serve last-good data during updates and tolerate schema changes (`OPS-017` to `OPS-021`).
 - **Database:** the existing PostgreSQL, configured in `.env` (`.env.example` in the repository); app data in its own schema `app_config`; no second database (`OPS-012` to `OPS-016`).
 - **Management use:** Executive Summary, regional view, drill-down, rankings, export and share, glossary, phone layout, saved views (`MGMT-001` to `MGMT-018`, `docs/09-management-experience.md`).
 - **Planned with Marketing (after Release 1 is validated):** SE-level monthly target and daily sell-out values (they exist already), day-by-day achievement progress against the working-day pace (nightly refresh at first), and near-real-time refresh later (`PROG-001` to `PROG-005`, DEC-070, DEC-071).
@@ -112,7 +114,7 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail), `PROG-` (daily progress), `DEPT-` (departments and modules).
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail), `PROG-` (daily progress), `DEPT-` (departments and modules), `INS-` (insight dashboard), `OPS-` (operations).
 
 ## 7. Roadmap at a glance
 
@@ -124,7 +126,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
-| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; SE-level source (DEC-070) |
+| 6 | Sales Detail (pivot) with export, Growth Sell In, Growth Sell Out, Daily Upload, then Performance Drivers, then further dashboards | Per-dashboard mapping rows approved; insight decisions DEC-085 to DEC-090 |
 | 7 | AI Chat and Data Findings | Findings thresholds (DEC-043); alert channels if wanted (DEC-055) |
 | 8 | Production hardening | — |
 | 9+ | Further departments (Marketing with product `pcode` and SE daily progress, Finance, HR, others), each added as data plus a module, **only after Release 1 is finished and validated** | Per department: approved schema, KPIs, scope dimensions, owners |
@@ -141,6 +143,7 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/11-insight-dashboard.md` | Performance Drivers: gap analysis of unused data, views, requirements, tests |
 | `docs/10-departments-and-modules.md` | Department platform: model, module manifest, switcher and "Coming soon" UI, admin screens, sensitive departments |
 | `docs/09-management-experience.md` | Management review: gaps found, personas, Executive Summary, derived metrics, export/share |
 | `docs/07-ai-chat.md` | AI chat: grounded-answer design, tools, pop-up behavior, rules, tests |

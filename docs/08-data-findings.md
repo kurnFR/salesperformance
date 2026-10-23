@@ -33,6 +33,10 @@ The two will not always agree (144 against 120 on the reference screenshots). Th
 | `ACHIEVEMENT_OUTLIER` | Achievement above an agreed ceiling (threshold open) | 644.95% growth values in a region |
 | `MAPPING_MISMATCH` | Region, branch or selling point present in performance data but absent from mapping, or the reverse; the same salesman number mapped to several regions | Unknown branch name |
 | `UPLOAD_GAP` | Distributor with no upload for N consecutive days (threshold open) | Daily Upload dashboard |
+| `SELL_OUT_ABOVE_SELL_IN` | Sell OUT far above Sell IN for a distributor over several months (threshold DEC-043) | Possible mapping or upload error |
+| `QTY_VALUE_MISMATCH` | Quantity with no value, or the reverse (when quantity columns are registered, DEC-087) | Real value 0 with quantity above 0 |
+| `SCHEMA_DRIFT` | A registered column is missing, renamed or retyped after an ETL run (`OPS-021`) | Column dropped by the ETL |
+| `PARTIAL_DATA` | A fresh result is implausibly small compared with the last good one (`OPS-020`) | Current month rows missing |
 | `USER_REPORTED` | A user flags a number from any chart ("report anomaly") with a note | Free text |
 
 Checks run after each completed data refresh (`OPS-009`) and on demand; results are stored with the version of the check. A check that cannot run (missing table or column) produces a finding of its own instead of failing silently.

@@ -43,7 +43,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Displays (for example the CEO TV), per-display playlists, per-item half/full presentation, the CEO's own playlist management and remote control from a phone (`PLAY-009` to `PLAY-013`), TV mode and on-screen labels (`UI-037`, `UI-038`, `DASH-012`).
 
 ### Phase 6: Growth and upload dashboards, then further dashboards
-- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload. Each is built separately and needs its mapping rows approved and acceptance examples (`06-dashboard-catalog.md`).
+- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload, then Performance Drivers (`11-insight-dashboard.md`, views 1 to 5 first, view 6 after the manual-upload sources are labelled, views 7 and 8 after DEC-086 to DEC-088).
 - Rolling 7-month window and growth logic (`GROW-001` to `GROW-008`) get unit tests including year-boundary windows (for example selected Mar-27) and zero last-year values.
 - Later dashboards follow the same rule: one at a time with approved schema, KPI definitions and examples.
 
@@ -71,6 +71,15 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 **Daily progress (when a day-level source exists)**
 - The line equals cumulative real divided by the monthly target for each day; the pace line equals elapsed working days over total from `dimdate`; colors follow the rule table; missing days are shown as missing; a monthly-only source never offers the view.
 - SE-level rows show target, sell-out and achievement; the SE sum versus the distributor's Real Sell OUT difference appears as "Unassigned / difference" and as a data finding.
+
+**Performance Drivers**
+- Shortfall shares sum to 100% and the Pareto line ends at 100%; sell-through and net gap equal hand calculations; streaks use closed months only and break on "n/a"; distribution counts equal the Sales Detail table; YTD equals the sum of months across a year boundary; generated sentences equal their numbers; out-of-scope users see no data, names or counts.
+
+**Resilience (ETL drops, truncates, adds columns)**
+- While the source is truncated, locked or missing, dashboards show the last good result with "data update in progress" and never blank or partial numbers; an added column changes nothing; a missing or renamed registered column disables only the affected widget and raises a finding; a missing `app_config` stops the app with restore instructions; the app passes its database tests on PostgreSQL 12 and a current PostgreSQL.
+
+**Window fit**
+- Switching the dashboard window between half and full (and any resize) reflows live, with no blank or white area, no scrollbars in TV mode, no white flash on load, and the playlist position kept.
 
 **Language**
 - Default language is English; an admin can change it; a user can override it; every string, chart label, tooltip, export header and glossary entry exists in both languages or falls back to English; numbers and dates follow the language without changing the underlying values.

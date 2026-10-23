@@ -6,12 +6,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 ## Needed before Phase 1 starts (owner)
 
-1. **DEC-008 Hosting:** operating system of the server, whether Docker is available, the internal address and HTTPS, and the Node.js and PostgreSQL versions. If you prefer, Phase 1 can start with a portable default (Node LTS, plain run script and an optional Dockerfile) and the hosting detail can follow.
-2. **DEC-080 ETL and the app's schema:** please confirm the ETL never drops, truncates or recreates schemas other than the ones it owns, so `app_config` is safe. A yes or no is enough.
+1. **DEC-080 ETL scope.** Which schemas and tables does the ETL drop or truncate, and which database user does it run as: the same as the app's `PG_USER`, or a different one? That decides whether permissions alone keep `app_config` safe, or the extra guards in `OPS-017` are needed. Default if you do not know: the ETL touches only objects inside `dwh_prod`, and the guards and backup are added anyway.
 
-Needed by Phase 5 (shapes the layouts from Phase 1): **DEC-078** how the CEO TV is driven (see below).
-
-Everything else has a proposed default and does not block Phase 1.
+Phase 1 can start once DEC-080 is answered or the default is accepted. Everything else has a proposed default.
 
 ## Needed for Phase 2 and later (not blocking Phase 1)
 
@@ -20,6 +17,8 @@ Everything else has a proposed default and does not block Phase 1.
 - **DEC-028** confirm the SE counting rule (replicate Tableau: exclude codes containing "SOI" for INA).
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
+- **DEC-082** ask the ETL to log the start and end of the load step (optional).
+- **DEC-085 to DEC-090** Performance Drivers decisions (Phase 6).
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -34,6 +33,7 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-005c | Role card example: RSM (5), IN 20% / 1 = one of five counted as achieved. The threshold behind "achieved" is settled in DEC-021 | Earlier (owner) | `01-metrics-contract.md` 5.3 |
 | DEC-007 | Users are created by an admin (original wording also planned Microsoft accounts; Microsoft is now skipped, see DEC-007a and DEC-038) | 2026-10-22 (owner) | `02` section 11 |
 | DEC-007a | Release 1 sign-in is admin-created username and password; users can change their password (supersedes the Microsoft part of DEC-007) | 2026-10-22 (owner) | `02` section 11 |
+| DEC-008 | Server: **Ubuntu 20.04 with Docker**, Node.js **v24.21.0**, PostgreSQL **12.22**. The app runs in Docker | 2026-10-22 (owner) | `02` section 15 |
 | DEC-009 | Use the **existing PostgreSQL** configured in `.env` (`PG_HOST`, `PG_PORT`, `PG_DB`, `PG_USER`, `PG_PASSWORD`); no second database. One full-access user is accepted for now; the app adds its own schema `app_config` and opens business-table sessions read-only. A separate read-only user stays optional later | 2026-10-22 (owner) | `02` section 14, `.env.example` |
 | DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
 | DEC-013 | UI languages: **English and Bahasa Indonesia**; **default English**; admin can change the default language | 2026-10-22 (owner) | `04` section 9 |
@@ -75,7 +75,10 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-071 | SE **real values exist per day** (day-level). The ETL still refreshes nightly; a daily/intraday snapshot is not created yet and can be created later | 2026-10-22 (owner) | `06` PROG-004, `02` OPS-011 |
 | DEC-074 | New modules (Marketing, then others) are added **after the Sales project is finished and validated**; new features follow validation | 2026-10-22 (owner) | `10` DEPT-020, `05` later phases |
 | DEC-077 | The whole ETL takes about 3 hours: about **2 hours of loading** plus about **50 minutes of materialized-view refresh**, and the materialized-view refresh is the final step. Data counts as ready when that process shows `SUCCESS` | 2026-10-22 (owner, with log evidence) | `02` OPS-005 |
+| DEC-078 | The CEO TV runs **two windows** (CCTV viewer and the dashboard browser). The user switches the dashboard window between half and full by hand; **default is half**. The dashboard must **fill the window with no blank space, or auto-fit** (auto-fit preferred) | 2026-10-22 (owner) | `04` UI-037, UI-041 |
 | DEC-079 | The CEO manages which dashboards rotate on his TV and how long each shows | 2026-10-22 (owner) | `04` PLAY-009 |
+| DEC-083 | The TV is driven by a **mini PC over HDMI**, so a mouse works | 2026-10-22 (owner) | `04` DASH-012 |
+| DEC-084 | The ETL **sometimes drops, truncates and adds columns** | 2026-10-22 (owner) | `02` OPS-017 to OPS-021 |
 
 ## Blocking Phase 0 and 2
 
@@ -91,7 +94,6 @@ Everything else has a proposed default and does not block Phase 1.
 
 | ID | Question | Proposed default | Blocks | Status |
 |---|---|---|---|---|
-| DEC-008 | Hosting and approved image storage | Single container deployment; curated server-side asset library in v1 (no arbitrary uploads) | Phase 4 | Open |
 | DEC-010 | Do filters persist across rotation or per dashboard? | Period filter shared; other filters per dashboard | Phase 5 | Proposed |
 | DEC-012 | Kiosk display authentication | Dedicated long-lived read-only display token, revocable by admin | Phase 5 | Proposed |
 | DEC-014 | Staleness threshold and caching (refresh itself is covered by DEC-046 and DEC-048) | Cache keyed by `dataVersion` (no fixed TTL needed); warn when no completed ETL run is seen for 36 hours | Phase 2 | Proposed |
@@ -138,6 +140,12 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-075 | Last-month-to-date cutoff for day-level sources: same calendar day or same working day? | Same working day (matches the working-day pace); show the cutoff date | Marketing | Proposed |
 | DEC-028 | SE counting rule | Replicate Tableau: distinct `SLSNO` excluding codes containing "SOI" for INA ("SOA" variant for the other principal, to confirm); no active-flag filter by default, optional filter; differences raised as findings | Phase 2 | Proposed |
 | DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
-| DEC-078 | How is the CEO TV driven? A PC with two windows (CCTV viewer and browser), the TV's own split screen, or something else? Which browser? Who or what switches a dashboard between half and full screen? Is the TV scaled at 200%? | Page adapts to the actual viewport; `presentation` is a hint; fullscreen only through a user action or kiosk mode | Phase 5 | Open |
-| DEC-080 | The ETL never drops, truncates or recreates the app's schema `app_config`; `app_config` is included in a regular backup stored off the database server, with a tested restore | Yes | Phase 1 | Open (owner to confirm) |
 | DEC-081 | Status values and time zone of `dwh_prod.etl_refresh_log` (running or failed rows, null `end_time`, local or UTC) | Checked by the schema check (DEC-076); a newer `start_time` without a newer successful `end_time` means "refresh in progress" | Phase 2 | Proposed |
+| DEC-080 | ETL scope: which schemas and tables does the ETL drop or truncate, and as which database user does it run (same as `PG_USER` or different)? | Only objects inside `dwh_prod`; guards and backup added anyway | Phase 1 | Open |
+| DEC-082 | Ask the ETL to log the start and end of its load step (not only `Refresh Materialized Views`) so the maintenance window is exact | Estimate the window from log history until then | Phase 2 | Proposed |
+| DEC-085 | The one new dashboard is **Performance Drivers** (views: Gap, Channel, Persistence, Distribution and ambition, YTD, Network; Mix and Productivity later) | As in `11` | Phase 6 | Proposed |
+| DEC-086 | Meaning of the type split `RealSellInReg/Fes`, `RealSellOutReg/Fes`, `TARGETSellInReg/Fes` ("Reg" and "Fes") | Not used until explained | Phase 6 | Open |
+| DEC-087 | Meaning of `RealQtySLI`, `RealQtySLO`, `TargetQtyEskaSLO`, `TargetValueEskaSLO` (units, Eska SLO) | Not used until explained | Phase 6 | Open |
+| DEC-088 | Productivity: join key between the performance view and the mapping view (selling point code vs `KODESCABANG`), meaning of `CUSTNO` and `FLAG_AKTIF` | Not used until confirmed | Phase 6 | Open |
+| DEC-089 | First month of the year for YTD (calendar or fiscal) | January | Phase 6 | Proposed |
+| DEC-090 | Default thresholds: chronic streak 3 closed months; momentum 2 points; top N 5; sell-through bands | As listed | Phase 6 | Proposed |

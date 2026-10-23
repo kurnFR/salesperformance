@@ -83,7 +83,7 @@ Validation: `0 <= warningMin < successMin`, colors from supported tokens meeting
 }
 ```
 
-`presentation` is `half`, `full` or `auto` (follow the actual viewport). Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must exist, `onLoadFailure` is `skip` or `keepLast`.
+`presentation` is an advisory hint (`half`, `full` or `auto`); the layout always follows the actual window. Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must exist, `onLoadFailure` is `skip` or `keepLast`.
 
 ### 2.4 Normalized filter object
 

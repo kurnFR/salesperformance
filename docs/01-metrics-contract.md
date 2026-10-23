@@ -272,3 +272,19 @@ Examples (mock): target 5000, real 2000 -> shortfall 3000; with 9 remaining work
 - `METRIC-028` `[C]` **Number types.** Target and real values are `int8` (bigint) in the database. All sums, ratios and derived values are computed in `numeric` (exact decimal), never in floating point. Percentages are rounded only for display.
 - `DATA-005` `[C]` Amounts reach the browser without precision loss: the API sends integers as JSON numbers when they fit a safe integer and as strings otherwise, and the UI never sums or averages displayed numbers. Contract tests cover values above the safe-integer limit.
 - `METRIC-029` `[C]` **Unit.** Values are plain numbers with no currency symbol or scaling in the data. Display uses thousands separators in the chosen locale (DEC-013); an optional unit label or abbreviation (for example juta) is a display setting, not part of the data.
+
+## 12. Insight metrics (Performance Drivers, `11-insight-dashboard.md`)
+
+All are arithmetic on stored values with the same server-side `numeric` rules (`METRIC-028`). Thresholds are admin settings (DEC-090).
+
+- `METRIC-030` `[P]` **Expected to date** = `target x working_day_progress` for the current month (target for a closed month). **Value pace gap** = `real - expected to date`. Not a forecast: it states where real stands against the pro-rated target.
+- `METRIC-031` `[P]` **Shortfall share (Pareto)** at a level within a parent: `shortfall(entity) / SUM(shortfall of entities below target under the same parent)`, sorted descending with a cumulative share. Gross shortfall (only entities below target) is shown next to the parent's own net shortfall so the difference is visible, never hidden.
+- `METRIC-032` `[P]` **Sell-through** = `SUM(Real Sell OUT) / SUM(Real Sell IN)` for the scope and period; **net channel gap** = `SUM(Real Sell IN) - SUM(Real Sell OUT)`. Zero Sell IN gives "n/a". The gap is **not a stock count**, and the UI says "Sell IN minus Sell OUT". Rolling windows (for example 3 months) are used where single months are noisy.
+- `METRIC-033` `[P]` **Status streak** = number of consecutive most recent **closed** months in which the entity's status is red (or not green). A month with no target breaks the streak and shows "n/a". Default "chronic" length: 3 months.
+- `METRIC-034` `[P]` **Momentum** = achievement of the last closed month minus the average achievement of the three closed months before it, in percentage points; an arrow is shown when the absolute change is at least 2 points (configurable).
+- `METRIC-035` `[P]` **Status distribution** = count of entities per status at a level for a month, using RULE-001 to RULE-005 (current month against the pace, closed months against 100%), and the change from the previous month.
+- `METRIC-036` `[P]` **Target ambition** = `target(M) / real(same month last year) - 1`; "n/a" when last year's real is zero or missing.
+- `METRIC-037` `[P]` **Year to date**: sums of target and real from the first month of the year (DEC-089, default January) through the selected month; expected to date uses `METRIC-030` for the current month; growth against last year's YTD over the same months.
+- `METRIC-038` `[P]` **Upload compliance** = `SUM(upload days) / SUM(eligible days)` at each level, using the eligible-day rule of `METRIC-017` (DEC-026).
+- `METRIC-039` `[P]` *(planned, DEC-086, DEC-087)* **Mix share** = type real / total real; **value per unit** = value / quantity as a proxy that mixes price and mix effects.
+- `METRIC-040` `[P]` *(planned, DEC-088)* **Productivity**: Sell OUT per SE = distributor Real Sell OUT / SE count of that distributor (`METRIC-027`); customers per SE. These are averages, not individual performance.
