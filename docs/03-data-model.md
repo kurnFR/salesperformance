@@ -176,9 +176,11 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
   "dimensions": [
     { "id": "region",      "label": "Region",      "source": "REGIONNAME" },
     { "id": "branch",      "label": "Branch",      "source": "BRANCHNAME" },
-    { "id": "spv",         "label": "SPV",         "source": "NAMAAREA" },
+    { "id": "spv",         "label": "SPV",         "source": "NAMAAREA", "key": "KODEAREA" },
     { "id": "distributor", "label": "Distributor", "source": "SELLINGPOINTNAME" },
     { "id": "se",          "label": "Salesman (SE)", "source": "SLSNO / SLSNAME", "entitiesOnly": true },
+    { "id": "salesType",   "label": "Sales type",  "source": "SLSTP", "entitiesOnly": true, "optional": true },
+    { "id": "position",    "label": "Position",    "source": "TEAM / TEAMNAME", "entitiesOnly": true, "optional": true },
     { "id": "customer",    "label": "Customer",    "source": "CUSTNO / CUSTNAME", "entitiesOnly": true },
     { "id": "city",        "label": "City",        "source": "KOTA", "optional": true }
   ],
@@ -197,7 +199,7 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
   ],
   "measures": [
     { "id": "targetIn",  "label": "Target Sell IN",  "source": "TOTALTargetSellIn" },
-    { "id": "targetOut", "label": "Target Sell OUT", "source": "TOTALTargetSellOut" },
+    { "id": "targetOut", "label": "Target Sell OUT", "source": "TOTALTargetSellOut", "aliases": ["TargetValueEskaSLO"], "note": "same measure under different column names in different tables (DEC-095)" },
     { "id": "realIn",    "label": "Real Sell IN",    "source": "TOTALRealSellIn" },
     { "id": "realOut",   "label": "Real Sell OUT",   "source": "TOTALRealSellOut" },
     { "id": "targetInReg",  "label": "Target Sell IN (Regular)",  "source": "TARGETSellInReg",  "segment": "reg" },
@@ -208,10 +210,9 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "targetOutFes", "label": "Target Sell OUT (Festive)", "source": "TARGETSellOutFes", "segment": "fes" },
     { "id": "realOutReg",   "label": "Real Sell OUT (Regular)",   "source": "RealSellOutReg",   "segment": "reg" },
     { "id": "realOutFes",   "label": "Real Sell OUT (Festive)",   "source": "RealSellOutFes",   "segment": "fes" },
-    { "id": "qtyIn",        "label": "Real Sell IN (quantity)",    "source": "RealQtySLI",        "unit": "TBD (DEC-094)" },
-    { "id": "qtyOut",       "label": "Real Sell OUT (quantity)",   "source": "RealQtySLO",        "unit": "TBD (DEC-094)" },
-    { "id": "targetQtyOut", "label": "Target Sell OUT (quantity)", "source": "TargetQtyEskaSLO",  "unit": "TBD (DEC-094)" },
-    { "id": "targetValueOutEska", "label": "Target Sell OUT (value, Eska)", "source": "TargetValueEskaSLO", "note": "compare with TOTALTargetSellOut (DEC-095)" },
+    { "id": "qtyIn",        "label": "Real Sell IN (quantity)",    "source": "RealQtySLI",        "unit": "carton" },
+    { "id": "qtyOut",       "label": "Real Sell OUT (quantity)",   "source": "RealQtySLO",        "unit": "carton" },
+    { "id": "targetQtyOut", "label": "Target Sell OUT (quantity)", "source": "TargetQtyEskaSLO",  "unit": "carton" },
     { "id": "seTarget",  "label": "SE target (month)",       "source": "TBD (DEC-070)", "level": "se", "status": "planned" },
     { "id": "seSellOut", "label": "SE sell out (month to date)", "source": "TBD (DEC-070)", "level": "se", "status": "planned" }
   ],
@@ -342,6 +343,7 @@ Source of table names: the repository file `table_name`. Column names come from 
 ### 4.2 Columns (names owner-confirmed as exact database names, DEC-001)
 
 - **Meanings confirmed by the owner (DEC-087, DEC-088):** `SLI` = Sell IN (sale **to the distributor**); `SLO` = Sell OUT (sale **from the distributor to the customer**). `RealQtySLI` and `RealQtySLO` are the realised Sell IN and Sell OUT **quantities**; `TargetQtyEskaSLO` is the Sell OUT target by **quantity**; `TargetValueEskaSLO` is the Sell OUT target by **value**; `RealSellInReg/Fes` and the other Reg/Fes columns are **values**; `CUSTNO` is the **customer code** and `CUSTNAME` the **customer name**. There is a quantity target for Sell OUT only; Sell IN has a value target but no quantity target.
+- **More mapping meanings (owner, DEC-096):** `KODESCABANG` = `SELLINGPOINTCODE` (the same code); `KOTA` = city; `KODEAREA` = SPV (area) code; `FLAG_AKTIF` = `Y` active, `N` no longer active (for an SE: resigned); `SLSTP` = type of salesperson (for example sales mix, sales office, taking order, others); `TEAM` = job position (for example sales executive or SPV). Quantities are already converted to **cartons** (DEC-094).
 - **Product groups:** `Reg` = Regular, products sold every day; `Fes` = Festive, products sold seasonally (owner, DEC-086). `TOTAL...` columns are expected to equal Regular plus Festive; the schema check verifies this.
 - **Performance:** `SELLINGPOINTCODE`, `SELLINGPOINTNAME`, `BRANCHCODE`, `BRANCHNAME`, `REGIONCODE`, `REGIONNAME`, `KODEAREA`, `NAMAAREA`, `KOTA`, `Tahun`, `Bulan`, `Periode` (month date), `TargetQtyEskaSLO`, `TargetValueEskaSLO`, `RealQtySLI`, `RealQtySLO`, `RealSellInReg`, `RealSellInFes`, **`TOTALRealSellIn`**, `RealSellOutReg`, `RealSellOutFes`, **`TOTALRealSellOut`**, `TARGETSellInReg`, `TARGETSellInFes`, **`TOTALTargetSellIn`**, `TARGETSellOutReg`, `TARGETSellOutFes`, **`TOTALTargetSellOut`**. Bold = fields used by the four reference sheets.
 - **Mapping:** `KOTA`, `REGIONCODE`, `REGIONNAME`, `BRANCHCODE`, `BRANCHNAME`, `KODEAREA`, `NAMAAREA`, `KODESCABANG`, `SELLINGPOINTNAME`, `SLSNO`, `SLSNAME`, `CUSTNO`, `CUSTNAME`, `SLSTP`, `TEAM`, `TEAMNAME`, `BranchActiveFlag`, `FLAG_AKTIF`, `NPWP`, `Source`.
@@ -354,9 +356,10 @@ Use these names exactly as the **column registry** in code (one file, one place)
 
 ### 4.3 Joins observed in the workbook (`[R]`)
 
+- Performance `SELLINGPOINTCODE` = Mapping `KODESCABANG` (the same code, confirmed by the owner, DEC-096); `KOTA` is the city; `KODEAREA` is the SPV (area) code with `NAMAAREA` as its name.
 - Master distributor `KOTA` = Daily upload `KOTA`.
 - Master distributor `KOTA` = Daily stock upload `KOTA`.
-- All other tables are used as separate sources blended on region, branch, area, selling point and month in Tableau; the exact join keys are confirmed by the schema check and the owner (DEC-076).
+- Column names are **not consistent across tables** (for example the Sell OUT value target is `TOTALTargetSellOut` in one place and `TargetValueEskaSLO` in another, same measure, DEC-095). The column registry therefore maps each canonical measure to the physical column of each table and principal, and the schema check verifies every mapping. All other tables are used as separate sources blended on region, branch, area, selling point and month in Tableau; the schema check confirms the remaining keys.
 
 ### 4.4 Organisation hierarchy and role mapping (`[R]`, confirm in DEC-003)
 
@@ -366,7 +369,7 @@ Use these names exactly as the **column registry** in code (one file, one place)
 | ASM | `BRANCHNAME` (19) | Branch-level flags |
 | SPV | `NAMAAREA` (75) | Area-level flags |
 | DIST | `SELLINGPOINTNAME` (confirmed meaning, DEC-002; 144 in the reference) | Selling-point flags |
-| SE (sales executive) | Name `SLSNAME`, key `SLSNO` (confirmed, DEC-002). Count: distinct `SLSNO` excluding codes that contain "SOI" in the INA reference sheet (260); a "SOA" variant exists for the other principal. Active flags are not used by Tableau (DEC-028) | `SE Excl SOI` field in sheet `Jumlah Team RSM INA` |
+| SE (sales executive) | Name `SLSNAME`, key `SLSNO` (confirmed, DEC-002). Tableau counts distinct `SLSNO` excluding codes that contain "SOI" for INA (260), with no active or position filter. The mapping also has `TEAM` (position, so SPVs may share this table), `FLAG_AKTIF` (`Y`/`N`) and `SLSTP` (sales type). The schema check reports the count under each candidate rule (DEC-028) | `SE Excl SOI` field in sheet `Jumlah Team RSM INA` |
 | Customer | Code `CUSTNO`, name `CUSTNAME` (confirmed, DEC-088). The mapping view has no month column, so it is a **current snapshot**, not history | Customer entities under an SE; no customer-level facts |
 
 Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE) > Customer (entities only, from the mapping). **In the current tables, targets exist only per selling point (distributor).** The owner says the SE-level monthly target and the month-to-date sell-out value per salesperson will be used in the Marketing module, which also enables day-by-day achievement (DEC-059, DEC-070). Whether they already exist in a table, and which one, is open. **Item = product name with product code `pcode`**; it is a separate product dimension that belongs to the Marketing dashboard, added later (DEC-060).
@@ -397,7 +400,7 @@ It checks, for every table in the principal registry:
 1. Every registry column exists, with its data type (expected: target and real `int8`) and nullability; reports extra or missing columns and name differences.
 2. Row counts and the range of periods (`Periode`) per table and principal.
 3. **Grain:** whether the performance view has one row per selling point per month (duplicate-key check), and whether months are complete.
-3c. `TargetValueEskaSLO` versus `TOTALTargetSellOut`: equal, or different sources? Quantity columns: types, zeros and negatives; value without quantity or the reverse.
+3c. `TargetValueEskaSLO` versus `TOTALTargetSellOut` (the same measure, so they should be equal; report differences). Quantity columns (cartons): types, zeros, negatives; value without quantity or the reverse. Distinct values of `TEAM`, `SLSTP` and `FLAG_AKTIF`, and the SE counts under each candidate rule (DEC-028).
 3b. For Sell IN and Sell OUT, target and real: does `TOTAL` equal Regular plus Festive (count of rows that differ, sum of differences)?
 4. Distinct regions per principal and a proposed display order (INA expected: JAWA 1, JAWA 2, PULAU 1, SUMATERA 1, SUMATERA 2; ASW six, including SUMATERA 3).
 5. `dimdate`: working days for the current month and whether 22-Oct-2026 gives 18 of 27 (66.67%).

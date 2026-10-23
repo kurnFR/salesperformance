@@ -43,7 +43,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Displays (for example the CEO TV), per-display playlists, per-item half/full presentation, the CEO's own playlist management and remote control from a phone (`PLAY-009` to `PLAY-013`), TV mode and on-screen labels (`UI-037`, `UI-038`, `DASH-012`).
 
 ### Phase 6: Growth and upload dashboards, then further dashboards
-- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload, then Performance Drivers (`11-insight-dashboard.md`, views 1 to 5 and 7 (Regular and Festive) first, view 6 after the manual-upload sources are labelled, view 8 after the schema check confirms the quantity unit and the mapping join, DEC-094 and DEC-096).
+- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload, then Performance Drivers (`11-insight-dashboard.md`, views 1 to 5 and 7 (Regular and Festive) first, view 6 after the manual-upload sources are labelled, view 8 after the schema check confirms the join and the flag values, DEC-097).
 - Rolling 7-month window and growth logic (`GROW-001` to `GROW-008`) get unit tests including year-boundary windows (for example selected Mar-27) and zero last-year values.
 - Later dashboards follow the same rule: one at a time with approved schema, KPI definitions and examples.
 

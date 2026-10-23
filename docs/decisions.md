@@ -16,7 +16,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-096** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
+- **DEC-085 to DEC-097** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -81,6 +81,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-086 | **Reg** = Regular, a product group sold every day. **Fes** = Festive, a product group sold seasonally. The owner wants their achievement analysed | 2026-10-22 (owner) | `11` INS-015 to INS-019, `01` METRIC-039 |
 | DEC-087 | **SLI** = Sell IN (sale to the distributor); **SLO** = Sell OUT (sale from the distributor to the customer). `RealQtySLI` and `RealQtySLO` are realised quantities; `TargetQtyEskaSLO` is the Sell OUT target by quantity; `TargetValueEskaSLO` is the Sell OUT target by value; `RealSellInReg/Fes` are values | 2026-10-22 (owner) | `03` 4.2, `01` METRIC-042 |
 | DEC-088 | `CUSTNO` is the **customer code** and `CUSTNAME` the customer name | 2026-10-22 (owner) | `03` 4.4, `11` INS-022 |
+| DEC-094 | Quantities are **already converted to cartons** | 2026-10-22 (owner) | `01` METRIC-042 |
+| DEC-095 | `TargetValueEskaSLO` is the **same measure** as `TOTALTargetSellOut`; column names are not consistent across tables, so the registry maps each measure per table | 2026-10-22 (owner) | `03` 4.3, field catalog |
+| DEC-096 | `KODESCABANG` = `SELLINGPOINTCODE`; `KOTA` = city; `KODEAREA` = SPV (area) code. `FLAG_AKTIF`: `Y` active, `N` no longer active (resigned for an SE). `SLSTP` = type of salesperson (sales mix, sales office, taking order, others). `TEAM` = job position (sales executive, SPV, ...) | 2026-10-22 (owner) | `03` 4.2 to 4.4 |
 
 ## Blocking Phase 0 and 2
 
@@ -140,7 +143,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-072 | SE achievement uses SE sell-out against an SE sell-out target; Sell IN is not an SE-level measure | Yes | Marketing | Proposed |
 | DEC-073 | When SE sell-out sums differ from the distributor's Real Sell OUT (different sources): show "Unassigned / difference" and raise a data finding, never force equality | Yes | Marketing | Proposed |
 | DEC-075 | Last-month-to-date cutoff for day-level sources: same calendar day or same working day? | Same working day (matches the working-day pace); show the cutoff date | Marketing | Proposed |
-| DEC-028 | SE counting rule | Replicate Tableau: distinct `SLSNO` excluding codes containing "SOI" for INA ("SOA" variant for the other principal, to confirm); no active-flag filter by default, optional filter; differences raised as findings | Phase 2 | Proposed |
 | DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
 | DEC-081 | Status values and time zone of `dwh_prod.etl_refresh_log` (running or failed rows, null `end_time`, local or UTC) | Checked by the schema check (DEC-076); a newer `start_time` without a newer successful `end_time` means "refresh in progress" | Phase 2 | Proposed |
 | DEC-082 | Ask the ETL (Pentaho) to log the start and end of its load step (not only `Refresh Materialized Views`) so the maintenance window is exact; Pentaho jobs can write their own log tables | Estimate the window from log history until then | Phase 2 | Proposed |
@@ -150,6 +152,5 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-091 | Pace expectation for Festive (seasonal) products: the working-day pace can mislead for a seasonal group | Same rule for both groups with a visible note; closed months against 100%; owner may define a seasonal expectation | Phase 6 | Proposed |
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
-| DEC-094 | Unit of the quantity columns (pieces, cartons, kilograms) and how to label it | Show the unit label from a setting; "units" until told | Phase 6 | Open |
-| DEC-095 | Is `TargetValueEskaSLO` the same measure as `TOTALTargetSellOut` or a different source? Which one do dashboards use? | Dashboards use `TOTALTargetSellOut`; the schema check compares them and differences become findings | Phase 6 | Open |
-| DEC-096 | Remaining mapping questions: join key between the performance and mapping views (selling point code versus `KODESCABANG`), meaning of `FLAG_AKTIF`, `SLSTP`, `TEAM`; the mapping is a current snapshot with no history | Productivity uses the current mapping, labelled so; join confirmed by the schema check | Phase 6 | Open |
+| DEC-028 | SE counting rule | First release replicates Tableau (distinct `SLSNO` excluding codes containing "SOI" for INA) for parity; the schema check reports the count under each candidate rule; proposed end state: active sales executives (`TEAM` = sales executive, `FLAG_AKTIF` = `Y`) | Phase 2 | Proposed |
+| DEC-097 | On a mapping row, does `FLAG_AKTIF` describe the SE, the customer, or both? Which values do `TEAM` and `SLSTP` take? (The schema check lists them.) | Flag describes the SE for SE counts and the customer for customer counts, to be confirmed by the listed values | Phase 6 | Open |

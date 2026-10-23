@@ -25,8 +25,8 @@ The current dashboards answer "what is the achievement" and "how does it compare
 | 8 | `distaktif`: total, active, resigned per month | **Network health:** active % and resignations over months (manual upload, flagged) | Yes |
 | 9 | Daily upload logs (grid only today) | **Reporting discipline:** upload compliance % by region and branch | Yes (eligible days DEC-026) |
 | 10 | `RealSellInReg/Fes`, `RealSellOutReg/Fes` and their targets (unused). **Reg = regular products sold every day; Fes = festive products sold seasonally** (owner, DEC-086) | **Product groups:** achievement, mix and growth for Regular versus Festive, and the seasonal pattern | Yes (pace for Fes, DEC-091) |
-| 11 | Quantities: `RealQtySLI` (Sell IN), `RealQtySLO` (Sell OUT), `TargetQtyEskaSLO` (Sell OUT target by quantity); `TargetValueEskaSLO` (Sell OUT target by value) | **Volume versus value:** Sell OUT quantity achievement, quantity growth against value growth, value per unit | Yes (unit and source checks, DEC-094, DEC-095) |
-| 12 | Mapping: SE per distributor, customers (`CUSTNO` code, `CUSTNAME` name) | **Coverage and productivity:** customers per SE and per distributor, Sell OUT per SE and per customer (averages over the current mapping) | Yes (join key, snapshot caveat, DEC-096) |
+| 11 | Quantities: `RealQtySLI` (Sell IN), `RealQtySLO` (Sell OUT), `TargetQtyEskaSLO` (Sell OUT target by quantity); `TargetValueEskaSLO` (Sell OUT target by value) | **Volume versus value:** Sell OUT quantity achievement, quantity growth against value growth, value per unit | Yes (quantities are in cartons; the two Sell OUT targets are the same measure) |
+| 12 | Mapping: SE per distributor, customers (`CUSTNO` code, `CUSTNAME` name) | **Coverage and productivity:** customers per SE and per distributor, Sell OUT per SE and per customer (averages over the current mapping) | Yes (join key is the same code; current-snapshot caveat) |
 | 13 | `dimdate` week, quarter, holiday | Weekly and quarterly cuts | Later, needs day-level data (Marketing/SE) |
 
 Deliberately not included: sales forecasts, "why" explanations, price effects, anything that needs data the project does not hold.
@@ -44,9 +44,9 @@ Deliberately not included: sales forecasts, "why" explanations, price effects, a
 | 5. YTD | How is the year going? | YTD target, real, expected to date, achievement and growth vs last year's YTD, per region |
 | 6. Network | Is the distributor base healthy and reporting? | Active % and resigned trend (flagged "manual upload"); upload compliance % |
 | 7. Product groups: Regular and Festive | Which product group drives or drags the achievement, and how seasonal is it? | Achievement % for Regular and Festive (Sell IN and Sell OUT) per region; mix share of real versus mix share of target; growth against last year per group; shortfall by group; a 12-month seasonal view of Festive this year versus last year |
-| 8. Volume and coverage | Are volumes and the field force growing with value? | Sell OUT quantity achievement per region; quantity growth against value growth; value per unit for Sell IN and Sell OUT against last year; customers per SE and per distributor; Sell OUT per SE and per customer (averages) |
+| 8. Volume and coverage | Are volumes and the field force growing with value? | Sell OUT quantity achievement per region; quantity growth against value growth; value per carton for Sell IN and Sell OUT against last year; active SE and vacant distributors (by sales type); customers per SE and per distributor; Sell OUT per SE and per customer (averages) |
 
-Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sales Performance services plus monthly history; view 8 additionally waits for the schema check to confirm the quantity unit and the mapping join (DEC-094, DEC-096). View 6 uses the manual-upload and upload-log sources.
+Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sales Performance services plus monthly history; view 8 only needs the schema check to confirm the join and the flag values (DEC-097). View 6 uses the manual-upload and upload-log sources.
 
 ## 4. Requirements
 
@@ -69,6 +69,7 @@ Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sa
 - `INS-020` `[C]` **Meanings** (owner): SLI is Sell IN, the sale to the distributor; SLO is Sell OUT, the sale from the distributor to the customer. Quantity columns are the realised quantities; `TargetQtyEskaSLO` and `TargetValueEskaSLO` are the Sell OUT targets by quantity and by value.
 - `INS-021` `[P]` **Volume versus value.** Per region and month: Sell OUT quantity achievement; quantity growth and value growth against last year side by side; value per unit for Sell IN and Sell OUT. Sell IN shows quantity without a percentage because no Sell IN quantity target exists.
 - `INS-022` `[P]` **Coverage.** Customers per SE and per distributor, and Sell OUT per SE and per customer, computed from the current mapping and labelled "average, current mapping". A drill-down from distributor to SE to customer lists names only, with no figures (`PIVOT-017`).
+- `INS-024` `[P]` **Vacancy and workforce signals** from the mapping: active SE per distributor, distributors with **no active SE** (vacant), resigned SE currently flagged `N`, and SE by sales type. The mapping is a current snapshot, so there is no resignation trend until history exists; the page does not claim one.
 - `INS-023` `[P]` Value per unit is labelled as such and never called price; changes are shown with the product-group split when the selector is set to Regular or Festive.
 - `INS-014` `[P]` Export (`MGMT-007`) of any view's table and a snapshot of any view.
 
@@ -93,8 +94,8 @@ Defined in `01-metrics-contract.md` section 12 (`METRIC-030` to `METRIC-040`): e
 
 - Regular plus Festive equals the `TOTAL` columns for target and real (Sell IN and Sell OUT); mix shares sum to 100% for real and for target; group achievement equals hand calculation; the selector never mixes groups; a mismatch raises a `TYPE_TOTAL_MISMATCH` finding instead of being hidden.
 
-- Quantity achievement equals `RealQtySLO / TargetQtyEskaSLO`; Sell IN shows no quantity percentage; value per unit equals value divided by quantity; coverage averages equal hand calculations over the mapping snapshot; zero quantity gives "n/a"; a quantity without value (or the reverse) raises `QTY_VALUE_MISMATCH`; `TargetValueEskaSLO` versus `TOTALTargetSellOut` differences raise `TARGET_SOURCE_MISMATCH`.
+- Quantity achievement equals `RealQtySLO / TargetQtyEskaSLO` (cartons); a distributor with no active SE is listed as vacant; Sell IN shows no quantity percentage; value per unit equals value divided by quantity; coverage averages equal hand calculations over the mapping snapshot; zero quantity gives "n/a"; a quantity without value (or the reverse) raises `QTY_VALUE_MISMATCH`; `TargetValueEskaSLO` and `TOTALTargetSellOut` are the same measure, so any difference raises `TARGET_SOURCE_MISMATCH`.
 
 ## 8. Open decisions
 
-DEC-085 (this dashboard and its view order), DEC-096 (mapping join key, `FLAG_AKTIF`, `SLSTP`, `TEAM` meanings), DEC-089 (year start for YTD), DEC-090 (default thresholds), DEC-091 (pace expectation for Festive), DEC-092 (product-group selector across the product), DEC-094 (quantity unit), DEC-095 (`TargetValueEskaSLO` versus `TOTALTargetSellOut`). DEC-086 and DEC-087 are answered. See `decisions.md`.
+DEC-085 (this dashboard and its view order), DEC-089 (year start for YTD), DEC-090 (default thresholds), DEC-091 (pace expectation for Festive), DEC-092 (product-group selector across the product), DEC-097 (flag scope and the values of `TEAM` and `SLSTP`). DEC-086, DEC-087, DEC-088, DEC-094, DEC-095 and DEC-096 are answered. See `decisions.md`.
