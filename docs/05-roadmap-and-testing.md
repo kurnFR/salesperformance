@@ -15,6 +15,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Monorepo, TypeScript strict, lint, test, CI; `AppShell`, sidebar, routing, theme provider, error boundaries, `/api/health`.
 - Repository interfaces with mock implementations; `fixtures/` and golden cases.
 - Authentication: admin-created local users (Argon2id, forced change of the temporary password, lockout, admin reset, change password) behind an `AuthProvider` interface. Microsoft sign-in is deferred.
+- Department-ready shell: department switcher, department-aware navigation and access model with Sales as the only active department; "Coming soon" pages for planned departments (`10-departments-and-modules.md`).
 - Access-control foundation: `AccessContext`, capability catalog, scope-required repositories, `GET /api/me/access`, seed roles as data (`02-architecture.md` section 10). Use a development identity stub until DEC-007 is decided.
 - **Exit:** shell works in Chrome and Firefox; CI green; scope tests pass.
 
@@ -27,6 +28,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 ### Phase 3: Configurable achievement rules and access admin
 - Glossary, default landing per role, saved views (`MGMT-003`, `MGMT-009`, `MGMT-011`).
 - Admin screens for roles, capabilities, scopes and user assignments (`UI-019`), with audit.
+- Department admin: departments, per-user department switches and department roles (`UI-035`).
 - Admin settings, validation, preview, persistence, versioning, boundary tests from the color table.
 
 ### Phase 4: Dashboard editor
@@ -60,6 +62,11 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 
 **Management**
 - Executive Summary numbers equal the Sales Performance service output for the same scope; a regional manager never sees another region in tiles, rankings, exports or shared links; derived metrics (`METRIC-019` to `METRIC-021`) match hand calculations including zero remaining days and zero target.
+
+**Departments**
+- A user's department switch and role control navigation, API, AI tools, export and shared links; direct URL or API access to a disabled department is refused.
+- Planned departments show "Coming soon" only to users who have them enabled; disabling a department hides it.
+- A new department can be added through data (department entry and manifest) without changing shell code.
 
 **Authentication**
 - Only admin-created, enabled users can sign in; nothing is created automatically.
@@ -170,3 +177,6 @@ A metric may go to production implementation when:
 - Tests can assert expected results without production customer data.
 
 The shell, themes, navigation, editor scaffolding and mock-backed UI may proceed earlier if mock data is clearly labeled and no irreversible data-model assumptions are made.
+
+### Later phases (not scheduled): further departments
+- Marketing (product dashboards with product name and `pcode`), Finance, HR and others. Each is added as a department entry plus a module manifest, with its own approved data mapping, KPIs, scope dimensions and, for Finance and HR, the sensitivity rules in `10-departments-and-modules.md` section 6.

@@ -48,6 +48,7 @@ All of this reuses the access model: a persona is just a role with a scope and a
 - `MGMT-002` `[P]` **Regional Manager view:** the same page scoped to the user's region(s), with branches, SPVs and distributors ranked by pace gap.
 - `MGMT-003` `[P]` **Default landing per role**, chosen by the admin on the role (for example Executive Summary for CEO and GM, regional view for RSM).
 - `MGMT-004` `[P]` **Drill-down** through the whole hierarchy (Region > Branch > SPV > Distributor, then SE and item where data exists, `PIVOT-014`) by clicking a tile, bar or row, with a breadcrumb and the same tooltip (target, real, %). Each level is the Sales Detail service filtered to the clicked item; scope always applies.
+- `MGMT-020` `[O]` **Company summary across departments** for CEO and General Manager once more than one department is active (DEC-067).
 - `MGMT-019` `[P]` **Depth cap per role:** the admin sets the deepest hierarchy level a role may open (for example the CEO to Distributor, an SPV to SE), so individual-level figures are shown only to roles that should see them (`PIVOT-019`).
 - `MGMT-005` `[P]` **Derived metrics**, defined in `01-metrics-contract.md` section 9: pace gap, shortfall to target, and "needed per remaining working day to reach 100%". These are arithmetic on existing values, not forecasts, and they are labelled that way.
 - `MGMT-006` `[P]` **Rankings and exceptions:** top N and bottom N by achievement, pace gap or growth, at any level the user may see; default N = 5, configurable.

@@ -98,30 +98,33 @@ Example from the owner (the columns and values are **only an example, not a fixe
 
 ### 6.1 Hierarchy and drill-down
 
-The dimension columns come from the organisation hierarchy (the mapping view). The user can **drill down from the top level to the deepest level that exists**, down to SE, and to item if an item level exists.
+The dimension columns come from the organisation hierarchy (the mapping view). The user can **drill down from the top level to the deepest level that exists**, down to SE. Targets exist only per selling point, so SE rows carry no target yet.
 
 ```mermaid
 flowchart TD
   subgraph FACTS["Target and real values available today (performance table)"]
     R["Region (RSM)"] --> B["Branch (ASM)"] --> S["Area (SPV)"] --> D["Selling point (DIST)"]
   end
-  D --> E["Salesman (SE): entities from the mapping, no sales facts yet"]
-  E --> I["Item: not defined yet (DEC-060)"]
+  D --> E["Salesman (SE): entities from the mapping, no target or facts yet"]
 ```
 
-- `PIVOT-014` `[C]` **Drill down by hierarchy.** After the user has chosen the columns, each row of a hierarchical dimension can be expanded to the next level (Region > Branch > SPV > Distributor > SE > Item) for as long as a deeper level exists. Collapsing returns to the parent.
+Product (item, with `pcode`) is **not** part of this hierarchy. It is a separate product dimension that belongs to the Marketing dashboard, added later (`10-departments-and-modules.md`).
+
+- `PIVOT-014` `[C]` **Drill down by hierarchy.** After the user has chosen the columns, each row of a hierarchical dimension can be expanded to the next level (Region > Branch > SPV > Distributor > SE) for as long as a deeper level exists. Collapsing returns to the parent.
 - `PIVOT-015` `[P]` **Two modes** over the same chosen columns: *Flat* (chosen dimension columns side by side, as in the owner's example, with subtotals) and *Drill* (a tree: start at any level, expand rows level by level, with a breadcrumb). The chosen fact columns stay while drilling.
 - `PIVOT-016` `[P]` Every node shows the chosen measures aggregated for its whole subtree, so a parent equals the sum of its children (percent columns are recalculated as `SUM(real) / SUM(target)`, never summed). Facts that cannot be placed on a lower level appear under an **Unassigned** node so totals still reconcile.
-- `PIVOT-017` `[C]` **Levels without data are never filled in.** Region to Distributor have target and real values today. SE and Item levels show only what the source holds: SE rows from the mapping (names, counts) with the measures marked "not available at this level", until a source with SE-level or item-level facts is supplied (DEC-059, DEC-060). Zero is never shown in place of "not available".
+- `PIVOT-017` `[C]` **Levels without data are never filled in.** Region to Distributor have target and real values today. The SE level shows only what the source holds: SE rows from the mapping (names, counts) with the measures marked "not available at this level", until SE targets and facts exist in a table (DEC-059). Zero is never shown in place of "not available".
 - `PIVOT-018` `[P]` Children load on demand (one level at a time, with the same period, filters, scope and measures), with a row cap and a "refine your filters" message; an "expand to level N" control is bounded by the same cap.
 - `PIVOT-019` `[P]` **Admin can cap the deepest level a role may see** (for example, the CEO to Distributor, an SPV to SE). Scope also applies at every level: a user only expands into values they may see. The cap is a role setting, not code (`02` section 10).
 - `PIVOT-020` `[P]` Accessible tree-grid: keyboard expand/collapse, announced level and state, focus kept on the same row after expanding.
-- `PIVOT-021` `[P]` The hierarchy is defined by a registry (`03-data-model.md` section 2.8), not hard-coded, so adding a level later (for example item) needs a registry entry and a source, not a redesign.
+- `PIVOT-021` `[P]` The hierarchy is defined by a registry (`03-data-model.md` section 2.8), not hard-coded, so adding a level later (for example SE facts, or the product catalog in Marketing) needs a registry entry and a source, not a redesign.
 
 ## 7. AI Chat (right panel)
 
 An icon in the right panel opens a chat that answers questions from the data and can show pop-up charts, cards, lines and bars. Full spec: [`07-ai-chat.md`](07-ai-chat.md). Requirement IDs `AI-001` to `AI-047`.
 
-## 8. Navigation and playlist
+## 8. Navigation, departments and playlist
+
+The product is a platform of departments (`10-departments-and-modules.md`): Sales is the only active one now; Marketing, Finance and HR are planned and appear as "Coming soon" for users who have them enabled. All dashboards in this catalog belong to the Sales department.
 
 All four dashboards are sidebar entries and can be playlist items (default 10 s). Dashboards 1 to 3 share the month filter; DEC-010 decides whether it persists across rotation.

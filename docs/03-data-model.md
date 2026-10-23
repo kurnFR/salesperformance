@@ -106,7 +106,8 @@ Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must e
     "principal": { "mode": "list", "values": ["ASW"] },
     "region":    { "mode": "list", "values": ["TBD-region-key-1", "TBD-region-key-2"] },
     "dashboard": { "mode": "all" }
-  }
+  },
+  "departmentId": "sales"
 }
 ```
 
@@ -184,9 +185,11 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
       { "id": "branch",      "dimension": "branch",      "parent": "region",      "measuresFrom": "performance" },
       { "id": "spv",         "dimension": "spv",         "parent": "branch",      "measuresFrom": "performance" },
       { "id": "distributor", "dimension": "distributor", "parent": "spv",         "measuresFrom": "performance" },
-      { "id": "se",          "dimension": "se",          "parent": "distributor", "measuresFrom": null, "entitiesFrom": "mapping" },
-      { "id": "item",        "dimension": "TBD",         "parent": "se",          "measuresFrom": null, "status": "undefined (DEC-060)" }
-    ] }
+      { "id": "se",          "dimension": "se",          "parent": "distributor", "measuresFrom": null, "entitiesFrom": "mapping", "note": "no SE target exists yet (DEC-059)" }
+    ] },
+    { "id": "productCatalog", "department": "marketing", "status": "planned",
+      "levels": [ { "id": "item", "label": "Product name", "key": "pcode", "measuresFrom": null } ],
+      "note": "Product (item) is not part of the Sales organisation hierarchy; it belongs to the Marketing module, added later (DEC-060)" }
   ],
   "measures": [
     { "id": "targetIn",  "label": "Target Sell IN",  "source": "TOTALTargetSellIn" },
@@ -260,13 +263,16 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `app_config.dashboards` | `id`, `route_key`, `name`, `description`, `visibility`, `published_version`, `created_at` | One row per dashboard |
+| `app_config.departments` | `id`, `name`, `sort_order`, `icon`, `status` (`planned`/`active`/`disabled`), `default_landing`, `created_at` | Admin-managed; there is no department table in the business database (DEC-063) |
+| `app_config.user_department_access` | `user_id`, `department_id`, `enabled`, `changed_by`, `changed_at` | Enable or disable each department per user (`DEPT-003`) |
+| `app_config.module_manifests` | `department_id`, `manifest_json`, `schema_version`, `status` | Validated module manifests (`10-departments-and-modules.md` section 3) |
+| `app_config.dashboards` | `id`, `department_id`, `route_key`, `name`, `description`, `visibility`, `published_version`, `created_at` | One row per dashboard; belongs to a department |
 | `app_config.dashboard_layout_versions` | `dashboard_id`, `version`, `layout_json`, `schema_version`, `created_by`, `created_at` | Append-only; unique `(dashboard_id, version)` for optimistic concurrency |
 | `app_config.achievement_rule_sets` | `version`, `rules_json`, `is_active`, `created_by`, `created_at` | Exactly one active |
 | `app_config.playlists` | `id`, `name`, `enabled`, `default_duration_seconds`, `on_load_failure` | |
 | `app_config.playlist_items` | `playlist_id`, `dashboard_id`, `position`, `duration_seconds`, `enabled` | FK to dashboards |
 | `app_config.assets` | `id`, `storage_key`, `mime_type`, `size_bytes`, `width`, `height`, `created_by` | Approved storage only |
-| `app_config.roles` | `id`, `name`, `description`, `is_system`, `default_landing`, `created_at` | Admin-managed; seed roles are normal rows; `default_landing` per `MGMT-003` |
+| `app_config.roles` | `id`, `department_id` (null for platform roles), `name`, `description`, `is_system`, `default_landing`, `created_at` | Admin-managed; seed roles are normal rows; `default_landing` per `MGMT-003` |
 | `app_config.role_capabilities` | `role_id`, `capability` | Capability validated against the code catalog |
 | `app_config.role_scopes` | `role_id`, `dimension`, `mode` (`all`/`list`), `values_json` | One row per dimension per role |
 | `app_config.user_roles` | `user_id`, `role_id` | `user_id` from the identity provider (DEC-007) |
@@ -330,7 +336,7 @@ Postgres folds unquoted identifiers to lowercase and column names with spaces or
 | DIST | `SELLINGPOINTNAME` (144) | Selling-point flags |
 | SE | `SLSNO` distinct (260), with codes containing "SOA" or "SOI" excluded in some counts | `SE Excl SOA/SOI` fields |
 
-Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE) > Item (undefined). Target and real values exist down to the selling point only. The mapping view also holds customer columns (`CUSTNO`, `CUSTNAME`); whether "item" means product or customer is open (DEC-060).
+Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE). **Targets exist only per selling point (distributor)**; no SE target is created yet (owner, DEC-059). **Item = product name with product code `pcode`**; it is a separate product dimension that belongs to the Marketing dashboard, added later (DEC-060).
 
 ### 4.5 Mapping status per dashboard item
 

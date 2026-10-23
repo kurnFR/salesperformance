@@ -46,6 +46,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
 - **Management use:** Executive Summary, regional view, drill-down, rankings, export and share, glossary, phone layout, saved views (`MGMT-001` to `MGMT-018`, `docs/09-management-experience.md`).
+- **Department-ready platform:** Sales is active now; Marketing (product dashboards), Finance, HR and others are planned. The UI and access model support departments from the start, with a department switcher, "Coming soon" pages and per-user department enable/disable and department roles (`DEPT-001` to `DEPT-018`, `docs/10-departments-and-modules.md`).
 - **AI Chat** in the right panel answers only from database data, never assumes or invents, and shows results as pop-up charts that stay in the chat (`AI-001` to `AI-047`).
 - **Data Findings** sheet lists anomalies to validate; manual-upload sources are labelled (`FIND-001`, `DASH-009`).
 - **Sign-in:** admin creates users with a username and password; users can change their password after login. Microsoft sign-in is skipped for now (no Microsoft administrator) and can be added later (`AUTH-001` to `AUTH-011`).
@@ -107,21 +108,22 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail).
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail), `DEPT-` (departments and modules).
 
 ## 7. Roadmap at a glance
 
 | Phase | Outcome | Needs from owner |
 |---|---|---|
 | 0 | Discovery, approved data contract and decisions | Verified columns and grain (DEC-001), SE/DIST definitions, units, owner answers in `docs/decisions.md` |
-| 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in with per-user TOTP, `.env` master key, access-control foundation | — |
+| 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in with per-user TOTP, `.env` master key, access-control foundation, department-ready navigation | — |
 | 2 | Sales Performance dashboard and Executive Summary on real data for INA and ASW: principal buttons, scoped data, tooltips, working-day progress from `dimdate`, auto-refresh from the ETL log, drill-down | Approved mapping rows and verified examples; ETL log table details (DEC-048) |
 | 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
-| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; SE-level and item-level sources (DEC-059, DEC-060) |
+| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; SE targets and facts if they are created (DEC-059) |
 | 7 | AI Chat and Data Findings | Findings thresholds (DEC-043); alert channels if wanted (DEC-055) |
 | 8 | Production hardening | — |
+| 9+ | Further departments (Marketing with product `pcode`, Finance, HR, others), each added as data plus a module | Per department: approved schema, KPIs, scope dimensions, owners |
 
 Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 
@@ -135,6 +137,7 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/10-departments-and-modules.md` | Department platform: model, module manifest, switcher and "Coming soon" UI, admin screens, sensitive departments |
 | `docs/09-management-experience.md` | Management review: gaps found, personas, Executive Summary, derived metrics, export/share |
 | `docs/07-ai-chat.md` | AI chat: grounded-answer design, tools, pop-up behavior, rules, tests |
 | `docs/08-data-findings.md` | Data findings sheet: checks, record, workflow |

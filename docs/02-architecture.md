@@ -83,6 +83,7 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | Method and path | Purpose | Permission |
 |---|---|---|
 | `GET /api/health` | Liveness/readiness | Public |
+| `GET /api/departments`, `GET/POST/PUT /api/admin/departments`, `PUT /api/admin/users/:id/departments` | Department list for the switcher; admin department management; per-user department enable/disable and roles (`10-departments-and-modules.md`) | Authenticated / `access.manage` |
 | `GET /api/me/access` | Signed-in user's capabilities and data scope (allowed principals, regions, dashboards); drives which buttons and filter options the UI shows | Authenticated |
 | `GET/POST/PUT/DELETE /api/admin/ai-providers`, `POST /api/admin/ai-providers/:id/test`, `PUT /api/admin/ai-settings` | AI provider profiles, API key (write-only), tests, global AI settings | `ai.settings.manage` |
 | `GET /api/data-version`, `GET /api/events` (server-sent events) | Current data version and as-of; push notice when a data refresh finishes | Authenticated |
@@ -187,6 +188,7 @@ sequenceDiagram
 
 ### 10.1 Model
 
+- **Departments:** capabilities are namespaced per department (for example `sales.dashboard.view`), a role belongs to a department, and each user has each department switched on or off (`10-departments-and-modules.md`). A department enabled with no role gives no access.
 - **Capabilities** are the things the code checks: actions (`layout.edit`, `rules.manage`, `playlist.manage`, `access.manage`, `findings.manage`, `ai.settings.manage`, `mfa.manage`, `export.use`), **features** (`dashboard.view` per dashboard, `ai.chat.use`, `findings.view`) and **filters** (`filter.principal`, `filter.region`, `filter.branch`, and so on). The catalog is fixed in code because code must check each item (a brand-new feature registers its capability when it ships); **who has each one is data**, and admins can turn any of them on or off per role at any time.
 - **Filter policy per role:** each filter is `hidden`, `locked` (fixed to the role's scope value) or `editable` within the allowed values.
 - **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
