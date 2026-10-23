@@ -43,7 +43,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - Displays (for example the CEO TV), per-display playlists, per-item half/full presentation, the CEO's own playlist management and remote control from a phone (`PLAY-009` to `PLAY-013`), TV mode and on-screen labels (`UI-037`, `UI-038`, `DASH-012`).
 
 ### Phase 6: Growth and upload dashboards, then further dashboards
-- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload, then Performance Drivers (`11-insight-dashboard.md`, views 1 to 5 first, view 6 after the manual-upload sources are labelled, views 7 and 8 after DEC-086 to DEC-088).
+- Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload, then Performance Drivers (`11-insight-dashboard.md`, views 1 to 5 and 7 (Regular and Festive) first, view 6 after the manual-upload sources are labelled, view 8 after DEC-087 and DEC-088).
 - Rolling 7-month window and growth logic (`GROW-001` to `GROW-008`) get unit tests including year-boundary windows (for example selected Mar-27) and zero last-year values.
 - Later dashboards follow the same rule: one at a time with approved schema, KPI definitions and examples.
 
@@ -73,6 +73,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - SE-level rows show target, sell-out and achievement; the SE sum versus the distributor's Real Sell OUT difference appears as "Unassigned / difference" and as a data finding.
 
 **Performance Drivers**
+- Regular plus Festive equals Total for target and real; mix shares sum to 100%; the product-group selector never mixes groups; a mismatch is shown as a finding, never hidden.
 - Shortfall shares sum to 100% and the Pareto line ends at 100%; sell-through and net gap equal hand calculations; streaks use closed months only and break on "n/a"; distribution counts equal the Sales Detail table; YTD equals the sum of months across a year boundary; generated sentences equal their numbers; out-of-scope users see no data, names or counts.
 
 **Resilience (ETL drops, truncates, adds columns)**

@@ -6,9 +6,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 ## Needed before Phase 1 starts (owner)
 
-1. **DEC-080 ETL scope.** Which schemas and tables does the ETL drop or truncate, and which database user does it run as: the same as the app's `PG_USER`, or a different one? That decides whether permissions alone keep `app_config` safe, or the extra guards in `OPS-017` are needed. Default if you do not know: the ETL touches only objects inside `dwh_prod`, and the guards and backup are added anyway.
-
-Phase 1 can start once DEC-080 is answered or the default is accepted. Everything else has a proposed default.
+**Nothing.** Every Phase 1 prerequisite has an answer (DEC-008, DEC-009, DEC-013, DEC-017, DEC-078, DEC-080). The remaining open items have proposed defaults and belong to later phases.
 
 ## Needed for Phase 2 and later (not blocking Phase 1)
 
@@ -18,7 +16,7 @@ Phase 1 can start once DEC-080 is answered or the default is accepted. Everythin
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-090** Performance Drivers decisions (Phase 6).
+- **DEC-085 to DEC-092** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -77,8 +75,10 @@ Phase 1 can start once DEC-080 is answered or the default is accepted. Everythin
 | DEC-077 | The whole ETL takes about 3 hours: about **2 hours of loading** plus about **50 minutes of materialized-view refresh**, and the materialized-view refresh is the final step. Data counts as ready when that process shows `SUCCESS` | 2026-10-22 (owner, with log evidence) | `02` OPS-005 |
 | DEC-078 | The CEO TV runs **two windows** (CCTV viewer and the dashboard browser). The user switches the dashboard window between half and full by hand; **default is half**. The dashboard must **fill the window with no blank space, or auto-fit** (auto-fit preferred) | 2026-10-22 (owner) | `04` UI-037, UI-041 |
 | DEC-079 | The CEO manages which dashboards rotate on his TV and how long each shows | 2026-10-22 (owner) | `04` PLAY-009 |
+| DEC-080 | The ETL touches **only `dwh_prod`**. It runs on **Pentaho**; its sources are **Excel files and a SQL Server on another server**. The app's `app_config` schema is outside its scope | 2026-10-22 (owner) | `02` OPS-017 |
 | DEC-083 | The TV is driven by a **mini PC over HDMI**, so a mouse works | 2026-10-22 (owner) | `04` DASH-012 |
 | DEC-084 | The ETL **sometimes drops, truncates and adds columns** | 2026-10-22 (owner) | `02` OPS-017 to OPS-021 |
+| DEC-086 | **Reg** = Regular, a product group sold every day. **Fes** = Festive, a product group sold seasonally. The owner wants their achievement analysed | 2026-10-22 (owner) | `11` INS-015 to INS-019, `01` METRIC-039 |
 
 ## Blocking Phase 0 and 2
 
@@ -141,11 +141,12 @@ Phase 1 can start once DEC-080 is answered or the default is accepted. Everythin
 | DEC-028 | SE counting rule | Replicate Tableau: distinct `SLSNO` excluding codes containing "SOI" for INA ("SOA" variant for the other principal, to confirm); no active-flag filter by default, optional filter; differences raised as findings | Phase 2 | Proposed |
 | DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
 | DEC-081 | Status values and time zone of `dwh_prod.etl_refresh_log` (running or failed rows, null `end_time`, local or UTC) | Checked by the schema check (DEC-076); a newer `start_time` without a newer successful `end_time` means "refresh in progress" | Phase 2 | Proposed |
-| DEC-080 | ETL scope: which schemas and tables does the ETL drop or truncate, and as which database user does it run (same as `PG_USER` or different)? | Only objects inside `dwh_prod`; guards and backup added anyway | Phase 1 | Open |
-| DEC-082 | Ask the ETL to log the start and end of its load step (not only `Refresh Materialized Views`) so the maintenance window is exact | Estimate the window from log history until then | Phase 2 | Proposed |
-| DEC-085 | The one new dashboard is **Performance Drivers** (views: Gap, Channel, Persistence, Distribution and ambition, YTD, Network; Mix and Productivity later) | As in `11` | Phase 6 | Proposed |
-| DEC-086 | Meaning of the type split `RealSellInReg/Fes`, `RealSellOutReg/Fes`, `TARGETSellInReg/Fes` ("Reg" and "Fes") | Not used until explained | Phase 6 | Open |
+| DEC-082 | Ask the ETL (Pentaho) to log the start and end of its load step (not only `Refresh Materialized Views`) so the maintenance window is exact; Pentaho jobs can write their own log tables | Estimate the window from log history until then | Phase 2 | Proposed |
+| DEC-085 | The one new dashboard is **Performance Drivers** (views: Gap, Channel, Persistence, Distribution and ambition, YTD, Network, Product groups Regular and Festive; Volume and Productivity later) | As in `11` | Phase 6 | Proposed |
 | DEC-087 | Meaning of `RealQtySLI`, `RealQtySLO`, `TargetQtyEskaSLO`, `TargetValueEskaSLO` (units, Eska SLO) | Not used until explained | Phase 6 | Open |
 | DEC-088 | Productivity: join key between the performance view and the mapping view (selling point code vs `KODESCABANG`), meaning of `CUSTNO` and `FLAG_AKTIF` | Not used until confirmed | Phase 6 | Open |
 | DEC-089 | First month of the year for YTD (calendar or fiscal) | January | Phase 6 | Proposed |
 | DEC-090 | Default thresholds: chronic streak 3 closed months; momentum 2 points; top N 5; sell-through bands | As listed | Phase 6 | Proposed |
+| DEC-091 | Pace expectation for Festive (seasonal) products: the working-day pace can mislead for a seasonal group | Same rule for both groups with a visible note; closed months against 100%; owner may define a seasonal expectation | Phase 6 | Proposed |
+| DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
+| DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |

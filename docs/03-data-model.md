@@ -198,6 +198,14 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "targetOut", "label": "Target Sell OUT", "source": "TOTALTargetSellOut" },
     { "id": "realIn",    "label": "Real Sell IN",    "source": "TOTALRealSellIn" },
     { "id": "realOut",   "label": "Real Sell OUT",   "source": "TOTALRealSellOut" },
+    { "id": "targetInReg",  "label": "Target Sell IN (Regular)",  "source": "TARGETSellInReg",  "segment": "reg" },
+    { "id": "targetInFes",  "label": "Target Sell IN (Festive)",  "source": "TARGETSellInFes",  "segment": "fes" },
+    { "id": "realInReg",    "label": "Real Sell IN (Regular)",    "source": "RealSellInReg",    "segment": "reg" },
+    { "id": "realInFes",    "label": "Real Sell IN (Festive)",    "source": "RealSellInFes",    "segment": "fes" },
+    { "id": "targetOutReg", "label": "Target Sell OUT (Regular)", "source": "TARGETSellOutReg", "segment": "reg" },
+    { "id": "targetOutFes", "label": "Target Sell OUT (Festive)", "source": "TARGETSellOutFes", "segment": "fes" },
+    { "id": "realOutReg",   "label": "Real Sell OUT (Regular)",   "source": "RealSellOutReg",   "segment": "reg" },
+    { "id": "realOutFes",   "label": "Real Sell OUT (Festive)",   "source": "RealSellOutFes",   "segment": "fes" },
     { "id": "seTarget",  "label": "SE target (month)",       "source": "TBD (DEC-070)", "level": "se", "status": "planned" },
     { "id": "seSellOut", "label": "SE sell out (month to date)", "source": "TBD (DEC-070)", "level": "se", "status": "planned" }
   ],
@@ -207,6 +215,11 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "gapIn",  "label": "Shortfall IN",      "formula": "max(targetIn - realIn, 0)" },
     { "id": "paceIn", "label": "Pace gap IN",       "formula": "achIn - workingDayProgress" },
     { "id": "seAchOut", "label": "SE achievement %", "formula": "seSellOut / seTarget", "level": "se", "status": "planned" }
+  ],
+  "segments": [
+    { "id": "all", "label": "All products",  "columns": "TOTAL*" },
+    { "id": "reg", "label": "Regular",       "columns": "*Reg", "meaning": "product group sold every day" },
+    { "id": "fes", "label": "Festive",       "columns": "*Fes", "meaning": "product group sold seasonally" }
   ],
   "period": { "source": "Periode", "granularity": "month" }
 }
@@ -319,6 +332,7 @@ Source of table names: the repository file `table_name`. Column names come from 
 
 ### 4.2 Columns (names owner-confirmed as exact database names, DEC-001)
 
+- **Product groups:** `Reg` = Regular, products sold every day; `Fes` = Festive, products sold seasonally (owner, DEC-086). `TOTAL...` columns are expected to equal Regular plus Festive; the schema check verifies this.
 - **Performance:** `SELLINGPOINTCODE`, `SELLINGPOINTNAME`, `BRANCHCODE`, `BRANCHNAME`, `REGIONCODE`, `REGIONNAME`, `KODEAREA`, `NAMAAREA`, `KOTA`, `Tahun`, `Bulan`, `Periode` (month date), `TargetQtyEskaSLO`, `TargetValueEskaSLO`, `RealQtySLI`, `RealQtySLO`, `RealSellInReg`, `RealSellInFes`, **`TOTALRealSellIn`**, `RealSellOutReg`, `RealSellOutFes`, **`TOTALRealSellOut`**, `TARGETSellInReg`, `TARGETSellInFes`, **`TOTALTargetSellIn`**, `TARGETSellOutReg`, `TARGETSellOutFes`, **`TOTALTargetSellOut`**. Bold = fields used by the four reference sheets.
 - **Mapping:** `KOTA`, `REGIONCODE`, `REGIONNAME`, `BRANCHCODE`, `BRANCHNAME`, `KODEAREA`, `NAMAAREA`, `KODESCABANG`, `SELLINGPOINTNAME`, `SLSNO`, `SLSNAME`, `CUSTNO`, `CUSTNAME`, `SLSTP`, `TEAM`, `TEAMNAME`, `BranchActiveFlag`, `FLAG_AKTIF`, `NPWP`, `Source`.
 - **Master distributor:** `KODESCABANG`, `BRANCHCODE`, `BRANCHNAME`, `REGIONCODE`, `REGIONNAME`, `KODEAREA`, `NAMAAREA`, `KOTA`, `SELLINGPOINTNAME`.
@@ -372,6 +386,7 @@ It checks, for every table in the principal registry:
 1. Every registry column exists, with its data type (expected: target and real `int8`) and nullability; reports extra or missing columns and name differences.
 2. Row counts and the range of periods (`Periode`) per table and principal.
 3. **Grain:** whether the performance view has one row per selling point per month (duplicate-key check), and whether months are complete.
+3b. For Sell IN and Sell OUT, target and real: does `TOTAL` equal Regular plus Festive (count of rows that differ, sum of differences)?
 4. Distinct regions per principal and a proposed display order (INA expected: JAWA 1, JAWA 2, PULAU 1, SUMATERA 1, SUMATERA 2; ASW six, including SUMATERA 3).
 5. `dimdate`: working days for the current month and whether 22-Oct-2026 gives 18 of 27 (66.67%).
 6. `dwh_prod.etl_refresh_log`: newest rows per `process_name`, distinct `status` values, whether a running row has a null `end_time`, and whether the timestamps carry a time zone (DEC-077).

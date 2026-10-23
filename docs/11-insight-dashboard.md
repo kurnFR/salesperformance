@@ -24,7 +24,7 @@ The current dashboards answer "what is the achievement" and "how does it compare
 | 7 | Monthly sums from January (Tableau has a YTD sheet; the new product has none) | **Year to date:** YTD achievement, expected to date, growth vs last year's YTD | Yes (year start DEC-089) |
 | 8 | `distaktif`: total, active, resigned per month | **Network health:** active % and resignations over months (manual upload, flagged) | Yes |
 | 9 | Daily upload logs (grid only today) | **Reporting discipline:** upload compliance % by region and branch | Yes (eligible days DEC-026) |
-| 10 | `RealSellInReg/Fes`, `RealSellOutReg/Fes` and their targets (unused) | **Mix:** regular versus the other type, share and growth | Blocked: meaning of "Fes" (DEC-086) |
+| 10 | `RealSellInReg/Fes`, `RealSellOutReg/Fes` and their targets (unused). **Reg = regular products sold every day; Fes = festive products sold seasonally** (owner, DEC-086) | **Product groups:** achievement, mix and growth for Regular versus Festive, and the seasonal pattern | Yes (pace for Fes, DEC-091) |
 | 11 | `RealQtySLI/SLO`, `TargetQtyEskaSLO`, `TargetValueEskaSLO` (unused) | **Volume versus value:** value per unit proxy, quantity achievement | Blocked: meaning of the columns (DEC-087) |
 | 12 | Mapping: SE per distributor, customers (`CUSTNO`) | **Productivity and coverage:** Sell OUT per SE, customers per SE | Blocked: join keys, active flags (DEC-088) |
 | 13 | `dimdate` week, quarter, holiday | Weekly and quarterly cuts | Later, needs day-level data (Marketing/SE) |
@@ -43,10 +43,10 @@ Deliberately not included: sales forecasts, "why" explanations, price effects, a
 | 4. Distribution and ambition | How wide is the problem, and are targets realistic? | Stacked counts red/yellow/green per region (and change from last month); target versus last year's real per region |
 | 5. YTD | How is the year going? | YTD target, real, expected to date, achievement and growth vs last year's YTD, per region |
 | 6. Network | Is the distributor base healthy and reporting? | Active % and resigned trend (flagged "manual upload"); upload compliance % |
-| 7. Mix and volume (planned) | What is the type and unit mix? | Needs DEC-086 and DEC-087 |
-| 8. Productivity (planned) | How productive is the field force? | Needs DEC-088 |
+| 7. Product groups: Regular and Festive | Which product group drives or drags the achievement, and how seasonal is it? | Achievement % for Regular and Festive (Sell IN and Sell OUT) per region; mix share of real versus mix share of target; growth against last year per group; shortfall by group; a 12-month seasonal view of Festive this year versus last year |
+| 8. Volume and productivity (planned) | Value per unit; Sell OUT and customers per SE | Needs DEC-087 and DEC-088 |
 
-Views 1 to 5 use confirmed columns and need only the Sales Performance services plus monthly history. View 6 uses the manual-upload and upload-log sources. Views 7 and 8 are specified now and built when the owner confirms the semantics.
+Views 1 to 5 and 7 use confirmed columns and need only the Sales Performance services plus monthly history. View 6 uses the manual-upload and upload-log sources. View 8 is specified now and built when the owner confirms the semantics (DEC-087, DEC-088).
 
 ## 4. Requirements
 
@@ -61,6 +61,11 @@ Views 1 to 5 use confirmed columns and need only the Sales Performance services 
 - `INS-011` `[P]` Closed-month history is read from the same approved tables; entities with no target in a month are shown as "n/a" and break a streak, never counted as red or green.
 - `INS-012` `[P]` The AI chat gets matching tools (section 6) so every figure on this dashboard can also be asked in chat, with identical numbers.
 - `INS-013` `[P]` Data caveats are visible where they apply: manual-upload sources, the in-progress month ("month to date"), and open data findings (`FIND-004`).
+- `INS-015` `[C]` **Regular versus Festive is analysed** (owner): Regular (`Reg`) is the product group sold every day; Festive (`Fes`) is the group sold seasonally. Achievement is computed per group for Sell IN and Sell OUT from the group columns (`03-data-model.md` section 4.2).
+- `INS-016` `[P]` **Mix.** Show each group's share of real value and of target value, and the gap between the two shares in points, so a region that sells more Festive than planned is visible even when the total looks fine.
+- `INS-017` `[P]` **Seasonality.** A 12-month view of Festive real value, this year against last year, with the same-month last-year value as the reference. It describes the pattern in the data; it does not forecast the season.
+- `INS-018` `[P]` **Pace for Festive.** The working-day pace assumes steady selling, which fits Regular products. Festive products sell in seasons, so the same pace can mislead. Default: apply the same rule to both groups (consistency) and show a note on Festive bars: "seasonal group, compared with the working-day pace"; for closed months both groups are judged against 100%. The owner may choose a different expectation for Festive (DEC-091).
+- `INS-019` `[P]` **Group selector across the product.** Sales Performance, Growth, Executive Summary and Sales Detail get a product-group selector: All (default, the `TOTAL` columns), Regular or Festive. It swaps target and real consistently, never mixing groups (`DASH-014`, DEC-092).
 - `INS-014` `[P]` Export (`MGMT-007`) of any view's table and a snapshot of any view.
 
 ## 5. Metric definitions
@@ -82,6 +87,8 @@ Defined in `01-metrics-contract.md` section 12 (`METRIC-030` to `METRIC-040`): e
 - Out-of-scope users get no data, no names and no counts from any view.
 - Every view passes the four-viewport matrix and fills the window with no blank area (`UI-041`).
 
+- Regular plus Festive equals the `TOTAL` columns for target and real (Sell IN and Sell OUT); mix shares sum to 100% for real and for target; group achievement equals hand calculation; the selector never mixes groups; a mismatch raises a `TYPE_TOTAL_MISMATCH` finding instead of being hidden.
+
 ## 8. Open decisions
 
-DEC-085 (this dashboard and its view order), DEC-086 (meaning of the type split "Reg" and "Fes"), DEC-087 (meaning of the quantity and Eska SLO columns), DEC-088 (join keys and active flags for productivity), DEC-089 (year start for YTD), DEC-090 (default thresholds). See `decisions.md`.
+DEC-085 (this dashboard and its view order), DEC-087 (meaning of the quantity and Eska SLO columns), DEC-088 (join keys and active flags for productivity), DEC-089 (year start for YTD), DEC-090 (default thresholds), DEC-091 (pace expectation for Festive), DEC-092 (product-group selector across the product). DEC-086 is answered. See `decisions.md`.
