@@ -115,7 +115,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 
 | Phase | Outcome | Needs from owner |
 |---|---|---|
-| 0 | Discovery, approved data contract and decisions | Verified columns and grain (DEC-001), SE/DIST definitions, units, owner answers in `docs/decisions.md` |
+| 0 | Discovery, approved data contract and decisions | Schema check report approved (DEC-076), ETL readiness semantics (DEC-077), SE counting rule (DEC-028) |
 | 1 | App shell, routing, themes, health check, mock fixtures, admin-created local sign-in with per-user TOTP, `.env` master key, access-control foundation, department-ready navigation | — |
 | 2 | Sales Performance dashboard and Executive Summary on real data for INA and ASW: principal buttons, scoped data, tooltips, working-day progress from `dimdate`, auto-refresh from the ETL log, drill-down | Approved mapping rows and verified examples; ETL log table details (DEC-048) |
 | 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |

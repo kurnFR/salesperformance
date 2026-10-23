@@ -7,11 +7,12 @@ Related: [`PRD.md`](../PRD.md) · [`decisions.md`](decisions.md)
 Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing requirement IDs.
 
 ### Phase 0: Discovery and data contract
-- Verify the Tableau-derived columns in PostgreSQL (`03-data-model.md` section 4.6) and approve the mapping rows. The workbook, screenshots and table names are already in the repo.
-- Close blocking decisions in `decisions.md`: at least DEC-001 to DEC-004, DEC-006, DEC-020, DEC-021, DEC-027, DEC-028, DEC-030.
+- Column names are owner-confirmed (DEC-001). Run the automated schema check (`03-data-model.md` section 4.6) to confirm types, grain, regions and the ETL log, then approve the mapping rows.
+- Close blocking decisions in `decisions.md`. For Phase 1 itself only DEC-009, DEC-013, DEC-017 and DEC-008 are needed; Phase 2 additionally needs DEC-077, DEC-028 and DEC-029.
 - **Exit:** approved metric and API contracts; no guessed schema.
 
 ### Phase 1: Foundation
+- Repository tooling (`pnpm` workspaces, TypeScript strict, lint, tests, CI), `.env.example`, column registry, principal registry and the `schema:check` script.
 - Monorepo, TypeScript strict, lint, test, CI; `AppShell`, sidebar, routing, theme provider, error boundaries, `/api/health`.
 - Repository interfaces with mock implementations; `fixtures/` and golden cases.
 - Authentication: admin-created local users (Argon2id, forced change of the temporary password, lockout, admin reset, change password) behind an `AuthProvider` interface. Microsoft sign-in is deferred.

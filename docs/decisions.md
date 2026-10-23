@@ -4,21 +4,30 @@ Every open question has a **proposed default** so work can continue; the default
 
 Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (blocked, no default) · `Superseded`.
 
-## What needs the owner now (highest impact first)
+## Needed before Phase 1 starts (owner)
 
-1. **DEC-001** Run the verification queries in `03-data-model.md` section 4.6 (column names and types, grain, region order). Nothing real can be built on the data until this is done.
-2. **DEC-048** Send the real ETL log table name and columns later (placeholder `ETLrefresh_log` is used meanwhile) and which row means the dashboard views finished refreshing.
-3. **DEC-075** Last-month-to-date cutoff rule when day-level data is used (same calendar day or same working day). Not needed until the Marketing module.
-4. **DEC-002, DEC-028** Exact meaning of DIST and SE, and which SE rows count (active flags, SOA/SOI exclusion).
-5. **DEC-029, DEC-030** Multi-month role-count denominators; unit and format of target and real values.
-6. **DEC-023, DEC-026** Growth bar colors; Daily Upload details.
-7. **DEC-013, DEC-017, DEC-008** UI language, target screens, hosting.
-8. **DEC-054, DEC-057** Executive Summary content, and which roles are CEO, General Manager and Regional Manager (is Regional Manager the RSM?).
+1. **DEC-009 App data location.** Approve where the app stores its own data (users, roles, sessions, layouts): a dedicated schema `app_config` in the existing PostgreSQL, or a separate small database. Either way, use **two database users**: a read-only user for the business tables and a separate user that can write only to the app's own schema or database. Phase 1 cannot store users and roles without this.
+2. **DEC-013 UI language** (Bahasa Indonesia, English or both) and number format.
+3. **DEC-017 Target screens:** meeting-room TV resolution, laptop, phone minimum width.
+4. **DEC-008 Hosting:** operating system, whether Docker is available, the internal address and HTTPS, and the Node.js and PostgreSQL versions on the server.
+
+Everything else has a proposed default and does not block Phase 1.
+
+## Needed for Phase 2 and later (not blocking Phase 1)
+
+- **DEC-077** which ETL process(es) mean the dashboard views are ready, and the log's status values and time zone.
+- **DEC-076** run the schema check and approve the mapping rows.
+- **DEC-028** confirm the SE counting rule (replicate Tableau: exclude codes containing "SOI" for INA).
+- **DEC-029** multi-month role-count denominators.
+- **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
+- **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
 
 | ID | Decision | Confirmed | Where used |
 |---|---|---|---|
+| DEC-001 | The column names in the Tableau workbook are **exactly the PostgreSQL column names**; the workbook is the source for the column registry. Types and grain are confirmed by the automated schema check (DEC-076) | 2026-10-22 (owner) | `03` section 4 |
+| DEC-002 | **DIST** = `sellingpointname`. **SE** = sales executive; name column `slsname` (key `slsno`) | 2026-10-22 (owner) | `01` METRIC-026, `03` 4.4 |
 | DEC-005 | Color rule: if achievement >= working-day progress -> green (even below 70%); otherwise <70% red, 70% to <100% yellow, >=100% green. Equality is green. Yellow overrides red when behind pace but >=70% | 2026-10-22 (owner, in chat) | `01-metrics-contract.md` section 4 |
 | DEC-005a | Working-day progress is capped to 0-100% on the server | 2026-10-22 | `01-metrics-contract.md` 5.7 |
 | DEC-005b | Working-day progress comes from the working-day table/calendar, not sales achievement | Earlier (owner) | `01-metrics-contract.md` 5.7 |
@@ -31,20 +40,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
 | DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
 | DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
-| DEC-049 | The encryption master key is entered by the administrator in the server's `.env`; the app refuses to start without it | 2026-10-22 (owner) | `02` SEC-015 |
-| DEC-048a | The ETL materialized-view refresh log **already exists in a log table**; the app reads it for the "data as of" time and the refresh signal (polling) | 2026-10-22 (owner) | `02` OPS-005 |
-| DEC-039a | MFA method is **TOTP** | 2026-10-22 (owner) | `02` AUTH-011 |
-| DEC-058 | Sales Detail (pivot): user picks a period range, dimension headers (region, branch, SPV, distributor) and fact values (target, real Sell IN, real Sell OUT), with a grand total | 2026-10-22 (owner) | `06` section 6 |
-| DEC-052 | In Sales Detail the **user chooses the columns**; the owner's example is only an example, not a fixed layout. All measures (Target Sell IN, Target Sell OUT, Real Sell IN, Real Sell OUT) are selectable | 2026-10-22 (owner) | `06` PIVOT-004 |
-| DEC-057 | Regional Manager and RSM are the same role. CEO and General Manager see all regions; the Regional Manager sees own region(s) | 2026-10-22 (owner) | `09` section 2 |
-| DEC-061 | Hierarchical dimensions can be drilled down through the hierarchy until SE, or until item if it exists | 2026-10-22 (owner) | `06` section 6.1, PIVOT-014 |
-| DEC-060 | **Item = product name with product code `pcode`**. It is not part of this project; it will come with the **Marketing dashboard** later | 2026-10-22 (owner) | `03` 2.8, `10` DEPT-005 |
-| DEC-069 | Departments such as **Marketing, Finance, HR and others** will be added later; the UI and access model plan for them now; a **department role can be added to each user** and enabled or disabled per user; the **department table does not exist yet** | 2026-10-22 (owner) | `10-departments-and-modules.md` |
-| DEC-059 | In the current tables targets exist only per selling point (distributor). SE-level monthly target and month-to-date sell-out per salesperson are planned to arrive with the **Marketing** module | 2026-10-22 (owner) | `03` 4.4, `06` PIVOT-017 |
-| DEC-065 | Departments to plan for, in order: **Sales, Marketing, Finance, HR**; Marketing is built next | 2026-10-22 (owner, accepted proposal) | `10` section 7 |
-| DEC-070 | The SE-level monthly target and sell-out data **already exist** in tables; they are improved and used later in the Marketing module. Table names and columns will be supplied then | 2026-10-22 (owner) | `03` 4.4, `10` DEPT-019 |
-| DEC-071 | SE **real values exist per day** (day-level). The ETL still refreshes nightly; a daily/intraday snapshot is not created yet and can be created later | 2026-10-22 (owner) | `06` PROG-004, `02` OPS-011 |
-| DEC-074 | New modules (Marketing, then others) are added **after the Sales project is finished and validated**; new features follow validation | 2026-10-22 (owner) | `10` DEPT-020, `05` later phases |
+| DEC-030 | Target and real values are `int8`; calculations use `numeric`; no currency symbol in the data (display separators per locale, optional unit label is a display setting) | 2026-10-22 (owner) | `01` METRIC-028, METRIC-029, DATA-005 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -53,6 +49,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-036 | Admin sets roles when creating users and keeps full control afterwards: can change what a role is allowed, and switch features and filters on or off | 2026-10-22 (owner) | `02` section 10, SEC-014 |
 | DEC-038 | Microsoft sign-in is **skipped** for now (no Microsoft administrator). Revisit when one is available | 2026-10-22 (owner) | `02` section 11, AUTH-009 |
 | DEC-039 | **MFA is configurable per user**: admin enables or disables it for each user who needs it. Remaining local-account policy values stay as proposed | 2026-10-22 (owner) | `02` AUTH-010, AUTH-011 |
+| DEC-039a | MFA method is **TOTP** | 2026-10-22 (owner) | `02` AUTH-011 |
 | DEC-040b | AI chat history is deleted after **60 days** | 2026-10-22 (owner) | `07` AI-035 |
 | DEC-041 | Data is **monthly**, loaded by the ETL (nightly today); the current month is month-to-date as of the last completed refresh. For "month to date" questions the AI says only monthly periods exist (no "last month to date"). Near-real-time refresh is planned later | 2026-10-22 (owner) | `01` METRIC-018, `07` AI-026, `DASH-010` |
 | DEC-044 | `distaktif` holds both INA and ASW regions now and will be split into separate tables later. Until then filter by each principal's region codes; after the split change only the principal registry | 2026-10-22 (owner) | `03` 2.6 |
@@ -60,13 +57,25 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-046 | An **ETL** loads source data, refreshes materialized views and runs stored procedures, taking almost 3 hours. Dashboards must **auto-refresh** when data changes | 2026-10-22 (owner) | `02` section 13, `DASH-011` |
 | DEC-046a | AI behavior: confirms typos/wrong questions and suggests alternatives, answers after confirmation; answers from dashboard data; may do logical calculation; no free database queries and no tables outside the existing ones | 2026-10-22 (owner) | `07` AI-007, AI-008, AI-024 |
 | DEC-047 | The AI provider is **configurable in settings**: admin selects provider (9Router, OmniRoute, local model, Claude, Gemini, OpenAI/Codex, any OpenAI-compatible), model, and saves the API key; can switch any time | 2026-10-22 (owner) | `07` section 9, AI-037 to AI-047 |
+| DEC-048 | The ETL refresh log is **`dwh_prod.etl_refresh_log`** (`process_name`, `start_time`, `end_time`, `status`, `message`). Newest row: `Refresh Materialized Views`, 2026-10-22 04:24:28.270 to 05:14:07.327, `SUCCESS`. `dataAsOf` = `end_time` of the newest `SUCCESS` row of the configured process | 2026-10-22 (owner) | `02` OPS-005, `03` 2.6 |
+| DEC-048a | The ETL materialized-view refresh log **already exists in a log table**; the app reads it for the "data as of" time and the refresh signal (polling) | 2026-10-22 (owner) | `02` OPS-005 |
+| DEC-049 | The encryption master key is entered by the administrator in the server's `.env`; the app refuses to start without it | 2026-10-22 (owner) | `02` SEC-015 |
+| DEC-052 | In Sales Detail the **user chooses the columns**; the owner's example is only an example, not a fixed layout. All measures (Target Sell IN, Target Sell OUT, Real Sell IN, Real Sell OUT) are selectable | 2026-10-22 (owner) | `06` PIVOT-004 |
+| DEC-057 | Regional Manager and RSM are the same role. CEO and General Manager see all regions; the Regional Manager sees own region(s) | 2026-10-22 (owner) | `09` section 2 |
+| DEC-058 | Sales Detail (pivot): user picks a period range, dimension headers (region, branch, SPV, distributor) and fact values (target, real Sell IN, real Sell OUT), with a grand total | 2026-10-22 (owner) | `06` section 6 |
+| DEC-059 | In the current tables targets exist only per selling point (distributor). SE-level monthly target and month-to-date sell-out per salesperson are planned to arrive with the **Marketing** module | 2026-10-22 (owner) | `03` 4.4, `06` PIVOT-017 |
+| DEC-060 | **Item = product name with product code `pcode`**. It is not part of this project; it will come with the **Marketing dashboard** later | 2026-10-22 (owner) | `03` 2.8, `10` DEPT-005 |
+| DEC-061 | Hierarchical dimensions can be drilled down through the hierarchy until SE, or until item if it exists | 2026-10-22 (owner) | `06` section 6.1, PIVOT-014 |
+| DEC-065 | Departments to plan for, in order: **Sales, Marketing, Finance, HR**; Marketing is built next | 2026-10-22 (owner, accepted proposal) | `10` section 7 |
+| DEC-069 | Departments such as **Marketing, Finance, HR and others** will be added later; the UI and access model plan for them now; a **department role can be added to each user** and enabled or disabled per user; the **department table does not exist yet** | 2026-10-22 (owner) | `10-departments-and-modules.md` |
+| DEC-070 | The SE-level monthly target and sell-out data **already exist** in tables; they are improved and used later in the Marketing module. Table names and columns will be supplied then | 2026-10-22 (owner) | `03` 4.4, `10` DEPT-019 |
+| DEC-071 | SE **real values exist per day** (day-level). The ETL still refreshes nightly; a daily/intraday snapshot is not created yet and can be created later | 2026-10-22 (owner) | `06` PROG-004, `02` OPS-011 |
+| DEC-074 | New modules (Marketing, then others) are added **after the Sales project is finished and validated**; new features follow validation | 2026-10-22 (owner) | `10` DEPT-020, `05` later phases |
 
 ## Blocking Phase 0 and 2
 
 | ID | Question | Proposed default | Impact if wrong | Blocks | Status |
 |---|---|---|---|---|---|
-| DEC-001 | PostgreSQL schema verification | Table names and Tableau-derived columns are in `03-data-model.md` section 4. Still needed: `information_schema.columns` output, row grain of the performance view, join keys, region display order | Entire data layer | Phase 2 | Partly answered |
-| DEC-002 | Are DIST and SE distinct? Which appear on cards vs header? | Treat as distinct until told otherwise | Wrong cards/totals | Phase 2 | Open |
 | DEC-003 | Org hierarchy and roll-up | Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE); achievement aggregated per level (`03` 4.4) | Wrong role achievement | Phase 2 | Proposed |
 | DEC-004 | Achievement formulas, aggregation order, zero/missing target, denominator for people without data | Aggregate then divide; missing target = unavailable; missing-data people excluded from denominator but flagged | Wrong percentages | Phase 2 | Proposed |
 | DEC-004a | Do IN/OUT on the role cards mean Sell IN and Sell Out? | Yes | Wrong counts | Phase 2 | Proposed |
@@ -96,9 +105,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-023 | Growth bar colors: this-year bars green/yellow, last-year bars green/red. Exact rule | Tableau `ColorSellIN -1` and `LY` formulas | Observed behavior (`06` GROW-005) | Growth phase | Open |
 | DEC-025 | Growth with zero last-year value; hide growth for in-progress month | Tableau uses `ZN` and a closing-month filter | "n/a" when last-year is 0; hide for current month | Growth phase | Proposed |
 | DEC-026 | Daily Upload: row key (selling point vs city), day count, weekend/holiday, stock-upload variant, vacant rows | Screenshot 4 and workbook | Row = selling point; weekends neutral; stock variant as a toggle | Upload phase | Open |
-| DEC-028 | SE definition: distinct `SLSNO`; exclude codes containing SOA/SOI? Use `FLAG_AKTIF`, `BranchActiveFlag`, `SLSTP`? | Workbook fields | Distinct `SLSNO`, active only, SOA/SOI excluded when owner confirms | Phase 2 | Open |
 | DEC-029 | Multi-month range: denominators for role counts (entities x months), or single month only | Tableau formula | Allow month ranges; denominator entities x months | Phase 2 | Open |
-| DEC-030 | Unit and currency of target/real (value or quantity), thousands format, abbreviation in tooltips | `TOTAL...` fields are integers; unit unknown | Show raw integers with thousands separators; unit per owner | Phase 2 | Open |
 
 ## Follow-ups created by the owner's answers
 
@@ -119,7 +126,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-054 | Executive Summary content and default landing page per role | As in `09-management-experience.md` section 3 and 4 | Phase 2 | Proposed |
 | DEC-055 | Alert and delivery channels (in-app only, email, WhatsApp) | In-app Needs-attention list only in v1 | Phase 7 | Open |
 | DEC-056 | Derived management metrics (pace gap, shortfall, needed per remaining working day) | As in `01` section 9 | Phase 2 | Proposed |
-| DEC-048 | ETL refresh log: real table name (owner's guess `ETLrefresh_log`, to be given later), columns, and which row means the views used by the dashboards finished refreshing. Name is configuration, not code | Poll the log every 60 s; finish time of the last successful run | Phase 2 | Open (name pending) |
 | DEC-062 | Deepest hierarchy level per role (depth cap) | Every role may open all levels it has scope for; admin can cap per role | Phase 6 | Proposed |
 | DEC-063 | Department list lives in the app's own `app_config.departments` (admin-managed), not in the business database | Yes, as in `03` section 3 | Phase 1 | Proposed |
 | DEC-064 | Visibility of planned departments: "Coming soon" only to users who have them enabled (admins see all) | As described in `10` section 4 | Phase 1 | Proposed |
@@ -128,3 +134,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-072 | SE achievement uses SE sell-out against an SE sell-out target; Sell IN is not an SE-level measure | Yes | Marketing | Proposed |
 | DEC-073 | When SE sell-out sums differ from the distributor's Real Sell OUT (different sources): show "Unassigned / difference" and raise a data finding, never force equality | Yes | Marketing | Proposed |
 | DEC-075 | Last-month-to-date cutoff for day-level sources: same calendar day or same working day? | Same working day (matches the working-day pace); show the cutoff date | Marketing | Proposed |
+| DEC-028 | SE counting rule | Replicate Tableau: distinct `SLSNO` excluding codes containing "SOI" for INA ("SOA" variant for the other principal, to confirm); no active-flag filter by default, optional filter; differences raised as findings | Phase 2 | Proposed |
+| DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
+| DEC-077 | ETL log semantics: which `process_name` rows must be `SUCCESS` before data counts as ready (the whole ETL takes about 3 hours, the logged materialized-view step about 50 minutes on 22-Oct-2026)? Which `status` values exist (running, failed)? Do running rows have a null `end_time`? Are the timestamps local time or UTC? | Use `Refresh Materialized Views` + `SUCCESS`; treat a newer `start_time` without a newer successful `end_time` as "refresh in progress" | Phase 2 | Open |

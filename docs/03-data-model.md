@@ -137,7 +137,7 @@ Maps each principal to its physical tables so no query code hard-codes `ina`/`as
   ],
   "sharedTables": {
     "dateDimension": "dwh_prod.dimdate",
-    "etlRefreshLog": { "table": "ETLrefresh_log (owner's guess, unverified; DEC-048)", "finishedColumn": "TBD", "statusColumn": "TBD" }
+    "etlRefreshLog": { "table": "dwh_prod.etl_refresh_log", "processName": "Refresh Materialized Views", "startColumn": "start_time", "finishedColumn": "end_time", "statusColumn": "status", "successValue": "SUCCESS", "messageColumn": "message" }
   }
 }
 ```
@@ -285,7 +285,7 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.user_mfa` | `user_id`, `enabled`, `method` (`totp`), `secret_encrypted`, `recovery_codes_hash`, `enrolled_at`, `reset_at` | Enabled or disabled per user by an admin |
 | `app_config.ai_provider_profiles` | `id`, `name`, `adapter`, `base_url`, `model`, `api_key_encrypted`, `key_last4`, `enabled`, `is_active`, `qualification_status`, `tested_at`, `acknowledged_by`, `created_by` | Key encrypted with a server master key (DEC-049) |
 | `app_config.ai_settings` | `enabled`, `temperature`, `max_tool_calls`, `rate_limit`, `retention_days` | Single row |
-| ETL refresh log (**exists already**, owned by the ETL; read-only for the app) | name and columns to verify (DEC-048) | Source of `dataAsOf` and the refresh signal; the app never writes it |
+| `dwh_prod.etl_refresh_log` (**exists**, owned by the ETL; read-only for the app) | `process_name`, `start_time`, `end_time`, `status`, `message` | Source of `dataAsOf` and the refresh signal; the app never writes it (DEC-048) |
 | `app_config.saved_views` | `id`, `user_id`, `dashboard_id`, `name`, `view_json`, `is_default` | Pivot layouts and filters (`MGMT-009`) |
 | `app_config.usage_events` | `week`, `role_id`, `page`, `action`, `count` | Privacy-safe counts only, no content (`MGMT-018`) |
 | `app_config.auth_identities` | `user_id`, `provider`, `tenant_id`, `object_id`, `account_hint`, `linked_at` | **Reserved for deferred Microsoft sign-in** (not used in release 1) |
@@ -300,7 +300,7 @@ Requirements if approved: explicit migrations with constraints, indexes and roll
 
 ### 4.1 Tables supplied by the owner (data dictionary `table_name`)
 
-Source of table names: the repository file `table_name`. Column lists come from the Tableau workbook's CSV connections (INA). `[R]` = reference-derived, not yet verified in PostgreSQL.
+Source of table names: the repository file `table_name`. Column names come from the Tableau workbook, whose headers are **exactly the PostgreSQL column names** (owner, DEC-001). Data types are confirmed only where stated: target and real values are `int8` (DEC-030); other types and the row grain are checked by the automated schema check (4.6).
 
 | Logical name | INA table | ASW table | Role in the product |
 |---|---|---|---|
@@ -312,7 +312,7 @@ Source of table names: the repository file `table_name`. Column lists come from 
 | Daily upload | `dwh_prod.mt_daily_updateina` | `dwh_prod.mt_daily_updateasw` | Daily upload log per selling point |
 | Daily stock upload | `dwh_prod.mt_daily_updatestockina` | `dwh_prod.mt_daily_updatestockasw` | Daily stock upload log |
 
-### 4.2 Columns (`[R]`, verify in PostgreSQL)
+### 4.2 Columns (names owner-confirmed as exact database names, DEC-001)
 
 - **Performance:** `SELLINGPOINTCODE`, `SELLINGPOINTNAME`, `BRANCHCODE`, `BRANCHNAME`, `REGIONCODE`, `REGIONNAME`, `KODEAREA`, `NAMAAREA`, `KOTA`, `Tahun`, `Bulan`, `Periode` (month date), `TargetQtyEskaSLO`, `TargetValueEskaSLO`, `RealQtySLI`, `RealQtySLO`, `RealSellInReg`, `RealSellInFes`, **`TOTALRealSellIn`**, `RealSellOutReg`, `RealSellOutFes`, **`TOTALRealSellOut`**, `TARGETSellInReg`, `TARGETSellInFes`, **`TOTALTargetSellIn`**, `TARGETSellOutReg`, `TARGETSellOutFes`, **`TOTALTargetSellOut`**. Bold = fields used by the four reference sheets.
 - **Mapping:** `KOTA`, `REGIONCODE`, `REGIONNAME`, `BRANCHCODE`, `BRANCHNAME`, `KODEAREA`, `NAMAAREA`, `KODESCABANG`, `SELLINGPOINTNAME`, `SLSNO`, `SLSNAME`, `CUSTNO`, `CUSTNAME`, `SLSTP`, `TEAM`, `TEAMNAME`, `BranchActiveFlag`, `FLAG_AKTIF`, `NPWP`, `Source`.
@@ -321,13 +321,13 @@ Source of table names: the repository file `table_name`. Column lists come from 
 - **Active distributors:** `RegionCode`, `RegionName`, `AreaCode`, `AreaName`, `Bulan`, `TOTAL DIST`, `Total Resign`, `Total Aktif`.
 - **Daily upload / stock upload:** `SELLINGPOINTCODE`, `SELLINGPOINTNAME`, `INVOICE_DATE` (stock: `STOCKUPDATEDATE`), `KOTA`, `Updated`.
 
-Postgres folds unquoted identifiers to lowercase and column names with spaces or parentheses (`TOTAL DIST`, `workingday(5)`) may differ from the CSV headers. Never copy these names into SQL without checking.
+Use these names exactly as the **column registry** in code (one file, one place) and always quote identifiers in SQL; never build a column name from user input. If a name differs in the real table (for example case folding, or spaces and parentheses in `TOTAL DIST` and `workingday(5)`), the schema check reports it before any query runs.
 
 ### 4.3 Joins observed in the workbook (`[R]`)
 
 - Master distributor `KOTA` = Daily upload `KOTA`.
 - Master distributor `KOTA` = Daily stock upload `KOTA`.
-- All other tables are used as separate sources blended on region, branch, area, selling point and month in Tableau; the exact keys must be defined by the owner (DEC-001).
+- All other tables are used as separate sources blended on region, branch, area, selling point and month in Tableau; the exact join keys are confirmed by the schema check and the owner (DEC-076).
 
 ### 4.4 Organisation hierarchy and role mapping (`[R]`, confirm in DEC-003)
 
@@ -336,8 +336,8 @@ Postgres folds unquoted identifiers to lowercase and column names with spaces or
 | RSM | `REGIONNAME` (5 regions give 5 RSM) | Region-level achievement flags |
 | ASM | `BRANCHNAME` (19) | Branch-level flags |
 | SPV | `NAMAAREA` (75) | Area-level flags |
-| DIST | `SELLINGPOINTNAME` (144) | Selling-point flags |
-| SE | `SLSNO` distinct (260), with codes containing "SOA" or "SOI" excluded in some counts | `SE Excl SOA/SOI` fields |
+| DIST | `SELLINGPOINTNAME` (confirmed meaning, DEC-002; 144 in the reference) | Selling-point flags |
+| SE (sales executive) | Name `SLSNAME`, key `SLSNO` (confirmed, DEC-002). Count: distinct `SLSNO` excluding codes that contain "SOI" in the INA reference sheet (260); a "SOA" variant exists for the other principal. Active flags are not used by Tableau (DEC-028) | `SE Excl SOI` field in sheet `Jumlah Team RSM INA` |
 
 Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE). **In the current tables, targets exist only per selling point (distributor).** The owner says the SE-level monthly target and the month-to-date sell-out value per salesperson will be used in the Marketing module, which also enables day-by-day achievement (DEC-059, DEC-070). Whether they already exist in a table, and which one, is open. **Item = product name with product code `pcode`**; it is a separate product dimension that belongs to the Marketing dashboard, added later (DEC-060).
 
@@ -347,10 +347,10 @@ Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Sal
 |---|---|---|---|
 | Sell IN actual and target | Performance: `TOTALRealSellIn`, `TOTALTargetSellIn` | Selling point per month | Derived from Tableau; DB verification pending |
 | Sell Out actual and target | Performance: `TOTALRealSellOut`, `TOTALTargetSellOut` | Selling point per month | Derived from Tableau; DB verification pending |
-| Region list and order | Performance / Mapping: `REGIONCODE`, `REGIONNAME` | Region | Display order undefined (DEC-001) |
+| Region list and order | Performance / Mapping: `REGIONCODE`, `REGIONNAME` | Region | Display order proposed by the schema check, owner approves (DEC-076) |
 | Team totals RSM/ASM/SPV/SE | Mapping: region, branch, area, `SLSNO` | Salesman | Derived; active flags undefined (DEC-028) |
 | Role achievement counts | Performance aggregated per entity per month; achieved when achievement >= working-day progress | Entity per month | Rule confirmed (DEC-021); DB verification pending |
-| Data refresh time (`dataAsOf`) | Existing ETL refresh log table (name and columns to verify, DEC-048); finish time of the last successful run | Run | Table exists; verification pending |
+| Data refresh time (`dataAsOf`) | `dwh_prod.etl_refresh_log`: `end_time` of the newest `SUCCESS` row for process `Refresh Materialized Views` | Run | Confirmed table and columns (DEC-048); readiness semantics in DEC-077 |
 | Sales Detail (pivot) | Performance table via the field catalog (2.8): region, branch, area, selling point, target, real Sell IN, real Sell OUT; period `Periode` | Selling point per month | Derived from Tableau; DB verification pending |
 | Working-day progress | `dimdate`: `dates`, `networkeddays`, `monthyear`; summed per month, no custom calendar | Date | Confirmed approach (DEC-027); verify 18 / 27 on 22-Oct-2026 |
 | Growth Sell In / Out | Performance, same month last year (12 months earlier) | Region per month | Derived from Tableau |
@@ -359,13 +359,21 @@ Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Sal
 
 An item is ready for production use only when its row is `Approved` and has a verified example (definition of ready in `05-roadmap-and-testing.md`). Until then it uses mock fixtures.
 
-### 4.6 Verification queries to run (owner or analyst)
+### 4.6 Automated schema check (Phase 1 task; replaces the manual queries)
 
-1. `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='dwh_prod' AND table_name IN (...)` for every table above.
-2. Row counts and date ranges per table; confirm the grain of the performance view (one row per selling point per month?).
-3. Distinct `REGIONNAME` per principal (expect INA: JAWA 1, JAWA 2, PULAU 1, SUMATERA 1, SUMATERA 2; Tableau lists ASW with six regions including SUMATERA 3).
-4. For Oct 2026: `networkeddays` per date, to reproduce 66.67% on 22-Oct-2026.
-5. Independent hand calculation of one region's Sell IN % for one month.
+The sandbox that writes this specification cannot reach your database, so the check is a small script in the repository (`pnpm schema:check`), run by the technical administrator with the read-only database user. It reads the column registry and prints one report; nothing is changed in the database.
+
+It checks, for every table in the principal registry:
+1. Every registry column exists, with its data type (expected: target and real `int8`) and nullability; reports extra or missing columns and name differences.
+2. Row counts and the range of periods (`Periode`) per table and principal.
+3. **Grain:** whether the performance view has one row per selling point per month (duplicate-key check), and whether months are complete.
+4. Distinct regions per principal and a proposed display order (INA expected: JAWA 1, JAWA 2, PULAU 1, SUMATERA 1, SUMATERA 2; ASW six, including SUMATERA 3).
+5. `dimdate`: working days for the current month and whether 22-Oct-2026 gives 18 of 27 (66.67%).
+6. `dwh_prod.etl_refresh_log`: newest rows per `process_name`, distinct `status` values, whether a running row has a null `end_time`, and whether the timestamps carry a time zone (DEC-077).
+7. `distaktif`: months present, regions present per principal, active greater than total, regions missing from the mapping (feeds the findings checks).
+8. One hand-checkable figure per principal for the owner to compare with Tableau (a region's Sell IN and Sell Out for one month).
+
+The report is saved as a Markdown file for the owner to review and approve the mapping rows in 4.5.
 
 ## 5. Mock fixtures
 
