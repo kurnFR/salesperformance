@@ -134,7 +134,10 @@ Maps each principal to its physical tables so no query code hard-codes `ina`/`as
         "dailyUpload": "dwh_prod.mt_daily_updateasw",
         "dailyStockUpload": "dwh_prod.mt_daily_updatestockasw" } }
   ],
-  "sharedTables": { "dateDimension": "dwh_prod.dimdate" }
+  "sharedTables": {
+    "dateDimension": "dwh_prod.dimdate",
+    "etlRefreshLog": { "table": "ETLrefresh_log (owner's guess, unverified; DEC-048)", "finishedColumn": "TBD", "statusColumn": "TBD" }
+  }
 }
 ```
 
@@ -172,7 +175,18 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "branch",      "label": "Branch",      "source": "BRANCHNAME" },
     { "id": "spv",         "label": "SPV",         "source": "NAMAAREA" },
     { "id": "distributor", "label": "Distributor", "source": "SELLINGPOINTNAME" },
+    { "id": "se",          "label": "Salesman (SE)", "source": "SLSNO / SLSNAME", "entitiesOnly": true },
     { "id": "city",        "label": "City",        "source": "KOTA", "optional": true }
+  ],
+  "hierarchies": [
+    { "id": "salesOrg", "levels": [
+      { "id": "region",      "dimension": "region",      "parent": null,          "measuresFrom": "performance" },
+      { "id": "branch",      "dimension": "branch",      "parent": "region",      "measuresFrom": "performance" },
+      { "id": "spv",         "dimension": "spv",         "parent": "branch",      "measuresFrom": "performance" },
+      { "id": "distributor", "dimension": "distributor", "parent": "spv",         "measuresFrom": "performance" },
+      { "id": "se",          "dimension": "se",          "parent": "distributor", "measuresFrom": null, "entitiesFrom": "mapping" },
+      { "id": "item",        "dimension": "TBD",         "parent": "se",          "measuresFrom": null, "status": "undefined (DEC-060)" }
+    ] }
   ],
   "measures": [
     { "id": "targetIn",  "label": "Target Sell IN",  "source": "TOTALTargetSellIn" },
@@ -197,6 +211,7 @@ Request and response (placeholders):
   "dimensions": ["region", "branch", "spv", "distributor"],
   "measures": ["targetIn", "realIn", "realOut"],
   "filters": { "region": ["TBD-region-key"] },
+  "mode": "drill", "drill": { "fromLevel": "region", "path": { "region": "TBD-region-key" } },
   "sort": { "by": "achIn", "dir": "asc" }, "page": { "size": 100, "cursor": null } }
 ```
 
@@ -207,7 +222,7 @@ Request and response (placeholders):
   "dataAsOf": "TBD", "truncated": false }
 ```
 
-Source columns are Tableau-derived and unverified (`4.2`). Whether the Sell IN and Sell OUT targets are shown as one "Target" or two is open (DEC-052).
+Source columns are Tableau-derived and unverified (`4.2`). All four measures are selectable and none is mandatory (DEC-052). A level whose `measuresFrom` is `null` returns entities only and its measures come back as `"notAvailable"`, never 0. `GET /api/sales-detail/hierarchy` returns the levels, which measures each supports, and the deepest level the signed-in user may open.
 
 ### 2.9 Tooltip-ready metric DTOs (`[P]`, supports DASH-001)
 
@@ -315,7 +330,7 @@ Postgres folds unquoted identifiers to lowercase and column names with spaces or
 | DIST | `SELLINGPOINTNAME` (144) | Selling-point flags |
 | SE | `SLSNO` distinct (260), with codes containing "SOA" or "SOI" excluded in some counts | `SE Excl SOA/SOI` fields |
 
-Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE).
+Hierarchy: Region (RSM) > Branch (ASM) > Area (SPV) > Selling point (DIST) > Salesman (SE) > Item (undefined). Target and real values exist down to the selling point only. The mapping view also holds customer columns (`CUSTNO`, `CUSTNAME`); whether "item" means product or customer is open (DEC-060).
 
 ### 4.5 Mapping status per dashboard item
 

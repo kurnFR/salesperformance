@@ -95,7 +95,8 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | `GET /api/sales-performance/growth?principalId=&month=&window=7&metric=sellIn\|sellOut` | Rolling-window growth matrix (`DASH-002`) | Viewer+ |
 | `GET /api/sales-performance/active-distributors?principalId=&month=` | Active / total distributors per region | Viewer+ |
 | `GET /api/executive-summary?principalId=&month=` | Executive Summary blocks (headline, tiles, needs-attention, movers, data health) within scope (`09-management-experience.md`) | Viewer+ |
-| `POST /api/sales-detail/query` (read-only; body: period range, dimensions, measures, filters, sort, page) | Pivot-style detail with totals; validated against the field catalog (`PIVOT-011`) | Viewer+ |
+| `POST /api/sales-detail/query` (read-only; body: period range, dimensions, measures, filters, mode flat or drill, drill path, sort, page) | Pivot-style detail with totals and on-demand children; validated against the field catalog (`PIVOT-011`, `PIVOT-014`) | Viewer+ |
+| `GET /api/sales-detail/hierarchy` | Hierarchy levels, which measures each level supports, deepest level the user may open | Viewer+ |
 | `POST /api/export/sales-detail`, `POST /api/export/snapshot` | Excel/CSV of a table; PDF/image snapshot of a dashboard (`MGMT-007`) | `export.use` |
 | `GET/PUT /api/me/views`, `GET /api/glossary` | Saved views; metric glossary generated from the metrics contract | Authenticated |
 | `GET /api/uploads/daily?principalId=&month=&regionId=&branchId=&kind=sales\|stock` | Daily upload grid | Viewer+ |
@@ -284,7 +285,7 @@ sequenceDiagram
 ```
 
 - `OPS-004` `[C]` Dashboards, kiosk/playlist displays and open AI results update automatically after a refresh finishes, without a manual reload and without flicker (current view stays until new data arrives).
-- `OPS-005` `[C]` The **ETL refresh log table already exists** (owner, DEC-048). The app only reads it: the finish time of the last successful refresh is `dataAsOf`, and a change in that value is the "data refreshed" signal. The API polls it (default every 60 seconds, configurable); a cheap query. `NOTIFY` from the ETL is an optional later improvement, not a requirement. The table name, its columns, and how to tell that the views used by the dashboards finished refreshing are verified in Phase 0 (DEC-048).
+- `OPS-005` `[C]` The **ETL refresh log table already exists** (owner, DEC-048). The app only reads it: the finish time of the last successful refresh is `dataAsOf`, and a change in that value is the "data refreshed" signal. The API polls it (default every 60 seconds, configurable); a cheap query. `NOTIFY` from the ETL is an optional later improvement, not a requirement. The table name is configuration, not code (the owner's guess is `ETLrefresh_log`; the real name comes later). The table name, its columns, and how to tell that the views used by the dashboards finished refreshing are verified in Phase 0 (DEC-048).
 - `OPS-006` `[P]` `dataVersion` is part of every cache key, so stale cached numbers are never served after a refresh. Cache lifetime is configuration.
 - `OPS-007` `[P]` While a run is in progress the UI may show "refresh in progress, data as of <previous completion>" (needs the log to record the start). Failed runs show the previous completed `dataAsOf` and a warning.
 - `OPS-008` `[P]` **Avoid read blocking:** a plain `REFRESH MATERIALIZED VIEW` locks readers for its duration. Prefer `REFRESH MATERIALIZED VIEW CONCURRENTLY` (needs a unique index on each view) so dashboards stay readable during the run. This is a database/ETL decision for the owner.

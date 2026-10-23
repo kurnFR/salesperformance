@@ -25,13 +25,13 @@ The first specification reproduced the Tableau sheets faithfully. That serves an
 
 What is already strong for management: working-day pace coloring, data as-of time, data findings, scope per role, presentation mode, and a grounded AI.
 
-## 2. Management personas (`[P]`, confirm roles in DEC-057)
+## 2. Management personas (`[P]`; Regional Manager = RSM is confirmed in DEC-057)
 
 | Persona | Scope (set by admin) | Typical questions | Device | Default landing |
 |---|---|---|---|---|
 | CEO | All principals, all regions | Are we on pace this month? Which region is the problem? Better or worse than last year? | Phone, meeting-room screen | Executive Summary |
 | General Manager | All principals (or one), all regions | Which branches and SPVs drag the region? Who is furthest behind pace? | Laptop, phone | Executive Summary, then Sales Detail |
-| Regional Manager (RSM) | Own region(s) | Which branches, SPVs and distributors in my region are behind? What do I need per day to reach 100%? | Phone, laptop | Regional view (own region) |
+| Regional Manager (= RSM, confirmed) | Own region(s) | Which branches, SPVs and distributors in my region are behind? What do I need per day to reach 100%? | Phone, laptop | Regional view (own region) |
 | ASM / SPV (optional) | Own branch or area | Which distributors need a visit today? | Phone | Regional view, filtered |
 
 All of this reuses the access model: a persona is just a role with a scope and a default landing (`MGMT-003`). Nothing is hard-coded.
@@ -47,7 +47,8 @@ All of this reuses the access model: a persona is just a role with a scope and a
   6. **Data health:** data as-of time and the count of open data findings that affect the user's scope.
 - `MGMT-002` `[P]` **Regional Manager view:** the same page scoped to the user's region(s), with branches, SPVs and distributors ranked by pace gap.
 - `MGMT-003` `[P]` **Default landing per role**, chosen by the admin on the role (for example Executive Summary for CEO and GM, regional view for RSM).
-- `MGMT-004` `[P]` **Drill-down** Region > Branch > SPV > Distributor by clicking a tile, bar or row, with a breadcrumb and the same tooltip (target, real, %). Each level is the Sales Detail service filtered to the clicked item; scope always applies.
+- `MGMT-004` `[P]` **Drill-down** through the whole hierarchy (Region > Branch > SPV > Distributor, then SE and item where data exists, `PIVOT-014`) by clicking a tile, bar or row, with a breadcrumb and the same tooltip (target, real, %). Each level is the Sales Detail service filtered to the clicked item; scope always applies.
+- `MGMT-019` `[P]` **Depth cap per role:** the admin sets the deepest hierarchy level a role may open (for example the CEO to Distributor, an SPV to SE), so individual-level figures are shown only to roles that should see them (`PIVOT-019`).
 - `MGMT-005` `[P]` **Derived metrics**, defined in `01-metrics-contract.md` section 9: pace gap, shortfall to target, and "needed per remaining working day to reach 100%". These are arithmetic on existing values, not forecasts, and they are labelled that way.
 - `MGMT-006` `[P]` **Rankings and exceptions:** top N and bottom N by achievement, pace gap or growth, at any level the user may see; default N = 5, configurable.
 - `MGMT-007` `[P]` **Export and share:** Excel and CSV for the Sales Detail table and ranking lists; PDF or image snapshot of the Executive Summary and any dashboard for meetings. Files carry the filters, scope note and data as-of time. Capability `export.use`, assignable per role; limited to the user's scope; row limit with a clear message. Scheduled email or WhatsApp delivery is later (DEC-055).

@@ -35,7 +35,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 | 3 | Growth Sell Out | `sheet3-growth sell out.png` | Same layout using Sell Out | `06` section 3 |
 | 4 | Daily Upload | `sheet 4-Daily Upload.png` | Per-distributor daily upload calendar for a month | `06` section 4 |
 | 5 | Data Findings | (new) | Anomalies and findings to validate, such as DIST total vs manual active-distributor upload | `08` |
-| 6 | Sales Detail (pivot) | (owner example) | Choose dimensions (region, branch, SPV, distributor) and facts (target, real Sell IN, real Sell OUT) over a period range, with totals and export | `06` section 6 |
+| 6 | Sales Detail (pivot) | (owner example, not a fixed layout) | The user chooses columns (hierarchy dimensions and fact values) over a period range, with totals, drill-down through the hierarchy down to SE and item where data exists, and export | `06` section 6 |
 | - | Executive Summary | (new) | One-screen view for CEO, General Manager and Regional Manager: pace, regions, needs-attention, movers, data health | `09` |
 | - | AI Chat | (new, right panel icon) | Answers questions from the data only, with pop-up charts that stay in the chat | `07` |
 
@@ -119,7 +119,7 @@ The screenshot is evidence of visual arrangement, not of schema, formulas or res
 | 3 | Configurable achievement rules and the access admin screens (roles, scopes, feature/filter toggles, MFA per user) | Rule defaults confirmed |
 | 4 | Dashboard editor | Persistence approval |
 | 5 | Playlist and presentation mode | Kiosk auth decision |
-| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; target definition (DEC-052) |
+| 6 | Sales Detail (pivot) with export, then Growth Sell In, Growth Sell Out, Daily Upload (one at a time), then further dashboards | Per-dashboard mapping rows approved; SE-level and item-level sources (DEC-059, DEC-060) |
 | 7 | AI Chat and Data Findings | Findings thresholds (DEC-043); alert channels if wanted (DEC-055) |
 | 8 | Production hardening | — |
 

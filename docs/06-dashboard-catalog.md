@@ -75,7 +75,7 @@ A separate sheet listing anomalies and findings that need validation, for exampl
 
 **Purpose:** a detail table where the user chooses the header names (dimensions) and the fact values (measures) and sees totals. The workbook's older `DetailPerAreaSellIN` and `DetailPerAreaSellOut` sheets (separate Sell In and Sell Out detail by area) are replaced by this single, flexible view.
 
-Example from the owner (values are an example, not data):
+Example from the owner (the columns and values are **only an example, not a fixed layout**: the user chooses which columns to show):
 
 | Region | Branch | SPV | Distributor | Target | Real Sell IN | Real Sell OUT |
 |---|---|---|---|---|---|---|
@@ -84,8 +84,8 @@ Example from the owner (values are an example, not data):
 
 - `PIVOT-001` `[C]` A detail table with dimension columns, fact columns and a **grand total** row.
 - `PIVOT-002` `[C]` A **period range filter**: the user chooses a start and an end period from the list of available periods (months). Facts are summed over the range.
-- `PIVOT-003` `[C]` The user **chooses which dimension headers to show and their order**. Available dimensions: Region, Branch, SPV (area), Distributor (selling point). `[P]` City (`KOTA`). Salesman (SE) is **not** a dimension because the target and real values are stored per selling point and month, not per salesman (`03-data-model.md` section 4.2).
-- `PIVOT-004` `[C]` The user **chooses which fact columns to show**: Target, Real Sell IN, Real Sell OUT. `[P]` derived columns: achievement % for Sell IN and Sell OUT, shortfall to target, pace gap (`01` section 9). The source has separate targets for Sell In and Sell Out; whether to show one "Target" or two is open (DEC-052).
+- `PIVOT-003` `[C]` The user **chooses which dimension columns to show**, in any combination. The dimensions form a **hierarchy** (see below): Region (RSM), Branch (ASM), SPV (area), Distributor (selling point), then Salesman (SE) and Item where the data exists. `[P]` City (`KOTA`) as a flat, non-hierarchical column.
+- `PIVOT-004` `[C]` The user **chooses which fact columns to show** from every available measure: Target Sell IN, Target Sell OUT, Real Sell IN, Real Sell OUT. `[P]` derived columns: achievement % for Sell IN and Sell OUT, shortfall to target, pace gap (`01` section 9). Nothing is fixed to the owner's example (DEC-052).
 - `PIVOT-005` `[C]` **Grand total** at the bottom. `[P]` Subtotals at each grouping level with expand and collapse. Totals are calculated **by the server from the underlying values**, never by adding rounded numbers on screen. Percent columns are `SUM(real) / SUM(target)` at every level, not an average of row percentages.
 - `PIVOT-006` `[P]` Sorting, a filter on each dimension (only values the user may see), search, column chooser, frozen header, and server-side paging or virtual scrolling for large result sets.
 - `PIVOT-007` `[P]` Percent columns use the bar color rule (RULE-001 to RULE-005) with a text or icon cue (`A11Y`).
@@ -94,7 +94,29 @@ Example from the owner (values are an example, not data):
 - `PIVOT-010` `[C]` Access scope applies: the user sees only allowed principals and regions, and the grand total says it is "within your access".
 - `PIVOT-011` `[P]` **Governed query, no free SQL.** Dimensions and measures come from an allowlisted field catalog (`03-data-model.md` section 2.8). The server builds a fixed, parameterized aggregation (grouping with roll-up for totals) over the approved performance table. Limits: at most 4 dimensions, a row cap with a clear "refine your filters" message, query timeout.
 - `PIVOT-012` `[P]` Drill-down links: from any Sales Performance or Executive Summary item to this table pre-filtered (MGMT-004).
-- `PIVOT-013` `[P]` The example row above becomes the first golden fixture (clearly labelled mock): with a single Target of 5000, Sell IN is 40% and Sell OUT is 60%.
+- `PIVOT-013` `[P]` The owner's example row becomes the first golden fixture (labelled mock), with Target Sell IN and Target Sell OUT both 5000: Sell IN 2000 gives 40% and Sell OUT 3000 gives 60%.
+
+### 6.1 Hierarchy and drill-down
+
+The dimension columns come from the organisation hierarchy (the mapping view). The user can **drill down from the top level to the deepest level that exists**, down to SE, and to item if an item level exists.
+
+```mermaid
+flowchart TD
+  subgraph FACTS["Target and real values available today (performance table)"]
+    R["Region (RSM)"] --> B["Branch (ASM)"] --> S["Area (SPV)"] --> D["Selling point (DIST)"]
+  end
+  D --> E["Salesman (SE): entities from the mapping, no sales facts yet"]
+  E --> I["Item: not defined yet (DEC-060)"]
+```
+
+- `PIVOT-014` `[C]` **Drill down by hierarchy.** After the user has chosen the columns, each row of a hierarchical dimension can be expanded to the next level (Region > Branch > SPV > Distributor > SE > Item) for as long as a deeper level exists. Collapsing returns to the parent.
+- `PIVOT-015` `[P]` **Two modes** over the same chosen columns: *Flat* (chosen dimension columns side by side, as in the owner's example, with subtotals) and *Drill* (a tree: start at any level, expand rows level by level, with a breadcrumb). The chosen fact columns stay while drilling.
+- `PIVOT-016` `[P]` Every node shows the chosen measures aggregated for its whole subtree, so a parent equals the sum of its children (percent columns are recalculated as `SUM(real) / SUM(target)`, never summed). Facts that cannot be placed on a lower level appear under an **Unassigned** node so totals still reconcile.
+- `PIVOT-017` `[C]` **Levels without data are never filled in.** Region to Distributor have target and real values today. SE and Item levels show only what the source holds: SE rows from the mapping (names, counts) with the measures marked "not available at this level", until a source with SE-level or item-level facts is supplied (DEC-059, DEC-060). Zero is never shown in place of "not available".
+- `PIVOT-018` `[P]` Children load on demand (one level at a time, with the same period, filters, scope and measures), with a row cap and a "refine your filters" message; an "expand to level N" control is bounded by the same cap.
+- `PIVOT-019` `[P]` **Admin can cap the deepest level a role may see** (for example, the CEO to Distributor, an SPV to SE). Scope also applies at every level: a user only expands into values they may see. The cap is a role setting, not code (`02` section 10).
+- `PIVOT-020` `[P]` Accessible tree-grid: keyboard expand/collapse, announced level and state, focus kept on the same row after expanding.
+- `PIVOT-021` `[P]` The hierarchy is defined by a registry (`03-data-model.md` section 2.8), not hard-coded, so adding a level later (for example item) needs a registry entry and a source, not a redesign.
 
 ## 7. AI Chat (right panel)
 

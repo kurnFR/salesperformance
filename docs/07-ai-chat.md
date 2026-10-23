@@ -52,7 +52,7 @@ Each tool lives beside the dashboard service it reuses (parity guaranteed by con
 | `getActiveDistributors(principal, regions[], period)` | Active, total, % | METRIC-016 |
 | `getWorkingDayProgress(period)` | Elapsed, total, % | METRIC-008 |
 | `getUploadStatus(principal, filters, month)` | Upload days per distributor | METRIC-017 |
-| `getDetailRows(principal, period, dimensions[], measures[], filters, topN)` | Rows and totals from the Sales Detail service, capped; supports ranking questions (lowest achievement, largest shortfall) | `PIVOT-*`, METRIC-019 to 022 |
+| `getDetailRows(principal, period, dimensions[], measures[], filters, level, topN)` | Rows and totals from the Sales Detail service at any hierarchy level the user may open, capped; supports ranking questions (lowest achievement, largest shortfall). At levels with no facts (SE, item today) it says the measure is not available | `PIVOT-*`, METRIC-019 to 022 |
 | `getDataFindings(principal, scope)` | Open anomalies relevant to the answer | `08-data-findings.md` |
 | `resolveEntity(kind, text)` | Deterministic fuzzy match of a typed name (region, metric, period) to allowed values, with candidates and similarity | Allowed values in scope |
 | `calculate(operation, inputs)` | Exact arithmetic on **values returned by other tools**: sum, difference, ratio, percent change, average, min, max, rank, share of total. Returns the result and the formula | Deterministic code, not the model |

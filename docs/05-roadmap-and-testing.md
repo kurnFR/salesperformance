@@ -56,6 +56,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - The owner's example row is reproduced from a mock fixture (Sell IN 2000 and Sell OUT 3000 against target 5000).
 - Only allowed principals and regions appear; the grand total is labelled "within your access"; a field id outside the catalog is rejected; the row cap and timeout return a clear message.
 - Excel/CSV export equals the on-screen result and carries filters, scope note and as-of.
+- **Hierarchy:** expanding a node shows the next level for the same period, filters, scope and measures; a parent equals the sum of its children (percent columns recalculated); facts that cannot be placed on a lower level appear under Unassigned; levels without data show "not available" and never 0; the role's deepest-level cap and the user's scope are enforced at every expansion, including by direct API call; keyboard expand/collapse works.
 
 **Management**
 - Executive Summary numbers equal the Sales Performance service output for the same scope; a regional manager never sees another region in tiles, rankings, exports or shared links; derived metrics (`METRIC-019` to `METRIC-021`) match hand calculations including zero remaining days and zero target.
