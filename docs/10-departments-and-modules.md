@@ -11,6 +11,7 @@ Tags: `[C]` owner-confirmed, `[P]` proposed, `[O]` open.
 - `DEPT-003` `[C]` A **department role can be added to every user** and each department can be **enabled or disabled per user**.
 - `DEPT-004` `[C]` The **department table does not exist yet**, so the app creates and manages its own department list (admin-managed), instead of reading one from the business database.
 - `DEPT-005` `[C]` Marketing will own the **product (item)** dashboards, with the product name and `pcode` (product code). Product data is not part of the Sales release (DEC-060).
+- `DEPT-020` `[C]` **Release gate.** New modules (Marketing and later departments) are added **after the Sales project is finished and validated as working** (acceptance and Tableau parity, `05-roadmap-and-testing.md` section 2). Until then the UI only holds the planned slots ("Coming soon"). The SE-level data and daily progress belong to that later work; they are not part of Release 1.
 - `DEPT-019` `[C]` Marketing will also use the **monthly target and month-to-date sell-out value per salesperson (SE)** to show **achievement progress day by day**, and near real time later (DEC-070, DEC-071). It supplies the SE level of the Sales hierarchy and the daily-progress view (`06-dashboard-catalog.md` section 6.2).
 
 ## 2. Model

@@ -183,4 +183,6 @@ A metric may go to production implementation when:
 The shell, themes, navigation, editor scaffolding and mock-backed UI may proceed earlier if mock data is clearly labeled and no irreversible data-model assumptions are made.
 
 ### Later phases (not scheduled): further departments
+**Gate (owner decision, DEC-074):** these start only after Release 1 (Sales) is finished, validated by the owner and working in use. The slots exist in the UI from Phase 1, but no module work begins before the gate.
+
 - Marketing (product dashboards with product name and `pcode`; SE-level monthly target and sell-out; daily progress and near-real-time achievement per `PROG-001`), Finance, HR and others. Each is added as a department entry plus a module manifest, with its own approved data mapping, KPIs, scope dimensions and, for Finance and HR, the sensitivity rules in `10-departments-and-modules.md` section 6.

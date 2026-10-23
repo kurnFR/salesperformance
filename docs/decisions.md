@@ -8,7 +8,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 1. **DEC-001** Run the verification queries in `03-data-model.md` section 4.6 (column names and types, grain, region order). Nothing real can be built on the data until this is done.
 2. **DEC-048** Send the real ETL log table name and columns later (placeholder `ETLrefresh_log` is used meanwhile) and which row means the dashboard views finished refreshing.
-3. **DEC-070, DEC-071** For SE-level data: does the table exist yet (name), is it day-level or only a monthly sum, and is a daily snapshot possible?
+3. **DEC-075** Last-month-to-date cutoff rule when day-level data is used (same calendar day or same working day). Not needed until the Marketing module.
 4. **DEC-002, DEC-028** Exact meaning of DIST and SE, and which SE rows count (active flags, SOA/SOI exclusion).
 5. **DEC-029, DEC-030** Multi-month role-count denominators; unit and format of target and real values.
 6. **DEC-023, DEC-026** Growth bar colors; Daily Upload details.
@@ -42,6 +42,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-069 | Departments such as **Marketing, Finance, HR and others** will be added later; the UI and access model plan for them now; a **department role can be added to each user** and enabled or disabled per user; the **department table does not exist yet** | 2026-10-22 (owner) | `10-departments-and-modules.md` |
 | DEC-059 | In the current tables targets exist only per selling point (distributor). SE-level monthly target and month-to-date sell-out per salesperson are planned to arrive with the **Marketing** module | 2026-10-22 (owner) | `03` 4.4, `06` PIVOT-017 |
 | DEC-065 | Departments to plan for, in order: **Sales, Marketing, Finance, HR**; Marketing is built next | 2026-10-22 (owner, accepted proposal) | `10` section 7 |
+| DEC-070 | The SE-level monthly target and sell-out data **already exist** in tables; they are improved and used later in the Marketing module. Table names and columns will be supplied then | 2026-10-22 (owner) | `03` 4.4, `10` DEPT-019 |
+| DEC-071 | SE **real values exist per day** (day-level). The ETL still refreshes nightly; a daily/intraday snapshot is not created yet and can be created later | 2026-10-22 (owner) | `06` PROG-004, `02` OPS-011 |
+| DEC-074 | New modules (Marketing, then others) are added **after the Sales project is finished and validated**; new features follow validation | 2026-10-22 (owner) | `10` DEPT-020, `05` later phases |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
 | DEC-033 | Four reference dashboards in scope: Sales Performance, Growth Sell In, Growth Sell Out, Daily Upload. Source table names supplied in `table_name` | 2026-10-22 (owner, files) | `06`, `03` section 4 |
@@ -122,7 +125,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-064 | Visibility of planned departments: "Coming soon" only to users who have them enabled (admins see all) | As described in `10` section 4 | Phase 1 | Proposed |
 | DEC-066 | Sensitive departments (Finance, HR): off by default for everyone, separate export and AI capabilities, audited views | As in `10` section 6 | Before Finance/HR go active | Proposed |
 | DEC-067 | Company summary across departments for CEO and General Manager | Later, once two departments are active | Later | Open |
-| DEC-070 | SE-level data: do the monthly target and month-to-date sell-out per salesperson already exist in a table (name, columns), or will they be created with the Marketing module? Is Sell IN meaningful per SE (assumed no)? | SE rows stay entity-only until the source is registered | Marketing | Open |
-| DEC-071 | Day-level grain: does the SE sell-out source keep daily values, or only the month-to-date sum? If only the sum, can the ETL write a daily snapshot? Cutoff for last-month-to-date: same calendar day or same working day? Target refresh cadence for near real time | Daily snapshots written by the ETL; same working day | Marketing | Open |
 | DEC-072 | SE achievement uses SE sell-out against an SE sell-out target; Sell IN is not an SE-level measure | Yes | Marketing | Proposed |
 | DEC-073 | When SE sell-out sums differ from the distributor's Real Sell OUT (different sources): show "Unassigned / difference" and raise a data finding, never force equality | Yes | Marketing | Proposed |
+| DEC-075 | Last-month-to-date cutoff for day-level sources: same calendar day or same working day? | Same working day (matches the working-day pace); show the cutoff date | Marketing | Proposed |

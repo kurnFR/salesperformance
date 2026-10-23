@@ -124,8 +124,8 @@ Product (item, with `pcode`) is **not** part of this hierarchy. It is a separate
 - `PROG-001` `[P]` **Day-by-day achievement.** For any entity that has a monthly target and day-level (or daily snapshot) values, a line chart shows cumulative achievement per day against the **working-day pace line** (elapsed working days up to that day divided by total working days, from `dimdate`). The status color follows the confirmed rule (RULE-001 to RULE-005) at each day. Tooltip: date, target, real to date, %, pace %.
 - `PROG-002` `[P]` Applies first to SE sell-out against the SE monthly target, and to any other level for which day-level data is registered.
 - `PROG-003` `[C]` **Near-real-time later.** The view works with the current nightly refresh and with a faster refresh later; only the refresh signal changes (`02-architecture.md` section 13).
-- `PROG-004` `[O]` Needs day-level rows, or a daily snapshot of the month-to-date sum written by the ETL each day; the current performance view is monthly (DEC-071).
-- `PROG-005` `[P]` Until a day-level source exists the view is not offered; no day values are interpolated or estimated.
+- `PROG-004` `[C]` The SE sell-out source **already has real values per day** (owner, DEC-071), so no snapshot table is needed. The ETL still refreshes **nightly**, so the line ends at the last completed refresh (yesterday) and says "data as of". A more frequent ETL or daily snapshots can come later for near real time. The current sales performance view stays monthly.
+- `PROG-005` `[P]` Until the SE day-level source is registered (after the Sales release is validated, `DEPT-020`) the view is not offered; no day values are interpolated or estimated, and a day without a value is shown as missing.
 
 ## 7. AI Chat (right panel)
 

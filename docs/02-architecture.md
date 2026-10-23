@@ -298,8 +298,8 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  T1["Tier 1: monthly data,<br/>refreshed by the nightly ETL (now)"] --> T2["Tier 2: day-level values or<br/>daily snapshots (Marketing / SE, planned)"]
-  T2 --> T3["Tier 3: near real time<br/>(batches during the day, later)"]
+  T1["Tier 1: monthly data,<br/>refreshed by the nightly ETL (now)"] --> T2["Tier 2: day-level rows, refreshed<br/>nightly (SE sell-out, planned)"]
+  T2 --> T3["Tier 3: near real time<br/>(more frequent ETL or snapshots, later)"]
 ```
 
 Each registered data source declares its grain (`month`, `day`, `intraday`) and its refresh signal; `dataAsOf`, caching and the AI's "month to date" behavior are derived from that declaration.
