@@ -95,7 +95,7 @@ Values above are placeholders. The same tooltip contract as dashboards applies (
 - `AI-014` `[C]` Out-of-scope data is treated as not available to the user. The AI does not reveal that other principals, regions or users' data exist.
 - `AI-015` `[C]` Questions that are not about the data in the system (general knowledge, chit-chat, advice) get a short refusal explaining that the assistant answers from the system's data only.
 - `AI-016` `[C]` Every answer shows its basis: metric and formula reference, principal, region, period, filters, and data as-of time. When a relevant open data finding exists (for example distributor totals from a manual upload that looks stale), the answer shows that warning (`08-data-findings.md`).
-- `AI-017` `[P]` The AI replies in the user's language (Bahasa Indonesia or English) and uses the same labels as the dashboards (DEC-042).
+- `AI-017` `[P]` The AI replies in the language of the user's question, otherwise in the user's selected UI language (English or Bahasa Indonesia; default English, `I18N-007`), and uses the same labels as the dashboards.
 - `AI-018` `[C]` Read-only. No tool writes, changes configuration, or sends data elsewhere.
 - `AI-019` `[P]` Limits: per-user rate limit, maximum tool calls per question, maximum rows per result, request timeout, and a spend cap; limits show a clear message.
 - `AI-020` `[P]` Treat all database text (names, notes) as untrusted data, never as instructions (prompt-injection defense).

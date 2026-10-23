@@ -6,16 +6,16 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 ## Needed before Phase 1 starts (owner)
 
-1. **DEC-009 App data location.** Approve where the app stores its own data (users, roles, sessions, layouts): a dedicated schema `app_config` in the existing PostgreSQL, or a separate small database. Either way, use **two database users**: a read-only user for the business tables and a separate user that can write only to the app's own schema or database. Phase 1 cannot store users and roles without this.
-2. **DEC-013 UI language** (Bahasa Indonesia, English or both) and number format.
-3. **DEC-017 Target screens:** meeting-room TV resolution, laptop, phone minimum width.
-4. **DEC-008 Hosting:** operating system, whether Docker is available, the internal address and HTTPS, and the Node.js and PostgreSQL versions on the server.
+1. **DEC-008 Hosting:** operating system of the server, whether Docker is available, the internal address and HTTPS, and the Node.js and PostgreSQL versions. If you prefer, Phase 1 can start with a portable default (Node LTS, plain run script and an optional Dockerfile) and the hosting detail can follow.
+2. **DEC-080 ETL and the app's schema:** please confirm the ETL never drops, truncates or recreates schemas other than the ones it owns, so `app_config` is safe. A yes or no is enough.
+
+Needed by Phase 5 (shapes the layouts from Phase 1): **DEC-078** how the CEO TV is driven (see below).
 
 Everything else has a proposed default and does not block Phase 1.
 
 ## Needed for Phase 2 and later (not blocking Phase 1)
 
-- **DEC-077** which ETL process(es) mean the dashboard views are ready, and the log's status values and time zone.
+- **DEC-081** the log's status values and time zone (checked by the schema check).
 - **DEC-076** run the schema check and approve the mapping rows.
 - **DEC-028** confirm the SE counting rule (replicate Tableau: exclude codes containing "SOI" for INA).
 - **DEC-029** multi-month role-count denominators.
@@ -34,7 +34,10 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-005c | Role card example: RSM (5), IN 20% / 1 = one of five counted as achieved. The threshold behind "achieved" is settled in DEC-021 | Earlier (owner) | `01-metrics-contract.md` 5.3 |
 | DEC-007 | Users are created by an admin (original wording also planned Microsoft accounts; Microsoft is now skipped, see DEC-007a and DEC-038) | 2026-10-22 (owner) | `02` section 11 |
 | DEC-007a | Release 1 sign-in is admin-created username and password; users can change their password (supersedes the Microsoft part of DEC-007) | 2026-10-22 (owner) | `02` section 11 |
+| DEC-009 | Use the **existing PostgreSQL** configured in `.env` (`PG_HOST`, `PG_PORT`, `PG_DB`, `PG_USER`, `PG_PASSWORD`); no second database. One full-access user is accepted for now; the app adds its own schema `app_config` and opens business-table sessions read-only. A separate read-only user stays optional later | 2026-10-22 (owner) | `02` section 14, `.env.example` |
 | DEC-011 | Data scope is per user and configurable: principal, region and other filters. Some users see one region, some several; only users granted full access see both principals. Roles and permissions are data managed by admins, not code | 2026-10-22 (owner) | `02` section 10, `03` section 3, `PRD` section 5 |
+| DEC-013 | UI languages: **English and Bahasa Indonesia**; **default English**; admin can change the default language | 2026-10-22 (owner) | `04` section 9 |
+| DEC-017 | Target display: **4K TV**. For the CEO the dashboard takes **half of the screen** (CCTV on the other half) for some dashboards and the **full screen** for others. The screenshots are the half-screen layouts | 2026-10-22 (owner) | `04` section 10, `UI-037` |
 | DEC-020 | 70% up to 99% is yellow (70% inclusive) | 2026-10-22 (owner) | `01` RULE-009 |
 | DEC-021 | Role cards use the **same rule as the bars**: an entity is "achieved" when achievement >= working-day progress (bar condition 1). The count is live: when working-day progress rises above an entity's achievement it stops counting (for example RSM IN goes from 1 to 0) | 2026-10-22 (owner) | `01` 5.3, `06` PERF-002 |
 | DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
@@ -71,6 +74,8 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-070 | The SE-level monthly target and sell-out data **already exist** in tables; they are improved and used later in the Marketing module. Table names and columns will be supplied then | 2026-10-22 (owner) | `03` 4.4, `10` DEPT-019 |
 | DEC-071 | SE **real values exist per day** (day-level). The ETL still refreshes nightly; a daily/intraday snapshot is not created yet and can be created later | 2026-10-22 (owner) | `06` PROG-004, `02` OPS-011 |
 | DEC-074 | New modules (Marketing, then others) are added **after the Sales project is finished and validated**; new features follow validation | 2026-10-22 (owner) | `10` DEPT-020, `05` later phases |
+| DEC-077 | The whole ETL takes about 3 hours: about **2 hours of loading** plus about **50 minutes of materialized-view refresh**, and the materialized-view refresh is the final step. Data counts as ready when that process shows `SUCCESS` | 2026-10-22 (owner, with log evidence) | `02` OPS-005 |
+| DEC-079 | The CEO manages which dashboards rotate on his TV and how long each shows | 2026-10-22 (owner) | `04` PLAY-009 |
 
 ## Blocking Phase 0 and 2
 
@@ -87,14 +92,11 @@ Everything else has a proposed default and does not block Phase 1.
 | ID | Question | Proposed default | Blocks | Status |
 |---|---|---|---|---|
 | DEC-008 | Hosting and approved image storage | Single container deployment; curated server-side asset library in v1 (no arbitrary uploads) | Phase 4 | Open |
-| DEC-009 | Where app-owned config lives | Separate `app_config` schema in the same PostgreSQL, created by migrations (`03-data-model.md` section 3) | Phase 3 | Proposed |
 | DEC-010 | Do filters persist across rotation or per dashboard? | Period filter shared; other filters per dashboard | Phase 5 | Proposed |
 | DEC-012 | Kiosk display authentication | Dedicated long-lived read-only display token, revocable by admin | Phase 5 | Proposed |
-| DEC-013 | UI language (Bahasa Indonesia, English or both), number/date formatting, single vs multiple timezones across regions | Single business timezone; English labels as in the Tableau screenshots until the owner decides | Phase 1 | Open |
 | DEC-014 | Staleness threshold and caching (refresh itself is covered by DEC-046 and DEC-048) | Cache keyed by `dataVersion` (no fixed TTL needed); warn when no completed ETL run is seen for 36 hours | Phase 2 | Proposed |
 | DEC-015 | Layouts/playlists scope: global, per role, per user, per display | Global layouts; one default playlist; per-display playlists later | Phase 4 | Proposed |
 | DEC-016 | Rotation minimum duration and failure behavior | Minimum 5 s; on failure skip with notice | Phase 5 | Proposed |
-| DEC-017 | Target displays (resolution, aspect, viewing distance) and minimum viewport | 1920x1080 and 1366x768 desktop; tablet-width reflow | Phase 1 | Open |
 | DEC-018 | Tableau parity: sample periods and tolerance (workbook now provided) | 3 recent months incl. Oct-26; exact match after rounding | Phase 2 exit | Proposed |
 | DEC-019 | Out-of-scope features | Export and drill-down are **in scope** for management (`MGMT-004`, `MGMT-007`). Annotations and push alerts stay deferred | Phase 6 | Proposed |
 
@@ -136,4 +138,6 @@ Everything else has a proposed default and does not block Phase 1.
 | DEC-075 | Last-month-to-date cutoff for day-level sources: same calendar day or same working day? | Same working day (matches the working-day pace); show the cutoff date | Marketing | Proposed |
 | DEC-028 | SE counting rule | Replicate Tableau: distinct `SLSNO` excluding codes containing "SOI" for INA ("SOA" variant for the other principal, to confirm); no active-flag filter by default, optional filter; differences raised as findings | Phase 2 | Proposed |
 | DEC-076 | Verification of types, grain, regions and ETL log: run `pnpm schema:check` (Phase 1 script) with the read-only user and approve the report. This specification environment cannot reach the database | Owner or technical administrator runs it once Phase 1 provides the script | Phase 2 | Proposed |
-| DEC-077 | ETL log semantics: which `process_name` rows must be `SUCCESS` before data counts as ready (the whole ETL takes about 3 hours, the logged materialized-view step about 50 minutes on 22-Oct-2026)? Which `status` values exist (running, failed)? Do running rows have a null `end_time`? Are the timestamps local time or UTC? | Use `Refresh Materialized Views` + `SUCCESS`; treat a newer `start_time` without a newer successful `end_time` as "refresh in progress" | Phase 2 | Open |
+| DEC-078 | How is the CEO TV driven? A PC with two windows (CCTV viewer and browser), the TV's own split screen, or something else? Which browser? Who or what switches a dashboard between half and full screen? Is the TV scaled at 200%? | Page adapts to the actual viewport; `presentation` is a hint; fullscreen only through a user action or kiosk mode | Phase 5 | Open |
+| DEC-080 | The ETL never drops, truncates or recreates the app's schema `app_config`; `app_config` is included in a regular backup stored off the database server, with a tested restore | Yes | Phase 1 | Open (owner to confirm) |
+| DEC-081 | Status values and time zone of `dwh_prod.etl_refresh_log` (running or failed rows, null `end_time`, local or UTC) | Checked by the schema check (DEC-076); a newer `start_time` without a newer successful `end_time` means "refresh in progress" | Phase 2 | Proposed |

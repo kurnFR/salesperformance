@@ -73,15 +73,17 @@ Validation: `0 <= warningMin < successMin`, colors from supported tokens meeting
   "id": "playlist-main",
   "name": "Main wall display",
   "enabled": true,
+  "displayId": "display-ceo-tv",
+  "defaultPresentation": "half",
   "defaultDurationSeconds": 10,
   "onLoadFailure": "skip",
   "items": [
-    { "dashboardId": "sales-performance", "enabled": true, "durationSeconds": 10, "order": 1 }
+    { "dashboardId": "sales-performance", "enabled": true, "durationSeconds": 10, "presentation": "half", "order": 1 }
   ]
 }
 ```
 
-Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must exist, `onLoadFailure` is `skip` or `keepLast`.
+`presentation` is `half`, `full` or `auto` (follow the actual viewport). Validation: `durationSeconds >= 5` (`[P]` minimum), referenced dashboards must exist, `onLoadFailure` is `skip` or `keepLast`.
 
 ### 2.4 Normalized filter object
 
@@ -272,8 +274,11 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.dashboards` | `id`, `department_id`, `route_key`, `name`, `description`, `visibility`, `published_version`, `created_at` | One row per dashboard; belongs to a department |
 | `app_config.dashboard_layout_versions` | `dashboard_id`, `version`, `layout_json`, `schema_version`, `created_by`, `created_at` | Append-only; unique `(dashboard_id, version)` for optimistic concurrency |
 | `app_config.achievement_rule_sets` | `version`, `rules_json`, `is_active`, `created_by`, `created_at` | Exactly one active |
-| `app_config.playlists` | `id`, `name`, `enabled`, `default_duration_seconds`, `on_load_failure` | |
-| `app_config.playlist_items` | `playlist_id`, `dashboard_id`, `position`, `duration_seconds`, `enabled` | FK to dashboards |
+| `app_config.playlists` | `id`, `display_id`, `name`, `enabled`, `default_duration_seconds`, `default_presentation`, `on_load_failure` | One playlist per display (for example the CEO TV) |
+| `app_config.playlist_items` | `playlist_id`, `dashboard_id`, `position`, `duration_seconds`, `presentation` (`half`/`full`/`auto`), `enabled` | FK to dashboards |
+| `app_config.displays` | `id`, `name`, `credential_hash`, `owner_user_id`, `enabled`, `last_seen_at` | A TV or screen with its own revocable credential (DEC-012, DEC-079) |
+| `app_config.display_managers` | `display_id`, `user_id` | Who may change that display's playlist and remote-control it |
+| `app_config.app_settings` | `key`, `value_json`, `updated_by`, `updated_at` | Platform settings, for example `ui.defaultLanguage` (initial `en`) |
 | `app_config.assets` | `id`, `storage_key`, `mime_type`, `size_bytes`, `width`, `height`, `created_by` | Approved storage only |
 | `app_config.roles` | `id`, `department_id` (null for platform roles), `name`, `description`, `is_system`, `default_landing`, `created_at` | Admin-managed; seed roles are normal rows; `default_landing` per `MGMT-003` |
 | `app_config.role_capabilities` | `role_id`, `capability` | Capability validated against the code catalog |

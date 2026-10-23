@@ -12,6 +12,9 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 - **Exit:** approved metric and API contracts; no guessed schema.
 
 ### Phase 1: Foundation
+- Language scaffolding: English and Bahasa Indonesia translation files, admin default language (initial English), per-user override, locale-aware formatting (`I18N-001` to `I18N-007`).
+- Responsive test matrix: the four viewports in `04-ui-ux-spec.md` section 10, including half-screen 960 x 1080.
+- Database: two pools on one connection (read-only business sessions, app pool for `app_config` only), migrations restricted to `app_config` (`02-architecture.md` section 14).
 - Repository tooling (`pnpm` workspaces, TypeScript strict, lint, tests, CI), `.env.example`, column registry, principal registry and the `schema:check` script.
 - Monorepo, TypeScript strict, lint, test, CI; `AppShell`, sidebar, routing, theme provider, error boundaries, `/api/health`.
 - Repository interfaces with mock implementations; `fixtures/` and golden cases.
@@ -37,6 +40,7 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 
 ### Phase 5: Playlist and presentation mode
 - Playlist admin, ordering, durations, rotation controller, kiosk mode, playback controls, kiosk authentication.
+- Displays (for example the CEO TV), per-display playlists, per-item half/full presentation, the CEO's own playlist management and remote control from a phone (`PLAY-009` to `PLAY-013`), TV mode and on-screen labels (`UI-037`, `UI-038`, `DASH-012`).
 
 ### Phase 6: Growth and upload dashboards, then further dashboards
 - Order: Sales Detail (pivot) with export and ranking lists, then Growth Sell In, Growth Sell Out (shared matrix component), Daily Upload. Each is built separately and needs its mapping rows approved and acceptance examples (`06-dashboard-catalog.md`).
@@ -67,6 +71,15 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 **Daily progress (when a day-level source exists)**
 - The line equals cumulative real divided by the monthly target for each day; the pace line equals elapsed working days over total from `dimdate`; colors follow the rule table; missing days are shown as missing; a monthly-only source never offers the view.
 - SE-level rows show target, sell-out and achievement; the SE sum versus the distributor's Real Sell OUT difference appears as "Unassigned / difference" and as a data finding.
+
+**Language**
+- Default language is English; an admin can change it; a user can override it; every string, chart label, tooltip, export header and glossary entry exists in both languages or falls back to English; numbers and dates follow the language without changing the underlying values.
+
+**TV display**
+- All dashboards render correctly in the four viewports (half and full, at 100% and 200% scaling); on a TV, tooltip values appear as persistent labels; the CEO can add, remove, reorder and time dashboards for his display from his own device and the TV follows without reload; half or full presentation is applied per item; dashboards the viewer may not see are skipped.
+
+**Database safety**
+- No migration or code path writes outside `app_config`; business-table sessions are read-only; the app starts and works with a single database user; an optional read-only user can be added by configuration only; a restore of the `app_config` backup is tested.
 
 **Departments**
 - A user's department switch and role control navigation, API, AI tools, export and shared links; direct URL or API access to a disabled department is refused.

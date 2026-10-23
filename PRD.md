@@ -45,6 +45,9 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - Period selection is **by month** (`DASH-003`, from Tableau).
 - **Principals:** ASW and INA are chosen with buttons in the web; both are in release 1; access per user is set by admin (`DASH-004`, `DASH-008`, DEC-022).
 - Shared visual style (dark navy, orange outlines) is an optional brand preset (`DASH-006`).
+- **Language:** English and Bahasa Indonesia; default English; admin can change the default; users can switch (`I18N-001` to `I18N-007`).
+- **CEO TV:** 4K display with half-screen dashboards (CCTV on the other half) and full-screen dashboards; the CEO chooses which dashboards rotate and how long, and remote-controls the TV (`PLAY-009` to `PLAY-013`, `UI-037`, `UI-038`).
+- **Database:** the existing PostgreSQL, configured in `.env` (`.env.example` in the repository); app data in its own schema `app_config`; no second database (`OPS-012` to `OPS-016`).
 - **Management use:** Executive Summary, regional view, drill-down, rankings, export and share, glossary, phone layout, saved views (`MGMT-001` to `MGMT-018`, `docs/09-management-experience.md`).
 - **Planned with Marketing (after Release 1 is validated):** SE-level monthly target and daily sell-out values (they exist already), day-by-day achievement progress against the working-day pace (nightly refresh at first), and near-real-time refresh later (`PROG-001` to `PROG-005`, DEC-070, DEC-071).
 - **Department-ready platform:** Sales is active now; Marketing (product dashboards), Finance, HR and others are planned. The UI and access model support departments from the start, with a department switcher, "Coming soon" pages and per-user department enable/disable and department roles (`DEPT-001` to `DEPT-018`, `docs/10-departments-and-modules.md`).

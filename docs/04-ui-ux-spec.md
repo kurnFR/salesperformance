@@ -77,6 +77,11 @@ Reference screenshots: `docs/reference/` (four sheets; evidence of arrangement, 
 - `PLAY-006` `[C]` Visible, non-blocking behavior on dashboard load failure (skip or keep last good, by setting); never a blank screen.
 - `PLAY-007` `[O]` Whether filters persist across rotation or each dashboard keeps its own (DEC-010).
 - `PLAY-008` `[C]` Playlists persist server-side once storage is approved.
+- `PLAY-009` `[C]` **The CEO manages what rotates and for how long.** A user with `display.manage` on a display (for example the CEO for the CEO TV) chooses which dashboards are in that display's playlist, their order, and the duration of each. Changes reach the TV within seconds, without reloading it. Admins grant this right per user and per display (`PLAY-001` stays the admin default).
+- `PLAY-010` `[C]` Each item has a **presentation**: `half` (half screen), `full` (full screen) or `auto` (follow the actual viewport). Some dashboards are meant for half screen and some for full screen.
+- `PLAY-011` `[P]` A **display** is a named screen with its own revocable credential and its own playlist (DEC-079). Several displays can exist, each with its own playlist.
+- `PLAY-012` `[P]` **Remote control** from a phone or laptop: next, previous, pause, resume, jump to a dashboard, change a duration; the TV follows.
+- `PLAY-013` `[P]` Dashboards in a playlist that the display's user is not allowed to see are skipped and reported to the manager, never shown.
 
 ### Achievement colors
 - Configure thresholds and colors in admin settings, never hardcoded in chart components. Provide preview, restore defaults, safe fallback, validation of ordering/range/contrast, audit/version history where practical. Rule itself: `01-metrics-contract.md` section 4.
@@ -109,7 +114,7 @@ Neutral professional base with a restrained accent. The screenshot's orange/blue
 - Container-aware chart resize after sidebar, grid, theme or viewport changes.
 - Narrow widths: stack/reflow; never shrink labels to unreadable sizes.
 - Table needing horizontal scroll scrolls inside its own region only.
-- Define and test a minimum viewport in Phase 1 after identifying target displays (`[O]`: TV resolution, aspect ratio, distance).
+- Target displays are defined in section 10: the CEO TV is 4K with the dashboard on **half** of the screen (the other half shows CCTV) or on the **full** screen. Test the four viewports in that table from Phase 1.
 - Support browser zoom and high-DPI.
 - Rotation must not cause layout jumps between dashboards with different widget counts.
 
@@ -135,6 +140,30 @@ Every interactive component defines: default, hover, focus-visible, pressed/sele
 - `A11Y-004` `[C]` Loading placeholders never presented as real zero values.
 - `A11Y-005` `[P]` Automated axe checks in CI plus manual keyboard and screen-reader review before release.
 
-## 9. Content localisation (`[O]`)
+## 9. Language and formats (DEC-013)
 
-Interface language (Bahasa Indonesia, English, or both), number/date/percent formatting, and whether a single business timezone suffices across all regions (DEC-013).
+- `I18N-001` `[C]` The interface supports **English and Bahasa Indonesia**.
+- `I18N-002` `[C]` The **default language is English**. An admin can change the default language in settings (`ui.defaultLanguage`).
+- `I18N-003` `[P]` A user can switch language from a toggle; the choice is saved on the user and overrides the default.
+- `I18N-004` `[P]` Numbers, percentages and dates follow the language (English `1,234.5`; Indonesian `1.234,5`; month names localised). Formatting is display only: values stay exact `numeric` (`01-metrics-contract.md` section 11).
+- `I18N-005` `[P]` All text comes from translation files (`en`, `id`), including chart labels, tooltips, glossary entries, empty and error states and export headers. A missing Indonesian key falls back to English; a CI check lists missing keys.
+- `I18N-006` `[P]` Data names (regions, branches, distributors, SE) are shown as stored and never translated.
+- `I18N-007` `[P]` The AI replies in the language of the user's question, otherwise in the user's selected language (`AI-017`).
+- Time zone for "today" and the display date: single business time zone (DEC-006).
+
+## 10. TV and presentation mode (CEO display)
+
+The CEO TV is **4K** (3840 x 2160). Some dashboards use **half** of the screen (the other half shows CCTV); others use the **full** screen. The reference screenshots are the half-screen layouts (about 963 x 985). That matches a 4K TV running at 200% scaling: half screen is about **960 x 1080 CSS pixels**. This is an inference to confirm (DEC-078).
+
+| Case | Physical area | Expected CSS viewport | Use |
+|---|---|---|---|
+| Half screen, 4K at 200% | 1920 x 2160 | about 960 x 1080 | Reference screenshots; most dashboards |
+| Full screen, 4K at 200% | 3840 x 2160 | 1920 x 1080 | Wide dashboards (for example Sales Detail) |
+| Half screen, 4K at 100% | 1920 x 2160 | 1920 x 2160 | Must still look right |
+| Full screen, 4K at 100% | 3840 x 2160 | 3840 x 2160 | Must still look right |
+
+- `UI-037` `[C]` **Half and full layouts.** Every dashboard works in half and full viewports. The app chooses its layout from the actual viewport size (breakpoints), and a playlist item's `presentation` (`PLAY-010`) says which one is intended. The Tableau screenshots are the visual target for half screen.
+- `UI-038` `[P]` **TV mode** (presentation mode on a display): no sidebar or top bar, no scrollbars, hidden mouse cursor, large type readable from a distance (minimum sizes per viewport), high contrast, no hover-dependent information, little motion, no page reloads (data updates in place, `DASH-011`).
+- `DASH-012` `[P]` **No tooltips on a TV.** A TV has no mouse, so in TV mode the values that tooltips show (target, real, %) appear as **persistent on-screen labels** wherever space allows, with the same wording and numbers. Hover and keyboard tooltips (`DASH-001`) remain on laptops and phones.
+- `UI-039` `[O]` **Switching between half and full is a window or screen matter.** A web page cannot resize the browser window by itself. Options: the TV PC window layout is switched by the PC or a kiosk script; or the page requests browser fullscreen (needs a user action or kiosk mode); or the split screen is done by the TV. Which one applies is open (DEC-078).
+- `UI-040` `[P]` Charts render sharply on 4K (device pixel ratio aware) and stay light enough for the TV's hardware.

@@ -97,6 +97,7 @@ Domain modules own: metric DTOs and formatting, achievement formulas, role count
 | `GET /api/sales-performance/active-distributors?principalId=&month=` | Active / total distributors per region | Viewer+ |
 | `GET /api/executive-summary?principalId=&month=` | Executive Summary blocks (headline, tiles, needs-attention, movers, data health) within scope (`09-management-experience.md`) | Viewer+ |
 | `POST /api/sales-detail/query` (read-only; body: period range, dimensions, measures, filters, mode flat or drill, drill path, sort, page) | Pivot-style detail with totals and on-demand children; validated against the field catalog (`PIVOT-011`, `PIVOT-014`) | Viewer+ |
+| `GET/POST/PUT /api/displays`, `GET/PUT /api/displays/:id/playlist`, `POST /api/displays/:id/control` (next, previous, pause, resume, jump) | Display profiles (for example the CEO TV), their playlists, and remote control from a phone or laptop (`PLAY-009` to `PLAY-013`) | `display.manage` for that display |
 | `GET /api/sales-detail/hierarchy` | Hierarchy levels, which measures each level supports, deepest level the user may open | Viewer+ |
 | `POST /api/export/sales-detail`, `POST /api/export/snapshot` | Excel/CSV of a table; PDF/image snapshot of a dashboard (`MGMT-007`) | `export.use` |
 | `GET/PUT /api/me/views`, `GET /api/glossary` | Saved views; metric glossary generated from the metrics contract | Authenticated |
@@ -303,3 +304,13 @@ flowchart LR
 ```
 
 Each registered data source declares its grain (`month`, `day`, `intraday`) and its refresh signal; `dataAsOf`, caching and the AI's "month to date" behavior are derived from that declaration.
+
+## 14. Database connection and safety (DEC-009)
+
+**Owner decision `[C]`:** use the **existing PostgreSQL**; no second database (the database is a staging copy loaded by the ETL from production, and a second copy would have to be mirrored again). Connection comes from `.env` (`.env.example` is in the repository): `PG_HOST`, `PG_PORT`, `PG_DB`, `PG_USER`, `PG_PASSWORD`. The owner uses one full-access user for now.
+
+- `OPS-012` `[C]` **App data lives in its own schema `app_config` in the same database**, never inside `dwh_prod`. Migrations create and change only that schema; a startup check and a test refuse any migration that touches another schema. The ETL must never drop, truncate or recreate `app_config` (DEC-080).
+- `OPS-013` `[C]` **Single user is supported.** With only `PG_USER` set, the app uses two connection pools with the same credentials: a **business pool** whose sessions are opened read-only (`default_transaction_read_only = on`, statement timeout) used for every dashboard, pivot, AI-tool and export query; and an **app pool** that writes only to `app_config`. Business queries are fixed, parameterized and built from the column registry; no code path runs DDL or writes against `dwh_prod`.
+- `OPS-014` `[P]` **Optional later:** set `PG_RO_USER` / `PG_RO_PASSWORD` to use a separate read-only database user for the business pool (same database, no mirroring, five minutes of setup). It is not required, but it is the one control that still protects the warehouse if the app has a bug or is compromised, because read-only sessions are enforced by the app, while a read-only user is enforced by PostgreSQL.
+- `OPS-015` `[P]` **Backups.** The staging database can be rebuilt from production, but `app_config` (users, roles, layouts, playlists, saved views, settings) cannot. Include the `app_config` schema in a regular backup stored off the database server (for example a nightly schema-only dump plus data), and test a restore before go-live. The encryption master key is backed up separately (`SEC-015`).
+- `OPS-016` `[P]` ETL interplay: dashboards read the materialized views only after the refresh log shows success (`OPS-005`); the app never locks or refreshes views itself.
