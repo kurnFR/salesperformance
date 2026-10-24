@@ -28,7 +28,7 @@ The two will not always agree (144 against 120 on the reference screenshots). Th
 
 | Code | Check | Example finding |
 |---|---|---|
-| `DIST_COUNT_MISMATCH` | Distinct selling points per region in the mapping data vs `TOTAL DIST` in `distaktif` | Mapping 144 vs `distaktif` 120; per-region differences listed |
+| `DIST_COUNT_MISMATCH` | Distinct selling points per region in the mapping data versus `TOTAL DIST` in `distaktif`, **broken down by the distributor active flag** (`METRIC-044`) so a difference caused by not-active distributors is separated from one that is not | Mapping 144 (of which flag N: to be measured) vs `distaktif` 120; per-region differences listed |
 | `DISTAKTIF_STALE` | Latest `Bulan` in `distaktif` is older than the selected or current month | "No upload for Oct-26" |
 | `DISTAKTIF_INCONSISTENT` | `Total Aktif` greater than `TOTAL DIST`; `Total Aktif + Total Resign` different from `TOTAL DIST`; negative values; region in `distaktif` absent from mapping | Active 35 of 31 |
 | `TARGET_MISSING_OR_ZERO` | Actual greater than 0 with missing or zero target; negative actual or target | Region with no target for the month |

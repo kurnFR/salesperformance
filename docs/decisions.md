@@ -12,11 +12,10 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 
 - **DEC-081** the log's status values and time zone (checked by the schema check).
 - **DEC-076** run the schema check and approve the mapping rows.
-- **DEC-028** confirm the SE counting rule (replicate Tableau: exclude codes containing "SOI" for INA).
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-097** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
+- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -41,6 +40,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-022 | Principal is chosen in the web with buttons **ASW** and **INA**; both principals are in release 1. Access per principal is set by admin permissions, never hard-coded | 2026-10-22 (owner) | `06` DASH-004, `02` section 10 |
 | DEC-024 | Active distributor % = `Total Aktif / TOTAL DIST` from table `distaktif` (sheet 2 region cards, for example 30 / 31 = 97%) | 2026-10-22 (owner) | `01` METRIC-016, `06` section 3 |
 | DEC-027 | Working days come from the `dimdate` table (`networkeddays`); the app sums them for the selected month and does not compute its own calendar | 2026-10-22 (owner) | `01` 5.7 |
+| DEC-028 | **SE and SPV are already separated in the dimension** (view family `v_sr_per_branch...`), so the SE count is a plain distinct count of `SLSNO` (excluding codes containing "SOI" for INA), as Tableau does | 2026-10-22 (owner) | `01` METRIC-027, `03` 4.4 |
 | DEC-030 | Target and real values are `int8`; calculations use `numeric`; no currency symbol in the data (display separators per locale, optional unit label is a display setting) | 2026-10-22 (owner) | `01` METRIC-028, METRIC-029, DATA-005 |
 | DEC-031 | Every dashboard chart element has a tooltip with target, real value and % | 2026-10-22 (owner, in chat) | `01` section 7, `06` DASH-001 |
 | DEC-032 | Growth dashboards always show a rolling 7 months ending at the selected (default current) month, with last year's same months | 2026-10-22 (owner, in chat) | `06` DASH-002, GROW-001 |
@@ -84,6 +84,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-094 | Quantities are **already converted to cartons** | 2026-10-22 (owner) | `01` METRIC-042 |
 | DEC-095 | `TargetValueEskaSLO` is the **same measure** as `TOTALTargetSellOut`; column names are not consistent across tables, so the registry maps each measure per table | 2026-10-22 (owner) | `03` 4.3, field catalog |
 | DEC-096 | `KODESCABANG` = `SELLINGPOINTCODE`; `KOTA` = city; `KODEAREA` = SPV (area) code. `FLAG_AKTIF`: `Y` active, `N` no longer active (resigned for an SE). `SLSTP` = type of salesperson (sales mix, sales office, taking order, others). `TEAM` = job position (sales executive, SPV, ...) | 2026-10-22 (owner) | `03` 4.2 to 4.4 |
+| DEC-098 | Active flags come from master tables: the **customer** flag is defined in `fcustmst`; the **distributor** flag in `mscabang` (`Y` active, `N` not active) | 2026-10-22 (owner) | `03` 4.2 |
 
 ## Blocking Phase 0 and 2
 
@@ -152,5 +153,4 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-091 | Pace expectation for Festive (seasonal) products: the working-day pace can mislead for a seasonal group | Same rule for both groups with a visible note; closed months against 100%; owner may define a seasonal expectation | Phase 6 | Proposed |
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
-| DEC-028 | SE counting rule | First release replicates Tableau (distinct `SLSNO` excluding codes containing "SOI" for INA) for parity; the schema check reports the count under each candidate rule; proposed end state: active sales executives (`TEAM` = sales executive, `FLAG_AKTIF` = `Y`) | Phase 2 | Proposed |
-| DEC-097 | On a mapping row, does `FLAG_AKTIF` describe the SE, the customer, or both? Which values do `TEAM` and `SLSTP` take? (The schema check lists them.) | Flag describes the SE for SE counts and the customer for customer counts, to be confirmed by the listed values | Phase 6 | Open |
+| DEC-099 | Which columns of the mapping view carry the customer flag (from `fcustmst`), the distributor flag (from `mscabang`) and the SE active or resigned flag? Are `fcustmst` and `mscabang` available in `dwh_prod`, or only visible through the view? | Use only view columns (expected `FLAG_AKTIF` for the customer, `BranchActiveFlag` for the distributor); the schema check lists values per column; SE active flag stays optional until its source is known | Phase 6 | Open |

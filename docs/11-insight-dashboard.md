@@ -46,7 +46,7 @@ Deliberately not included: sales forecasts, "why" explanations, price effects, a
 | 7. Product groups: Regular and Festive | Which product group drives or drags the achievement, and how seasonal is it? | Achievement % for Regular and Festive (Sell IN and Sell OUT) per region; mix share of real versus mix share of target; growth against last year per group; shortfall by group; a 12-month seasonal view of Festive this year versus last year |
 | 8. Volume and coverage | Are volumes and the field force growing with value? | Sell OUT quantity achievement per region; quantity growth against value growth; value per carton for Sell IN and Sell OUT against last year; active SE and vacant distributors (by sales type); customers per SE and per distributor; Sell OUT per SE and per customer (averages) |
 
-Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sales Performance services plus monthly history; view 8 only needs the schema check to confirm the join and the flag values (DEC-097). View 6 uses the manual-upload and upload-log sources.
+Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sales Performance services plus monthly history; view 8 only needs the schema check to confirm the join and the flag values (DEC-099). View 6 uses the manual-upload and upload-log sources.
 
 ## 4. Requirements
 
@@ -69,7 +69,7 @@ Views 1 to 5, 7 and 8 use columns whose meaning is now confirmed and need the Sa
 - `INS-020` `[C]` **Meanings** (owner): SLI is Sell IN, the sale to the distributor; SLO is Sell OUT, the sale from the distributor to the customer. Quantity columns are the realised quantities; `TargetQtyEskaSLO` and `TargetValueEskaSLO` are the Sell OUT targets by quantity and by value.
 - `INS-021` `[P]` **Volume versus value.** Per region and month: Sell OUT quantity achievement; quantity growth and value growth against last year side by side; value per unit for Sell IN and Sell OUT. Sell IN shows quantity without a percentage because no Sell IN quantity target exists.
 - `INS-022` `[P]` **Coverage.** Customers per SE and per distributor, and Sell OUT per SE and per customer, computed from the current mapping and labelled "average, current mapping". A drill-down from distributor to SE to customer lists names only, with no figures (`PIVOT-017`).
-- `INS-024` `[P]` **Vacancy and workforce signals** from the mapping: active SE per distributor, distributors with **no active SE** (vacant), resigned SE currently flagged `N`, and SE by sales type. The mapping is a current snapshot, so there is no resignation trend until history exists; the page does not claim one.
+- `INS-024` `[P]` **Vacancy and workforce signals** from the mapping: SE per distributor, distributors with **no SE in the mapping** (vacant), and, once the SE active flag source is confirmed (DEC-099), active SE per distributor, distributors with no active SE and resigned SE; SE by sales type. **Customer hygiene:** active versus not active customers (flag from `fcustmst`) per distributor, so inactive customers still on the list are visible. **Distributor flag** (from `mscabang`): active versus not active distributors, shown next to the `distaktif` figures (`METRIC-044`). The mapping is a current snapshot, so there is no trend until history exists; the page does not claim one.
 - `INS-023` `[P]` Value per unit is labelled as such and never called price; changes are shown with the product-group split when the selector is set to Regular or Festive.
 - `INS-014` `[P]` Export (`MGMT-007`) of any view's table and a snapshot of any view.
 
@@ -98,4 +98,4 @@ Defined in `01-metrics-contract.md` section 12 (`METRIC-030` to `METRIC-040`): e
 
 ## 8. Open decisions
 
-DEC-085 (this dashboard and its view order), DEC-089 (year start for YTD), DEC-090 (default thresholds), DEC-091 (pace expectation for Festive), DEC-092 (product-group selector across the product), DEC-097 (flag scope and the values of `TEAM` and `SLSTP`). DEC-086, DEC-087, DEC-088, DEC-094, DEC-095 and DEC-096 are answered. See `decisions.md`.
+DEC-085 (this dashboard and its view order), DEC-089 (year start for YTD), DEC-090 (default thresholds), DEC-091 (pace expectation for Festive), DEC-092 (product-group selector across the product), DEC-099 (which view column carries which flag, and the SE active flag source). DEC-086, DEC-087, DEC-088, DEC-094, DEC-095 and DEC-096 are answered. See `decisions.md`.
