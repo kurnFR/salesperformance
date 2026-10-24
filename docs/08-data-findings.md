@@ -35,7 +35,7 @@ The two will not always agree (144 against 120 on the reference screenshots). Th
 | `ACHIEVEMENT_OUTLIER` | Achievement above an agreed ceiling (threshold open) | 644.95% growth values in a region |
 | `MAPPING_MISMATCH` | Region, branch or selling point present in performance data but absent from mapping, or the reverse; the same salesman number mapped to several regions | Unknown branch name |
 | `UPLOAD_GAP` | Distributor with no upload for N consecutive days (threshold open) | Daily Upload dashboard |
-| `UNMAPPED_REGION` | Distributors or cities whose region (or branch, SPV) is NULL, with their target, real and share of the total per month (`DATA-007`); the reconciliation identity of `METRIC-047` | 6 selling points with no region hold n% of Sell IN |
+| `UNMAPPED_REGION` | Distributors or cities whose region (or branch, SPV) is NULL, with target, real and share of the total per month (`DATA-007`); the reconciliation identity of `METRIC-047`. Later: suggestion, status, data owner notified, and age (`MAP-020`) | 6 selling points with no region hold n% of Sell IN |
 | `TYPE_TOTAL_MISMATCH` | `TOTAL` target or real differs from Regular plus Festive (Sell IN or Sell OUT) | Total 1000, Regular 600 + Festive 300 |
 | `SELL_OUT_ABOVE_SELL_IN` | Sell OUT far above Sell IN for a distributor over several months (threshold DEC-043) | Possible mapping or upload error |
 | `QTY_VALUE_MISMATCH` | Quantity with no value, or the reverse (`RealQtySLI/SLO` against the value columns) | Real value 0 with quantity above 0 |

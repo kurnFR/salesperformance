@@ -51,6 +51,7 @@ The owner has supplied the source table names (`table_name`), the Tableau workbo
 - **Server:** Ubuntu 20.04 with Docker, Node.js 24, PostgreSQL 12.22; the app runs in Docker and is tested on PostgreSQL 12 and a current version (`OPS-022` to `OPS-024`). The ETL sometimes drops, truncates and adds columns, so dashboards serve last-good data during updates and tolerate schema changes (`OPS-017` to `OPS-021`).
 - **Database:** the existing PostgreSQL, configured in `.env` (`.env.example` in the repository); app data in its own schema `app_config`; no second database (`OPS-012` to `OPS-016`).
 - **Unmapped values:** some distributors or cities have no region. Dashboards exclude them (as Tableau does) but always show the amount; Sales Detail includes them as "(Unmapped)"; a data finding lists them (`DATA-006`, `METRIC-045` to `METRIC-049`).
+- **Mapping Assistant (later):** fills and normalizes unmapped dimension values from existing database values only, through a reviewed fallback table, with email alerts to the data owner and a labelled, reversible AI suggestion if the owner does not fix the source (`MAP-001` to `MAP-020`, `docs/12-mapping-assistant.md`).
 - **Management use:** Executive Summary, regional view, drill-down, rankings, export and share, glossary, phone layout, saved views (`MGMT-001` to `MGMT-018`, `docs/09-management-experience.md`).
 - **Planned with Marketing (after Release 1 is validated):** SE-level monthly target and daily sell-out values (they exist already), day-by-day achievement progress against the working-day pace (nightly refresh at first), and near-real-time refresh later (`PROG-001` to `PROG-005`, DEC-070, DEC-071).
 - **Department-ready platform:** Sales is active now; Marketing (product dashboards), Finance, HR and others are planned. The UI and access model support departments from the start, with a department switcher, "Coming soon" pages and per-user department enable/disable and department roles (`DEPT-001` to `DEPT-018`, `docs/10-departments-and-modules.md`).
@@ -115,7 +116,7 @@ Every requirement carries a tag:
 - `[O]` **Open decision** (needs owner data or policy)
 - `[I]` **Implementation detail** (engineering choice; adjustable)
 
-The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail), `PROG-` (daily progress), `DEPT-` (departments and modules), `INS-` (insight dashboard), `OPS-` (operations).
+The screenshot is evidence of visual arrangement, not of schema, formulas or responsive behaviour. Mock data is never business evidence. Requirements have stable IDs with these prefixes: `DATA-`, `METRIC-`, `RULE-`, `UI-`, `EDIT-`, `PLAY-`, `SEC-`, `A11Y-`, `OPS-`, `DASH-` (cross-cutting dashboard rules), `PERF-` (dashboard 1), `GROW-` (dashboards 2 and 3), `UPLD-` (dashboard 4), `FIND-` (data findings), `AI-` (AI chat), `AUTH-` (authentication), `MGMT-` (management experience), `PIVOT-` (Sales Detail), `PROG-` (daily progress), `DEPT-` (departments and modules), `INS-` (insight dashboard), `MAP-` (Mapping Assistant), `OPS-` (operations).
 
 ## 7. Roadmap at a glance
 
@@ -144,6 +145,7 @@ Details, exit criteria and acceptance tests: `docs/05-roadmap-and-testing.md`.
 | `docs/03-data-model.md` | App-owned data structures (JSON), proposed config tables, source-mapping template |
 | `docs/04-ui-ux-spec.md` | Functional UI requirements, design system, responsive, interaction, chart UX, accessibility |
 | `docs/05-roadmap-and-testing.md` | Phases, acceptance criteria, error scenarios, testing strategy, definition of ready |
+| `docs/12-mapping-assistant.md` | Later feature: fill and normalize unmapped dimension values, fallback table, data-owner alerts |
 | `docs/11-insight-dashboard.md` | Performance Drivers: gap analysis of unused data, views, requirements, tests |
 | `docs/10-departments-and-modules.md` | Department platform: model, module manifest, switcher and "Coming soon" UI, admin screens, sensitive departments |
 | `docs/09-management-experience.md` | Management review: gaps found, personas, Executive Summary, derived metrics, export/share |

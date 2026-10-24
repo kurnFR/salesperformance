@@ -331,3 +331,12 @@ Each registered data source declares its grain (`month`, `day`, `intraday`) and 
 - `OPS-023` `[C]` **PostgreSQL 12 compatibility.** Every query and migration must work on PostgreSQL 12.22. Rules: IDs are generated in the app (UUID v7), not by `gen_random_uuid()` (built in only from PostgreSQL 13; on 12 it needs the `pgcrypto` extension); no `MERGE` (PostgreSQL 15), no `UNIQUE NULLS NOT DISTINCT` (15), no newer JSON functions; `ROLLUP`, `GROUPING SETS`, generated columns, `numeric`, `REFRESH MATERIALIZED VIEW CONCURRENTLY` and event triggers are available. CI runs the database tests against a PostgreSQL 12 container **and** a current PostgreSQL, so a later upgrade does not break the app.
 - `OPS-024` `[P]` **Support status to plan for (outside this project):** Ubuntu 20.04 left standard support in 2025 (security updates only through paid extended maintenance), and PostgreSQL 12 reached end of life in November 2024 (12.22 was its final release). Because the app is containerised and tested on 12 and a current version, upgrading the host and the database later is possible without changing the app. The warehouse's security patching is the owner's decision.
 - `OPS-025` `[P]` Time zone: containers run with `TZ` set to the business time zone (DEC-006); timestamps are stored and compared consistently with the ETL log's type (DEC-081).
+
+## 16. Mapping overlay and notifications (later feature, DEC-103)
+
+The Mapping Assistant (`12-mapping-assistant.md`) is added after Release 1 is validated. Release 1 only prepares the ground: unmapped values are grouped as "(Unmapped)", the `UNMAPPED_REGION` finding exists, and every query goes through the repository layer, where a **read-time overlay** can later substitute fallback values. Principles:
+
+- `OPS-026` `[P]` The overlay is applied in the repository layer when reading, never by writing to `dwh_prod`; the source value always wins when it is valid.
+- `OPS-027` `[P]` Suggestions run as a background job after each completed refresh, in dry-run first; only names go to the AI provider selected in settings (`AI-037` to `AI-047`).
+- `OPS-028` `[P]` Email goes through an SMTP server configured in `.env` (`SMTP_*`, optional); a digest is sent per data owner, with escalation; no secrets or sales values in the message body.
+- `OPS-029` `[P]` Capabilities: `mapping.review`, `mapping.suggest`; both assignable per role and department, with scope applied.

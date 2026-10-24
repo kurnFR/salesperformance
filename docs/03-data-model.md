@@ -321,6 +321,10 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.local_credentials` | `user_id`, `username`, `password_hash`, `must_change`, `failed_attempts`, `locked_until`, `changed_at` | Argon2id hash only |
 | `app_config.data_findings`, `data_finding_notes` | See `08-data-findings.md` section 3.1 | Findings and history |
 | `app_config.ai_sessions`, `ai_messages`, `ai_results` | `user_id`, question, tool-call summary, result spec JSON, `data_as_of`, timestamps | Per-user chat history and reopenable results; **deleted after 60 days** by a daily job |
+| `app_config.mapping_overrides` *(later, Mapping Assistant)* | `id`, `dimension`, `source_code`, `source_value`, `suggested_value`, `method` (`rule`/`similarity`/`ai`/`manual`), `evidence_json`, `confidence`, `status`, `effective_from`, `created_at`, `reviewed_by`, `reviewed_at` | Fill table; read-time overlay; never written to `dwh_prod` (`12-mapping-assistant.md`) |
+| `app_config.name_normalization` *(later)* | `dimension`, `code`, `alias`, `canonical_value`, `status`, `reviewed_by` | Alias to existing canonical value, same code only |
+| `app_config.data_owners` *(later)* | `finding_category`, `dimension`, `contact_name`, `contact_email`, `escalation_email`, `escalate_after_days` | Who is notified (`MAP-015`) |
+| `app_config.notification_log` *(later)* | `id`, `recipient`, `kind`, `subject`, `sent_at`, `status` | No sensitive content |
 | `app_config.audit_events` | `id`, `actor`, `action`, `target`, `summary_json`, `created_at` | Safe summaries only, no secrets; includes permission changes |
 
 Requirements if approved: explicit migrations with constraints, indexes and rollback notes; keep revision history for shared layouts and rules; validate referenced dashboards exist before publishing; never silently overwrite a newer revision.

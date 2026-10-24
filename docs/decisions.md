@@ -15,7 +15,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server; **DEC-101 to DEC-103** unmapped values.
+- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server; **DEC-104 to DEC-106** Mapping Assistant (later).
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -86,6 +86,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-096 | `KODESCABANG` = `SELLINGPOINTCODE`; `KOTA` = city; `KODEAREA` = SPV (area) code. `FLAG_AKTIF`: `Y` active, `N` no longer active (resigned for an SE). `SLSTP` = type of salesperson (sales mix, sales office, taking order, others). `TEAM` = job position (sales executive, SPV, ...) | 2026-10-22 (owner) | `03` 4.2 to 4.4 |
 | DEC-098 | Active flags come from master tables: the **customer** flag is defined in `fcustmst`; the **distributor** flag in `mscabang` (`Y` active, `N` not active) | 2026-10-22 (owner) | `03` 4.2 |
 | DEC-100 | Some distributors or cities are not defined or not mapped, so their region is NULL. Today dashboards **exclude** NULL region while the detail sheet **includes all regions including NULL** | 2026-10-22 (owner) | `01` section 13 |
+| DEC-101 | Unmapped values: dashboards exclude them with a visible reconciliation note; Sales Detail includes them as "(Unmapped)" with an "Include unmapped" switch (default on) | 2026-10-22 (owner agreed) | `01` section 13 |
+| DEC-102 | Roles with all regions (CEO, General Manager) see unmapped values by default; regional roles do not; admin can change | 2026-10-22 (owner agreed) | `01` METRIC-048 |
+| DEC-103 | **Later feature:** AI fills unmapped header dimension values and normalizes names from the nearest existing words in the database, never creating a new word; results go into a fallback (rename/normalize) table used when a refresh still has NULL; the data owner is informed (including email alerts) to fix the master source; if the owner does not fix it, the AI's best suggestion is used | 2026-10-22 (owner) | `12-mapping-assistant.md` |
 
 ## Blocking Phase 0 and 2
 
@@ -155,6 +158,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
 | DEC-099 | Which columns of the mapping view carry the customer flag (from `fcustmst`), the distributor flag (from `mscabang`) and the SE active or resigned flag? Are `fcustmst` and `mscabang` available in `dwh_prod`, or only visible through the view? | Use only view columns (expected `FLAG_AKTIF` for the customer, `BranchActiveFlag` for the distributor); the schema check lists values per column; SE active flag stays optional until its source is known | Phase 6 | Open |
-| DEC-101 | Behavior for unmapped (NULL region) values: dashboards exclude them with a visible reconciliation note; Sales Detail includes them as "(Unmapped)" with an "Include unmapped" switch (default on) | As described in `01` section 13 | Phase 2 | Proposed |
-| DEC-102 | Which roles may see unmapped values (`includeUnmapped`)? | On for roles with `region: all` (for example CEO, General Manager), off for regional scopes; admin can change | Phase 2 | Proposed |
-| DEC-103 | Who fixes unmapped distributors and cities (master data or the ETL's mapping source), and can the ETL write an explicit "UNMAPPED" label instead of NULL? | The data owner fixes the mapping; the app lists them in the `UNMAPPED_REGION` finding and never guesses | Phase 2 | Open |
+| DEC-104 | Mapping Assistant approval policy: grace period before auto-apply, confidence threshold, and the impact limit above which a person must approve | 14 days; high confidence only; entries above 1% of a region's total always need a person | Mapping Assistant | Proposed |
+| DEC-105 | History policy: apply a fallback from the approval month forward; backfill earlier months only with explicit approval and a restatement note | As described | Mapping Assistant | Proposed |
+| DEC-106 | Email for data-owner alerts: SMTP server and sender in `.env`, the contact list per finding category, digest frequency, escalation days | Weekly digest, immediate message for large impacts, escalate after 7 days | Mapping Assistant | Open |
