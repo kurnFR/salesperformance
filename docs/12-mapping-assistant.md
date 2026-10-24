@@ -21,8 +21,8 @@ The direction is sound, and the main risk is that **a wrong guess silently moves
 2. **Codes are the identity, names are labels.** Normalize spellings only among rows with the **same code** (`SELLINGPOINTCODE`, `KODEAREA`, branch code). Never merge two entities with different codes just because their names are similar.
 3. **Always labelled.** Any figure that depends on a suggestion carries an **"AI-suggested"** badge (and "approved" once reviewed), in tooltips, exports and AI answers, and the reconciliation note shows how much value rests on suggestions.
 4. **The source wins.** The fallback applies only while the source value is NULL or unmapped. As soon as a refresh delivers a valid source value, the entry is retired and marked "fixed at source". If the source later delivers a *different* value than the suggestion, that is flagged.
-5. **Review, with a grace period, then auto-apply** (this is your "if the owner does not fix it" rule): the data owner or an admin can approve or reject, with a preview of how regional totals would change. If nobody reviews within a grace period (default 14 days) and the suggestion meets the confidence rule, it is applied, still labelled and easy to revert. Large impacts (share of total above a threshold) need a person's approval and are never auto-applied.
-6. **Do not rewrite history by surprise.** Apply a fallback from the month it is approved onward by default; filling earlier months is an explicit "backfill" approval with a restatement note, because last month's report would otherwise change.
+5. **Review, with a grace period, then auto-apply** (this is your "if the owner does not fix it" rule): the data owner or an admin can approve or reject, with a preview of how regional totals would change. If nobody reviews within the **grace period (3 days, owner decision)** and the suggestion meets the confidence rule, it is applied, still labelled and easy to revert. Entries whose impact is above **1% of a region's total** need a person's approval and are never auto-applied.
+6. **History is restated visibly.** Owner decision: a fallback applies to **past months (backfill) and to later months**. Because that changes figures already reported, restated values are labelled and dated ("includes fallback applied on <date>"), the impact preview shows the change before approval, and a switch in settings can limit a fallback to forward-only if the owner ever wants that.
 7. **Retire the need for it.** Show how long each item has been unmapped and who owns it, send the data owner a list they can correct at the source, and mark entries "fixed at source" so the fallback table shrinks over time.
 8. **Send names only to the AI.** Selling point, city and existing region names, never sales values.
 
@@ -55,9 +55,9 @@ flowchart TD
 - `MAP-010` `[P]` **Consistency checks** reject a suggestion that contradicts the hierarchy (for example a branch already known in region A suggested for region B) or is not an existing value (`MAP-003`).
 - `MAP-011` `[P]` **Label everywhere:** "AI-suggested" and "approved" badges, an export column, wording in AI chat answers, and a reconciliation line: *mapped at source + mapped by fallback + unmapped = Sales Detail total*.
 - `MAP-012` `[P]` **Reversible and audited:** every entry can be rejected or reverted; reverting returns the values to "(Unmapped)" and the reconciliation updates; every change is audited.
-- `MAP-013` `[P]` **History policy:** from the approval month forward by default; backfill needs explicit approval and shows a restatement note (DEC-105).
+- `MAP-013` `[C]` **History policy:** a fallback applies to **all months, past (backfill) and next** (owner, DEC-105). Restated months carry the label and date; the impact preview covers the past months too; the setting `mapping.backfill` (default `all months`, alternative `forward only`) is an admin choice.
 - `MAP-014` `[P]` **Privacy:** only names go to the AI provider; the same provider settings and data-sharing acknowledgement as the AI chat apply (`AI-037` to `AI-047`); capability `mapping.suggest`.
-- `MAP-015` `[P]` **Notifications:** an email digest per data owner (and an immediate message for large impacts), sent through an SMTP server configured in `.env`, with a link to the list and the impact; escalation to a second contact after a set number of days (DEC-106). Contacts per finding category are an admin screen. Other channels such as WhatsApp are a later option (DEC-055).
+- `MAP-015` `[C]` **Notifications:** email is **not set up now**; the owner will fill the SMTP settings in the app after the project is running (DEC-106). Until then, findings, suggestions and "notification pending" status are visible in the app. When email is configured, an email digest per data owner (and an immediate message for large impacts) goes out with a link to the list and the impact, with escalation to a second contact after a set number of days. Contacts per finding category are an admin screen that can be filled before email exists. Other channels such as WhatsApp are a later option (DEC-055). The email settings are in `02-architecture.md` section 17.
 - `MAP-016` `[P]` **Review screen** (capability `mapping.review`): list by dimension and status, evidence, confidence, **impact preview** (how regional totals change), approve, reject, bulk approve for rule-based entries, export a "please correct at source" list for the data owner.
 - `MAP-017` `[P]` **Normalization table** (alias to canonical value) is separate from the fill table (key to region and parents), but both feed one read-time overlay in the repository layer; the app never writes to `dwh_prod`.
 - `MAP-018` `[P]` **Limits:** maximum entries and AI calls per run, rate limits, cost cap, and a dry-run mode that shows what would change without applying.
@@ -68,6 +68,8 @@ flowchart TD
 
 - A suggestion that is not an existing value is rejected; a suggestion that contradicts the hierarchy is rejected; names with different codes are never merged.
 - A valid source value always wins; when the source is fixed the entry becomes `fixed_at_source`; a conflicting later source value raises a flag.
+- Grace period is 3 days and the impact limit is 1% of the region's total; entries above the limit are never auto-applied; backfilled months carry the restatement label; `mapping.backfill = forward only` limits a fallback to later months.
+- With email not configured, nothing is sent, findings show "notification pending", and no backlog is mailed later: after configuration only the current digest is sent.
 - Dry run changes nothing; approve, reject and revert update totals and the reconciliation line exactly; backfill needs its own approval.
 - Large-impact entries are never auto-applied; grace-period auto-apply labels the result.
 - Only names are sent to the AI (test with a mock provider that records the payload).
@@ -76,4 +78,4 @@ flowchart TD
 
 ## 6. Open decisions
 
-DEC-104 (approval, grace period and confidence), DEC-105 (history and backfill), DEC-106 (email channel and contacts). See `decisions.md`.
+DEC-104, DEC-105 and DEC-106 are answered (3-day grace period and 1% impact limit; backfill and next months; email settings filled later). The data-owner contact list is filled by the owner in the app. See `decisions.md`.

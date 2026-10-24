@@ -324,6 +324,7 @@ Separate schema keeps app-owned data apart from read-only business tables. Names
 | `app_config.mapping_overrides` *(later, Mapping Assistant)* | `id`, `dimension`, `source_code`, `source_value`, `suggested_value`, `method` (`rule`/`similarity`/`ai`/`manual`), `evidence_json`, `confidence`, `status`, `effective_from`, `created_at`, `reviewed_by`, `reviewed_at` | Fill table; read-time overlay; never written to `dwh_prod` (`12-mapping-assistant.md`) |
 | `app_config.name_normalization` *(later)* | `dimension`, `code`, `alias`, `canonical_value`, `status`, `reviewed_by` | Alias to existing canonical value, same code only |
 | `app_config.data_owners` *(later)* | `finding_category`, `dimension`, `contact_name`, `contact_email`, `escalation_email`, `escalate_after_days` | Who is notified (`MAP-015`) |
+| `app_config.notification_settings` *(later)* | `enabled`, `smtp_host`, `smtp_port`, `security`, `username`, `password_encrypted`, `from_address`, `from_name`, `last_test_at`, `last_test_status` | Filled by an admin after go-live (`NOTIF-001`); password encrypted with the `.env` master key |
 | `app_config.notification_log` *(later)* | `id`, `recipient`, `kind`, `subject`, `sent_at`, `status` | No sensitive content |
 | `app_config.audit_events` | `id`, `actor`, `action`, `target`, `summary_json`, `created_at` | Safe summaries only, no secrets; includes permission changes |
 

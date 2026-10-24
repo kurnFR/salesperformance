@@ -15,7 +15,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server; **DEC-104 to DEC-106** Mapping Assistant (later).
+- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server; **DEC-107** data-owner contacts (filled in the app when email is set up).
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -89,6 +89,9 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-101 | Unmapped values: dashboards exclude them with a visible reconciliation note; Sales Detail includes them as "(Unmapped)" with an "Include unmapped" switch (default on) | 2026-10-22 (owner agreed) | `01` section 13 |
 | DEC-102 | Roles with all regions (CEO, General Manager) see unmapped values by default; regional roles do not; admin can change | 2026-10-22 (owner agreed) | `01` METRIC-048 |
 | DEC-103 | **Later feature:** AI fills unmapped header dimension values and normalizes names from the nearest existing words in the database, never creating a new word; results go into a fallback (rename/normalize) table used when a refresh still has NULL; the data owner is informed (including email alerts) to fix the master source; if the owner does not fix it, the AI's best suggestion is used | 2026-10-22 (owner) | `12-mapping-assistant.md` |
+| DEC-104 | Mapping Assistant: **3-day grace period** before auto-apply; **1% impact limit** acceptable (entries above 1% of a region's total always need a person) | 2026-10-22 (owner) | `12` section 2, MAP-010 |
+| DEC-105 | Mapping Assistant fallbacks apply to **backfill (past months) and next months**; restated months are labelled; a setting can limit to forward-only | 2026-10-22 (owner; interpretation of "also for backfill and next") | `12` MAP-013 |
+| DEC-106 | **SMTP is skipped for now**; a Settings > Notifications screen lets the owner fill it after the project is running; data-owner contacts are filled later | 2026-10-22 (owner) | `02` section 17, NOTIF-001 |
 
 ## Blocking Phase 0 and 2
 
@@ -158,6 +161,4 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
 | DEC-099 | Which columns of the mapping view carry the customer flag (from `fcustmst`), the distributor flag (from `mscabang`) and the SE active or resigned flag? Are `fcustmst` and `mscabang` available in `dwh_prod`, or only visible through the view? | Use only view columns (expected `FLAG_AKTIF` for the customer, `BranchActiveFlag` for the distributor); the schema check lists values per column; SE active flag stays optional until its source is known | Phase 6 | Open |
-| DEC-104 | Mapping Assistant approval policy: grace period before auto-apply, confidence threshold, and the impact limit above which a person must approve | 14 days; high confidence only; entries above 1% of a region's total always need a person | Mapping Assistant | Proposed |
-| DEC-105 | History policy: apply a fallback from the approval month forward; backfill earlier months only with explicit approval and a restatement note | As described | Mapping Assistant | Proposed |
-| DEC-106 | Email for data-owner alerts: SMTP server and sender in `.env`, the contact list per finding category, digest frequency, escalation days | Weekly digest, immediate message for large impacts, escalate after 7 days | Mapping Assistant | Open |
+| DEC-107 | Data-owner contacts per finding category and escalation days (needed only when email is configured) | Filled by the owner in the app; escalate after 7 days | After go-live | Open |

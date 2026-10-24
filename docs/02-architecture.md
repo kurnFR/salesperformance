@@ -338,5 +338,16 @@ The Mapping Assistant (`12-mapping-assistant.md`) is added after Release 1 is va
 
 - `OPS-026` `[P]` The overlay is applied in the repository layer when reading, never by writing to `dwh_prod`; the source value always wins when it is valid.
 - `OPS-027` `[P]` Suggestions run as a background job after each completed refresh, in dry-run first; only names go to the AI provider selected in settings (`AI-037` to `AI-047`).
-- `OPS-028` `[P]` Email goes through an SMTP server configured in `.env` (`SMTP_*`, optional); a digest is sent per data owner, with escalation; no secrets or sales values in the message body.
+- `OPS-028` `[C]` Email is configured **in the app** (Settings > Notifications), not in `.env` (section 17). Nothing is sent until an admin fills and tests it.
 - `OPS-029` `[P]` Capabilities: `mapping.review`, `mapping.suggest`; both assignable per role and department, with scope applied.
+
+## 17. Notification settings (email), filled after go-live (DEC-106)
+
+**Owner decision `[C]`:** SMTP is skipped for now; a settings screen lets the owner fill it once the project is running.
+
+- `NOTIF-001` `[C]` **Settings > Notifications** (capability `settings.notifications.manage`): SMTP host, port, security (none, STARTTLS or TLS), user name, password, sender address and display name, an on/off switch, and a **Send test email** button with the last test result.
+- `NOTIF-002` `[P]` The password follows the same rule as AI API keys: encrypted at rest with the `.env` master key, **write-only** in the UI (last characters only), never returned by an API or logged (`SEC-015`, `AI-039`). Settings live in `app_config.notification_settings`.
+- `NOTIF-003` `[C]` **Graceful until configured.** With email off or untested, the app sends nothing, the Mapping Assistant and findings still work, notifications show as "pending: email not configured", and alerts appear in the app. Configuring email later never mails an old backlog, only the current digest.
+- `NOTIF-004` `[P]` One notification service is used by every feature that needs email (data findings, the Mapping Assistant, management alerts if approved, DEC-055). Messages contain links and counts, never sales values or secrets; every send is logged without content (`notification_log`).
+- `NOTIF-005` `[P]` Data-owner contacts and escalation per finding category (`data_owners`) can be filled before email exists.
+- `NOTIF-006` `[P]` Changes to the settings and every test are audited. Failures are shown to admins with the SMTP error text (without the password).
