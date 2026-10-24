@@ -44,7 +44,7 @@ All of this reuses the access model: a persona is just a role with a scope and a
   3. Region tiles (status color, achievement %, pace gap), sorted by gap.
   4. **Needs attention:** the regions, then branches and SPVs, furthest behind pace.
   5. **Movers:** largest growth up and down against the same month last year (closed months only; the in-progress month is labelled not like-for-like).
-  6. **Data health:** data as-of time and the count of open data findings that affect the user's scope.
+  6. **Data health:** data as-of time and the count of open data findings that affect the user's scope, and the unmapped amount that is not in the totals (`METRIC-045`).
 - `MGMT-002` `[P]` **Regional Manager view:** the same page scoped to the user's region(s), with branches, SPVs and distributors ranked by pace gap.
 - `MGMT-003` `[P]` **Default landing per role**, chosen by the admin on the role (for example Executive Summary for CEO and GM, regional view for RSM).
 - `MGMT-004` `[P]` **Drill-down** through the whole hierarchy (Region > Branch > SPV > Distributor, then SE and item where data exists, `PIVOT-014`) by clicking a tile, bar or row, with a breadcrumb and the same tooltip (target, real, %). Each level is the Sales Detail service filtered to the clicked item; scope always applies.

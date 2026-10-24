@@ -38,6 +38,7 @@ Read in this order: `PRD.md` -> `docs/decisions.md` -> the doc(s) relevant to yo
 - The app targets PostgreSQL 12.22 and Node 24 in Docker: generate IDs in the app, no PostgreSQL 13+ only features, CI on PostgreSQL 12 and a current version (`docs/02-architecture.md` section 15).
 - UI must auto-fit the window (no blank space, no white flash) and reflow live between half and full (`UI-041`).
 - Insight figures (Performance Drivers) come from the metric definitions in `docs/01-metrics-contract.md` section 12; "so what" sentences are fixed templates, never model-written.
+- NULL region, branch, SPV, distributor or city keys are grouped as "(Unmapped)", never dropped silently and never guessed: dashboards exclude them with a reconciliation note, Sales Detail includes them, and a test proves dashboard total + unmapped = Sales Detail total (`docs/01-metrics-contract.md` section 13).
 - Drill-down follows the hierarchy registry; a level without a fact source returns entities with measures `notAvailable`, never 0 and never an estimate; the ETL refresh log table name is configuration (`docs/03-data-model.md` 2.6 and 2.8).
 - MFA is a per-user admin setting (TOTP); secrets are encrypted; users cannot disable their own MFA (`docs/02-architecture.md` AUTH-010, AUTH-011).
 - Data refresh: react to the end of an ETL run (refresh log row plus `NOTIFY`, or polling), include `dataVersion` in cache keys, push updates to browsers; never detect change from individual row writes (`docs/02-architecture.md` section 13).

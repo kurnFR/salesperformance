@@ -106,7 +106,7 @@ Validation: `0 <= warningMin < successMin`, colors from supported tokens meeting
   },
   "scope": {
     "principal": { "mode": "list", "values": ["ASW"] },
-    "region":    { "mode": "list", "values": ["TBD-region-key-1", "TBD-region-key-2"] },
+    "region":    { "mode": "list", "values": ["TBD-region-key-1", "TBD-region-key-2"], "includeUnmapped": false },
     "dashboard": { "mode": "all" }
   },
   "departmentId": "sales"
@@ -226,6 +226,7 @@ The pivot never accepts a column name from the browser. It accepts **ids** from 
     { "id": "valuePerUnitOut", "label": "Sell OUT value per unit", "formula": "realOut / qtyOut" },
     { "id": "seAchOut", "label": "SE achievement %", "formula": "seSellOut / seTarget", "level": "se", "status": "planned" }
   ],
+  "nullHandling": { "label": "(Unmapped)", "dashboards": "exclude with reconciliation note", "salesDetail": "include, switchable", "never": "guess or drop silently" },
   "segments": [
     { "id": "all", "label": "All products",  "columns": "TOTAL*" },
     { "id": "reg", "label": "Regular",       "columns": "*Reg", "meaning": "product group sold every day" },
@@ -249,7 +250,7 @@ Request and response (placeholders):
 ```json
 { "rows": [ { "level": 4, "keys": { "region": "TBD", "branch": "TBD", "spv": "TBD", "distributor": "TBD" },
               "values": { "targetIn": 0, "realIn": 0, "realOut": 0 }, "status": { "achIn": "red" } } ],
-  "subtotals": [], "grandTotal": { "values": { "targetIn": 0, "realIn": 0, "realOut": 0 }, "scopeNote": "within your access" },
+  "subtotals": [], "unmappedRow": { "label": "(Unmapped)", "values": { "targetIn": 0, "realIn": 0, "realOut": 0 } }, "grandTotal": { "values": { "targetIn": 0, "realIn": 0, "realOut": 0 }, "scopeNote": "within your access" },
   "dataAsOf": "TBD", "truncated": false }
 ```
 
@@ -402,6 +403,7 @@ It checks, for every table in the principal registry:
 3. **Grain:** whether the performance view has one row per selling point per month (duplicate-key check), and whether months are complete.
 3c. `TargetValueEskaSLO` versus `TOTALTargetSellOut` (the same measure, so they should be equal; report differences). Quantity columns (cartons): types, zeros, negatives; value without quantity or the reverse. Distinct values of `TEAM`, `SLSTP`, `FLAG_AKTIF` and `BranchActiveFlag`, and which of them is the customer flag and which the distributor flag (DEC-099).
 3d. **Distributor count variants** per region and principal: distinct selling points in the mapping, of which flag `Y` and flag `N`, against `distaktif` total and active (`METRIC-044`), to see how much of the 144 versus 120 difference the flag explains.
+3e. **Unmapped rows:** per principal and month, the number of rows, distinct selling points and cities whose region (and branch, SPV) is NULL, with their summed target and real and their share of the total, plus the list of those selling points and cities. This quantifies the gap between the dashboards (NULL region excluded) and the Sales Detail total (NULL included).
 3b. For Sell IN and Sell OUT, target and real: does `TOTAL` equal Regular plus Festive (count of rows that differ, sum of differences)?
 4. Distinct regions per principal and a proposed display order (INA expected: JAWA 1, JAWA 2, PULAU 1, SUMATERA 1, SUMATERA 2; ASW six, including SUMATERA 3).
 5. `dimdate`: working days for the current month and whether 22-Oct-2026 gives 18 of 27 (66.67%).

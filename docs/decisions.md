@@ -15,7 +15,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 - **DEC-029** multi-month role-count denominators.
 - **DEC-023, DEC-026** growth bar colors; Daily Upload details (build later).
 - **DEC-082** ask the ETL to log the start and end of the load step (optional).
-- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server.
+- **DEC-085 to DEC-099** Performance Drivers decisions (Phase 6); **DEC-093** which tables come from Excel versus SQL Server; **DEC-101 to DEC-103** unmapped values.
 - **DEC-054, DEC-075** Executive Summary details; last-month-to-date cutoff (Marketing).
 
 ## Confirmed
@@ -85,6 +85,7 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-095 | `TargetValueEskaSLO` is the **same measure** as `TOTALTargetSellOut`; column names are not consistent across tables, so the registry maps each measure per table | 2026-10-22 (owner) | `03` 4.3, field catalog |
 | DEC-096 | `KODESCABANG` = `SELLINGPOINTCODE`; `KOTA` = city; `KODEAREA` = SPV (area) code. `FLAG_AKTIF`: `Y` active, `N` no longer active (resigned for an SE). `SLSTP` = type of salesperson (sales mix, sales office, taking order, others). `TEAM` = job position (sales executive, SPV, ...) | 2026-10-22 (owner) | `03` 4.2 to 4.4 |
 | DEC-098 | Active flags come from master tables: the **customer** flag is defined in `fcustmst`; the **distributor** flag in `mscabang` (`Y` active, `N` not active) | 2026-10-22 (owner) | `03` 4.2 |
+| DEC-100 | Some distributors or cities are not defined or not mapped, so their region is NULL. Today dashboards **exclude** NULL region while the detail sheet **includes all regions including NULL** | 2026-10-22 (owner) | `01` section 13 |
 
 ## Blocking Phase 0 and 2
 
@@ -154,3 +155,6 @@ Status: `Confirmed` · `Proposed` (default in use, awaiting owner) · `Open` (bl
 | DEC-092 | A product-group selector (All, Regular, Festive) on Sales Performance, Growth, Executive Summary and Sales Detail | Yes, All by default | Phase 2 | Proposed |
 | DEC-093 | Which `dwh_prod` tables are loaded from Excel (manual) and which from SQL Server? (`distaktif` is a manual Excel upload) | Label known Excel tables; add findings checks for staleness | Phase 2 | Open |
 | DEC-099 | Which columns of the mapping view carry the customer flag (from `fcustmst`), the distributor flag (from `mscabang`) and the SE active or resigned flag? Are `fcustmst` and `mscabang` available in `dwh_prod`, or only visible through the view? | Use only view columns (expected `FLAG_AKTIF` for the customer, `BranchActiveFlag` for the distributor); the schema check lists values per column; SE active flag stays optional until its source is known | Phase 6 | Open |
+| DEC-101 | Behavior for unmapped (NULL region) values: dashboards exclude them with a visible reconciliation note; Sales Detail includes them as "(Unmapped)" with an "Include unmapped" switch (default on) | As described in `01` section 13 | Phase 2 | Proposed |
+| DEC-102 | Which roles may see unmapped values (`includeUnmapped`)? | On for roles with `region: all` (for example CEO, General Manager), off for regional scopes; admin can change | Phase 2 | Proposed |
+| DEC-103 | Who fixes unmapped distributors and cities (master data or the ETL's mapping source), and can the ETL write an explicit "UNMAPPED" label instead of NULL? | The data owner fixes the mapping; the app lists them in the `UNMAPPED_REGION` finding and never guesses | Phase 2 | Open |

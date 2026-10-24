@@ -122,6 +122,7 @@ Every endpoint documents purpose, permissions, filters, response fields, errors,
   "filtersApplied": { "principalId": "INA", "regionId": null },
   "dataAsOf": "2026-10-21T23:00:00Z",
   "generatedAt": "2026-10-22T05:31:00Z",
+  "unmapped": { "excludedFromTotals": true, "target": 0, "real": 0, "sharePct": 0.0 },
   "warnings": [ { "code": "MISSING_TARGET", "scope": "region-002" } ]
 }
 ```
@@ -196,6 +197,7 @@ sequenceDiagram
 - **Roles** are created, renamed and deleted by admins. A role = a set of capabilities + a data scope.
 - **Data scope** is, per scope dimension, either `all` or an explicit list of values. Dimensions come from a registry: `principal`, `region`, `branch`, `dashboard` (extendable without changing route code).
 - **"Full access"** is `principal: all` (and `region: all`) on a role, not a hard-coded role name.
+- **Unmapped values:** rows whose region is NULL belong to no region, so they are never part of a region list. A role sees them only when its scope sets `includeUnmapped` (default on for `region: all`, off for list scopes). See `01-metrics-contract.md` section 13.
 - **Users** get one or more roles; an optional per-user override can add or remove scope values.
 - **Effective access** = union of the user's roles (capabilities and scope values per dimension), then user overrides. No role, or an empty scope, means **no access** (deny by default).
 - Principals, regions and branches are values read from approved data or the principal registry (`03-data-model.md` 2.6). They are never listed in code or in UI components.

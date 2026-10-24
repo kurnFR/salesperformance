@@ -82,6 +82,9 @@ Each phase lists tasks and an exit gate. Work in small reviewable PRs, citing re
 **Window fit**
 - Switching the dashboard window between half and full (and any resize) reflows live, with no blank or white area, no scrollbars in TV mode, no white flash on load, and the playlist position kept.
 
+**Unmapped values**
+- Rows with a NULL region are never dropped or reassigned: dashboards exclude them and show the reconciliation note; Sales Detail shows an "(Unmapped)" row included in the grand total, switchable; dashboard total + unmapped equals the Sales Detail grand total for every measure, filter and product group; a Regional Manager never sees unmapped values; a role with `includeUnmapped` does; export and AI answers state the basis; the `UNMAPPED_REGION` finding lists the selling points and cities with their values.
+
 **Language**
 - Default language is English; an admin can change it; a user can override it; every string, chart label, tooltip, export header and glossary entry exists in both languages or falls back to English; numbers and dates follow the language without changing the underlying values.
 
